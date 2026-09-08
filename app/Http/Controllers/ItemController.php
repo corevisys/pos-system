@@ -27,7 +27,10 @@ class ItemController extends Controller
 {
     public function index(Request $request)
     {
-        $query = DbItem::where('child_bit', 0); // Only list parents or single items
+        // Store-scoped base query — cross-store item rows must never appear on this
+        // list or its exports. Mirrors SupplierController::index / CustomerController::index.
+        $query = DbItem::where('child_bit', 0) // Only list parents or single items
+            ->where('store_id', current_store_id());
 
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
@@ -54,21 +57,78 @@ class ItemController extends Controller
             });
         }
 
+        // Print/PDF export view — reuses the SAME filtered, store-scoped query builder
+        // as the on-screen list so exports always mirror exactly what the screen shows.
+        if ($request->export === 'print' || $request->export === 'pdf') {
+            $exportItems = $query->with(['category', 'brand', 'unit'])
+                ->orderBy('id', 'desc')
+                ->get();
+
+            return view('module.items.items_list_print', [
+                'items' => $exportItems,
+            ]);
+        }
+
+        // CSV export — same shared query builder.
+        if ($request->export === 'csv') {
+            $exportItems = $query->with(['category', 'brand', 'unit'])
+                ->orderBy('id', 'desc')
+                ->get();
+
+            $filename = "items_list_" . now()->format('Y_m_d_H_i_s') . ".csv";
+
+            $headers = [
+                "Content-type"        => "text/csv",
+                "Content-Disposition" => "attachment; filename=$filename",
+                "Pragma"              => "no-cache",
+                "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+                "Expires"             => "0"
+            ];
+
+            return response()->stream(function () use ($exportItems) {
+                $file = fopen('php://output', 'w');
+                // UTF-8 BOM for Excel compatibility
+                fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+                fputcsv($file, ['Item Code', 'Item Name', 'SKU', 'Barcode', 'Category', 'Brand', 'Unit', 'Stock', 'Sales Price', 'Status']);
+
+                foreach ($exportItems as $i) {
+                    fputcsv($file, [
+                        $i->item_code,
+                        $i->item_name,
+                        $i->sku ?? '',
+                        $i->custom_barcode ?? '',
+                        $i->category->category_name ?? '',
+                        $i->brand->brand_name ?? '',
+                        $i->unit->unit_name ?? '',
+                        (float) $i->stock,
+                        (float) $i->sales_price,
+                        $i->status == 1 ? 'Active' : 'Inactive',
+                    ]);
+                }
+                fclose($file);
+            }, 200, $headers);
+        }
+
+        $perPage = in_array((int) $request->input('per_page', 10), [10, 25, 50, 100], true)
+            ? (int) $request->input('per_page', 10)
+            : 10;
+
         $items = $query->with(['category', 'brand', 'unit', 'tax'])
                       ->withCount('serials')
                       ->latest()
-                      ->paginate(10);
+                      ->paginate($perPage)
+                      ->withQueryString();
 
-        $categories = DbCategory::where('status', 1)->get();
-        $brands = DbBrand::where('status', 1)->get();
+        $categories = DbCategory::where('status', 1)->where('store_id', current_store_id())->get();
+        $brands = DbBrand::where('status', 1)->where('store_id', current_store_id())->get();
 
         return view('module.items.items_list', compact('items', 'categories', 'brands'));
     }
 
     public function create()
     {
-        $categories = DbCategory::where('status', 1)->get();
-        $brands = DbBrand::where('status', 1)->get();
+        $categories = DbCategory::where('status', 1)->where('store_id', current_store_id())->get();
+        $brands = DbBrand::where('status', 1)->where('store_id', current_store_id())->get();
         $units = DbUnit::where('status', 1)->get();
         $taxes = DbTax::where('status', 1)->get();
         $warehouses = DbWarehouse::where('status', 1)->get();
@@ -393,8 +453,8 @@ class ItemController extends Controller
     public function edit($id)
     {
         $item = DbItem::with(['serials', 'warehouseItems'])->findOrFail($id);
-        $categories = DbCategory::where('status', 1)->get();
-        $brands = DbBrand::where('status', 1)->get();
+        $categories = DbCategory::where('status', 1)->where('store_id', current_store_id())->get();
+        $brands = DbBrand::where('status', 1)->where('store_id', current_store_id())->get();
         $units = DbUnit::where('status', 1)->get();
         $taxes = DbTax::where('status', 1)->get();
         $warehouses = DbWarehouse::where('status', 1)->get();
@@ -700,16 +760,67 @@ class ItemController extends Controller
 
     public function destroy($id)
     {
+        $storeId = current_store_id();
+
+        // Store-scoped lookup (IDOR protection) — a Store-2 user must never be able
+        // to delete a Store-1 item by supplying its id directly. Mirrors the exact
+        // fix applied to AccountController::destroy() (and Deposit/Supplier/
+        // CashReconciliation): the fetch is scoped by the current store, so a
+        // cross-store id resolves to "not found" and is rejected cleanly.
+        $item = DbItem::where('store_id', $storeId)->find($id);
+        if (!$item) {
+            return response()->json(['success' => false, 'message' => 'Item not found.'], 404);
+        }
+
+        // History guard: deleting a Box parent also cascade-deletes its variants,
+        // so check the item AND any child variants (parent_id) for existing history
+        // in every table that references db_items.id via an onDelete('cascade') FK
+        // (enumerated directly from the migrations — sales items, sales returns,
+        // purchase items, purchase returns, quotation items, stock adjustments,
+        // stock transfers, stock entries, warehouse stock, and serials regardless
+        // of status). Held carts (db_holditems) reference item_id without an FK but
+        // are tracked history too. Any match blocks the delete.
+        $itemIds = array_merge([$item->id], DbItem::where('parent_id', $item->id)->where('store_id', $storeId)->pluck('id')->all());
+
+        // NOTE: db_warehouseitems (current warehouse stock) is intentionally NOT in
+        // the blocking set — it is current inventory state, not historical usage,
+        // and the clean-delete flow removes it alongside the item (verified by
+        // ItemDeleteStoreScopeTest::test_same_store_delete_removes_variants_and_warehouse_rows).
+        $hasHistory = $itemIds
+            ? \Illuminate\Support\Facades\DB::table('db_salesitems')->whereIn('item_id', $itemIds)->exists()
+                || \Illuminate\Support\Facades\DB::table('db_salesitemsreturn')->whereIn('item_id', $itemIds)->exists()
+                || \Illuminate\Support\Facades\DB::table('db_purchaseitems')->whereIn('item_id', $itemIds)->exists()
+                || \Illuminate\Support\Facades\DB::table('db_purchaseitemsreturn')->whereIn('item_id', $itemIds)->exists()
+                || \Illuminate\Support\Facades\DB::table('db_quotationitems')->whereIn('item_id', $itemIds)->exists()
+                || \Illuminate\Support\Facades\DB::table('db_stockadjustmentitems')->whereIn('item_id', $itemIds)->exists()
+                || \Illuminate\Support\Facades\DB::table('db_stocktransferitems')->whereIn('item_id', $itemIds)->exists()
+                || \Illuminate\Support\Facades\DB::table('db_stockentry')->whereIn('item_id', $itemIds)->exists()
+                || \Illuminate\Support\Facades\DB::table('db_item_serials')->whereIn('item_id', $itemIds)->exists()
+                || \Illuminate\Support\Facades\DB::table('db_holditems')->whereIn('item_id', $itemIds)->exists()
+            : false;
+
+        if ($hasHistory) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This item has existing sales/purchase history and cannot be deleted. Deactivate it instead.',
+            ], 422);
+        }
+
         try {
             DB::beginTransaction();
-            $item = DbItem::findOrFail($id);
             
-            // Delete variants if any
-            DbItem::where('parent_id', $item->id)->delete();
+            // Delete variants if any — scoped to the same store as the parent
+            DbItem::where('parent_id', $item->id)
+                ->where('store_id', $storeId)
+                ->delete();
             
-            // Delete stock records
-            DbWarehouseItem::where('item_id', $item->id)->delete();
+            // Delete stock records — scoped to the same store
+            DbWarehouseItem::where('item_id', $item->id)
+                ->where('store_id', $storeId)
+                ->delete();
             
+            // Hard delete (db_items has no delete_bit / SoftDeletes — child rows in
+            // sales/purchase/warehouse/serial tables cascade via DB FKs).
             $item->delete();
             
             DB::commit();
@@ -761,8 +872,8 @@ class ItemController extends Controller
 
         $store = DbStore::first();
         $storeName = $store->store_name ?? 'COREVISYS POS';
-        $categories = DbCategory::where('status', 1)->get();
-        $brands = DbBrand::where('status', 1)->get();
+        $categories = DbCategory::where('status', 1)->where('store_id', current_store_id())->get();
+        $brands = DbBrand::where('status', 1)->where('store_id', current_store_id())->get();
         $warehouses = DbWarehouse::where('status', 1)->get();
 
         $initialItems = [];

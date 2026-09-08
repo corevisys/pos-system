@@ -54,8 +54,8 @@ class PosController extends Controller
     {
         $customers = DbCustomer::where('status', 1)->get();
         $warehouses = DbWarehouse::where('status', 1)->get();
-        $categories = DbCategory::where('status', 1)->get();
-        $brands = DbBrand::where('status', 1)->get();
+        $categories = DbCategory::where('status', 1)->where('store_id', current_store_id())->get();
+        $brands = DbBrand::where('status', 1)->where('store_id', current_store_id())->get();
         $taxes = DbTax::where('status', 1)->get();
         $paymentTypes = DbPaymentType::where('status', 1)->get();
         $accounts = AcAccount::where('status', 1)->get();
@@ -321,12 +321,19 @@ class PosController extends Controller
             if ($request->sale_id) {
                 $sale = DbSale::with(['items', 'payments'])->findOrFail($request->sale_id);
                 
-                // Revert Old Stock & Serials before applying new ones
+                // Revert Old Stock & Serials before applying new ones — SKIP service lines
+                // (service_bit=1): their stock was never decremented at checkout, so it
+                // must not be incremented back here either.
                 foreach ($sale->items as $oldItem) {
-                    DbItem::where('id', $oldItem->item_id)->increment('stock', $oldItem->sales_qty);
-                    DbWarehouseItem::where('warehouse_id', $sale->warehouse_id)
-                        ->where('item_id', $oldItem->item_id)
-                        ->increment('available_qty', $oldItem->sales_qty);
+                    $oldDbItem = DbItem::find($oldItem->item_id);
+                    $isServiceLine = $oldDbItem && (int) $oldDbItem->service_bit === 1;
+
+                    if (!$isServiceLine) {
+                        DbItem::where('id', $oldItem->item_id)->increment('stock', $oldItem->sales_qty);
+                        DbWarehouseItem::where('warehouse_id', $sale->warehouse_id)
+                            ->where('item_id', $oldItem->item_id)
+                            ->increment('available_qty', $oldItem->sales_qty);
+                    }
                     
                     DbItemSerial::where('sale_id', $sale->id)
                         ->where('item_id', $oldItem->item_id)
@@ -442,16 +449,19 @@ class PosController extends Controller
                     'unit_total_cost' => isset($item['total']) ? ($item['total'] / $item['qty']) : $item['price'],
                 ]);
 
-                // Update Stock
+                // Update Stock — SKIP for service lines (service_bit=1): services are
+                // non-inventory billable items and must never decrement db_items.stock
+                // or db_warehouseitems.available_qty (they would otherwise drive the
+                // service's stock into negative numbers on every sale).
                 $dbItem = DbItem::find($item['id']);
-                if ($dbItem) {
+                if ($dbItem && (int) $dbItem->service_bit !== 1) {
                     $dbItem->decrement('stock', $item['qty']);
                 }
 
                 $whItem = DbWarehouseItem::where('warehouse_id', $request->warehouse_id)
                     ->where('item_id', $item['id'])
                     ->first();
-                if ($whItem) {
+                if ($whItem && $dbItem && (int) $dbItem->service_bit !== 1) {
                     $whItem->decrement('available_qty', $item['qty']);
                 }
 
@@ -887,16 +897,18 @@ class PosController extends Controller
                     'unit_total_cost' => isset($item['total']) ? ($item['total'] / $item['qty']) : $item['price'],
                 ]);
 
-                // Decrement Stock
+                // Decrement Stock — SKIP for service lines (service_bit=1): services are
+                // non-inventory billable items and must never decrement db_items.stock
+                // or db_warehouseitems.available_qty.
                 $dbItem = DbItem::find($item['id']);
-                if($dbItem) {
+                if($dbItem && (int) $dbItem->service_bit !== 1) {
                      $dbItem->decrement('stock', $item['qty']);
                 }
                 
                 $whItem = DbWarehouseItem::where('warehouse_id', $request->warehouse_id)
                     ->where('item_id', $item['id'])
                     ->first();
-                if($whItem) {
+                if($whItem && $dbItem && (int) $dbItem->service_bit !== 1) {
                     $whItem->decrement('available_qty', $item['qty']);
                 }
 
@@ -1267,7 +1279,18 @@ class PosController extends Controller
             ->map(fn ($q) => (float) $q)
             ->all();
 
+        // Service items (service_bit=1) are non-inventory billable lines and carry no
+        // sellable stock, so they are exempt from the stock-availability gate — their
+        // checkout never decrements stock either.
+        $serviceItemIds = DbItem::whereIn('id', array_keys($requestedQty))
+            ->where('service_bit', 1)
+            ->pluck('id')
+            ->flip();
+
         foreach ($requestedQty as $itemId => $qty) {
+            if (isset($serviceItemIds[$itemId])) {
+                continue;
+            }
             $available = $warehouseStock[$itemId] ?? ($globalStock[$itemId] ?? 0);
             if ($available < $qty) {
                 $item = DbItem::find($itemId);
