@@ -241,7 +241,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('edit/{id}', [App\Http\Controllers\ServiceController::class, 'edit'])->name('edit');
             Route::post('update/{id}', [App\Http\Controllers\ServiceController::class, 'update'])->name('update');
             Route::delete('delete/{id}', [App\Http\Controllers\ServiceController::class, 'destroy'])->name('delete');
-            Route::view('import', 'module.items.import_services')->name('import');
+            Route::patch('toggle-status/{id}', [App\Http\Controllers\ServiceController::class, 'toggleStatus'])->name('toggle-status');
         });
         
         Route::get('list', [App\Http\Controllers\ItemController::class, 'index'])->name('list');
@@ -258,17 +258,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('categories/{category}/edit', [App\Http\Controllers\CategoryController::class, 'edit'])->name('categories.edit');
         Route::put('categories/{category}', [App\Http\Controllers\CategoryController::class, 'update'])->name('categories.update');
         Route::delete('categories/{category}', [App\Http\Controllers\CategoryController::class, 'destroy'])->name('categories.destroy');
+        Route::patch('categories/toggle-status/{category}', [App\Http\Controllers\CategoryController::class, 'toggleStatus'])->name('categories.toggle-status');
         Route::get('brands', [App\Http\Controllers\BrandController::class, 'index'])->name('brands');
         Route::get('brands/add', [App\Http\Controllers\BrandController::class, 'create'])->name('brands.add');
         Route::post('brands', [App\Http\Controllers\BrandController::class, 'store'])->name('brands.store');
         Route::get('brands/{brand}/edit', [App\Http\Controllers\BrandController::class, 'edit'])->name('brands.edit');
         Route::put('brands/{brand}', [App\Http\Controllers\BrandController::class, 'update'])->name('brands.update');
         Route::delete('brands/{brand}', [App\Http\Controllers\BrandController::class, 'destroy'])->name('brands.destroy');
+        Route::patch('brands/toggle-status/{brand}', [App\Http\Controllers\BrandController::class, 'toggleStatus'])->name('brands.toggle-status');
         Route::get('variants', [App\Http\Controllers\VariantController::class, 'index'])->name('variants');
         Route::get('variants/add', [App\Http\Controllers\VariantController::class, 'create'])->name('variants.add');
         Route::post('variants', [App\Http\Controllers\VariantController::class, 'store'])->name('variants.store');
         Route::get('variants/{variant}/edit', [App\Http\Controllers\VariantController::class, 'edit'])->name('variants.edit');
         Route::put('variants/{variant}', [App\Http\Controllers\VariantController::class, 'update'])->name('variants.update');
+        Route::delete('variants/{variant}', [App\Http\Controllers\VariantController::class, 'destroy'])->name('variants.destroy');
+        Route::patch('variants/toggle-status/{variant}', [App\Http\Controllers\VariantController::class, 'toggleStatus'])->name('variants.toggle-status');
         Route::get('labels', [App\Http\Controllers\ItemController::class, 'printLabels'])->name('labels');
         Route::post('labels', [App\Http\Controllers\ItemController::class, 'printLabels'])->name('labels.post');
         Route::match(['get', 'post'], 'labels/print', [App\Http\Controllers\ItemController::class, 'directPrintLabels'])->name('labels.print');
