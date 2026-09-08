@@ -29,6 +29,8 @@ class RolePermissionSeeder extends Seeder
             'payment_types_add', 'payment_types_edit', 'payment_types_delete', 'payment_types_view',
             'import_customers', 'stock_transfer_add', 'stock_transfer_edit', 'stock_transfer_delete', 'stock_transfer_view',
             'seller_points_report', 'services_add', 'services_edit', 'services_delete', 'services_view',
+            // Reserved: unused since the Import Services page/route was removed; kept for
+            // a potential future re-implementation of bulk service import.
             'import_services', 'stock_adjustment_add', 'stock_adjustment_edit', 'stock_adjustment_delete', 'stock_adjustment_view',
             'variant_add', 'variant_edit', 'variant_delete', 'variant_view',
             'accounts_add', 'accounts_edit', 'accounts_delete', 'accounts_view',
@@ -83,6 +85,7 @@ class RolePermissionSeeder extends Seeder
                     'dashboard_recent_items', 'dashboard_stock_alert', 'dashboard_trending_items_chart',
                     'items_add', 'items_edit', 'items_view', 'import_items', 'brand_add', 'brand_edit', 'brand_view',
                     'items_category_add', 'items_category_edit', 'items_category_view',
+                    'variant_add', 'variant_edit', 'variant_view', 'variant_delete',
                     'customers_add', 'customers_edit', 'customers_view', 'import_customers',
                     'suppliers_add', 'suppliers_edit', 'suppliers_view', 'import_suppliers',
                     'sales_add', 'sales_edit', 'sales_view', 'sales_payment_view', 'sales_payment_add', 'sales_report', 'sales_payments_report',
