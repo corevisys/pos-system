@@ -1,0 +1,76 @@
+# ============================================================
+# Laravel + CorevisysPOS .gitignore
+# SECURITY: This project integrates payment gateways (Stripe,
+# PayPal, Instamojo), SMS (Twilio) and SMTP. NEVER un-ignore
+# .env or any real credential file.
+# ============================================================
+
+# ---- Environment / secrets (NEVER commit) ----
+.env
+.env.*
+!.env.example
+.env.backup
+.env.production
+.env.local
+.env.staging
+.env.testing
+.env.dusk.local
+
+# ---- Composer / Node ----
+/vendor
+/node_modules
+/auth.json
+composer.phar
+npm-debug.log
+yarn-error.log
+.pnpm-debug.log
+
+# ---- Laravel runtime / cache / build ----
+/public/hot
+/public/storage
+/public/build
+/storage/*.key
+/storage/pail
+/storage/app/*
+!/storage/app/public
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/testing/*
+/storage/framework/views/*
+/storage/logs/*.log
+/bootstrap/cache/*.php
+*.log
+
+# ---- Database dumps / sqlite (may contain real data) ----
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+
+# ---- Uploaded user content (customer docs, images) ----
+/public/uploads
+
+# ---- Project backup files (contain source snapshots) ----
+/storage/invoice_backup_pre_rewrite
+
+# ---- IDE / OS ----
+/.idea
+/.vscode
+/.zed
+/.fleet
+/.nova
+/.phpactor.json
+.DS_Store
+Thumbs.db
+
+# ---- PHPUnit ----
+.phpunit.result.cache
+.phpunit.cache
+
+# ---- Local testing / scratch ----
+/test_concur.sqlite
+/selects_discovery.txt
+
+# ---- Homestead / misc ----
+Homestead.json
+Homestead.yaml

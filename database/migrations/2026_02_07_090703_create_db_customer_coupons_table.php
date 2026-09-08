@@ -1,0 +1,51 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('db_customer_coupons', function (Blueprint $table) {
+            $table->id();
+            $table->integer('store_id')->nullable();
+            $table->string('code')->nullable();
+            $table->string('name')->nullable();
+            $table->text('description')->nullable();
+            $table->decimal('value', 16, 2)->default(0);
+            $table->string('type')->nullable();
+            $table->date('expire_date')->nullable();
+            $table->integer('status')->default(1);
+            $table->integer('created_by')->nullable();
+            $table->date('created_date')->nullable();
+            $table->time('created_time')->nullable();
+            $table->string('system_name')->nullable();
+            $table->string('system_ip')->nullable();
+            $table->unsignedBigInteger('customer_id')->nullable();
+            $table->unsignedBigInteger('coupon_id')->nullable();
+            $table->timestamps();
+
+            // Indexes
+            $table->index('customer_id');
+            $table->index('coupon_id');
+            $table->index('code');
+
+            // Foreign Keys
+            $table->foreign('customer_id')->references('id')->on('db_customers')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreign('coupon_id')->references('id')->on('db_coupons')->onDelete('cascade')->onUpdate('cascade');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('db_customer_coupons');
+    }
+};
