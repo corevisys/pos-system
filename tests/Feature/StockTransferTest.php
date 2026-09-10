@@ -40,11 +40,13 @@ test('stock transfer to a new destination warehouse with no prior stock record c
     $warehouseFrom = DbWarehouse::create([
         'warehouse_name' => 'Source Warehouse A',
         'status' => 1,
+        'store_id' => 1,
     ]);
 
     $warehouseTo = DbWarehouse::create([
         'warehouse_name' => 'Destination Warehouse B',
         'status' => 1,
+        'store_id' => 1,
     ]);
 
     $category = DbCategory::create([
@@ -60,6 +62,7 @@ test('stock transfer to a new destination warehouse with no prior stock record c
         'sales_price' => 40.00,
         'stock' => 100,
         'status' => 1,
+        'store_id' => 1,
     ]);
 
     // Give source warehouse 50 initial qty
@@ -104,11 +107,13 @@ test('stock transfer to an existing destination warehouse increments stock prope
     $warehouseFrom = DbWarehouse::create([
         'warehouse_name' => 'Source Warehouse C',
         'status' => 1,
+        'store_id' => 1,
     ]);
 
     $warehouseTo = DbWarehouse::create([
         'warehouse_name' => 'Destination Warehouse D',
         'status' => 1,
+        'store_id' => 1,
     ]);
 
     $category = DbCategory::create([
@@ -124,6 +129,7 @@ test('stock transfer to an existing destination warehouse increments stock prope
         'sales_price' => 40.00,
         'stock' => 100,
         'status' => 1,
+        'store_id' => 1,
     ]);
 
     // Source has 40, Destination already has 10
@@ -171,16 +177,19 @@ test('stock transfer update to a new destination warehouse initializes destinati
     $warehouseFrom = DbWarehouse::create([
         'warehouse_name' => 'Source Warehouse E',
         'status' => 1,
+        'store_id' => 1,
     ]);
 
     $warehouseTo1 = DbWarehouse::create([
         'warehouse_name' => 'Destination Warehouse F1',
         'status' => 1,
+        'store_id' => 1,
     ]);
 
     $warehouseTo2 = DbWarehouse::create([
         'warehouse_name' => 'Destination Warehouse F2 (New)',
         'status' => 1,
+        'store_id' => 1,
     ]);
 
     $category = DbCategory::create([
@@ -196,6 +205,7 @@ test('stock transfer update to a new destination warehouse initializes destinati
         'sales_price' => 40.00,
         'stock' => 100,
         'status' => 1,
+        'store_id' => 1,
     ]);
 
     // Initial stock in source = 50

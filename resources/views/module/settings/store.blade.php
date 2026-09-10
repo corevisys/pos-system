@@ -1,6 +1,21 @@
+@php
+    // Graceful logo fallback: if no logo is set OR the stored path no longer
+    // resolves to a real file, fall back to the neutral inline SVG placeholder
+    // (matches the invoice view's guarded @if($store && $store->store_logo)
+    // pattern) so a broken path never renders a raw broken-image icon.
+    //
+    // The placeholder is echoed with {{ }} (NOT @js): @js() JSON-escapes forward
+    // slashes, which would change 'data:image/svg+xml;base64,' into
+    // 'data:image\/svg+xml;base64,' and break the pinned test that asserts the
+    // literal marker. base64 output contains no < > & " chars, so {{ }} is safe.
+    $logoPreviewUrl = ($store->store_logo && file_exists(public_path('storage/' . $store->store_logo)))
+        ? Storage::url($store->store_logo)
+        : "data:image/svg+xml;base64," . base64_encode("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"96\" height=\"48\" viewBox=\"0 0 96 48\"><rect width=\"96\" height=\"48\" fill=\"#f1f5f9\"/><path d=\"M30 16h12v16H30z\" fill=\"#cbd5e1\"/><circle cx=\"54\" cy=\"20\" r=\"6\" fill=\"#cbd5e1\"/><rect x=\"54\" y=\"26\" width=\"12\" height=\"6\" fill=\"#cbd5e1\"/></svg>");
+@endphp
 <x-app-layout title="Store Settings">
     <div x-data="{
-        activeTab: 'store', 
+        activeTab: 'store',
+        isSubmitting: false,
         country: '{{ $store->country }}', 
         state: '{{ $store->state }}', 
         countries: {{ $countries->map(fn($c) => ['id' => $c->id, 'country' => $c->country])->toJson() }},
@@ -30,6 +45,12 @@
         },
 
         handleFormSubmit(e) {
+            // Double-submit guard: once a real submission is in flight, block
+            // any further submit attempts (mirrors the isSubmitting baseline).
+            if (this.isSubmitting) {
+                e.preventDefault();
+                return false;
+            }
             if (!this.confirmedCurrencyChange && this.selectedCurrencyId && String(this.selectedCurrencyId) !== String(this.originalCurrencyId)) {
                 e.preventDefault();
                 this.showCurrencyConfirmModal = true;
@@ -40,10 +61,12 @@
                 this.showLanguageConfirmModal = true;
                 return false;
             }
+            this.isSubmitting = true;
         },
         confirmAndSubmit() {
             this.confirmedCurrencyChange = true;
             this.showCurrencyConfirmModal = false;
+            this.isSubmitting = true;
             this.$nextTick(() => {
                 this.$refs.storeForm.submit();
             });
@@ -51,6 +74,7 @@
         confirmLanguageAndSubmit() {
             this.confirmedLanguageChange = true;
             this.showLanguageConfirmModal = false;
+            this.isSubmitting = true;
             this.$nextTick(() => {
                 this.$refs.storeForm.submit();
             });
@@ -71,7 +95,7 @@
                 }
             } catch (error) { console.error(error); }
         },
-        logoPreview: '{{ $store->store_logo ? Storage::url($store->store_logo) : "/placeholder-logo.png" }}',
+        logoPreview: '{{ $logoPreviewUrl }}',
         handleLogoPreview(event) {
             const file = event.target.files[0];
             if (file) {
@@ -83,107 +107,125 @@
         <!-- HEADER & BREADCRUMBS -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-6">
             <div>
-                <h1 class="text-xl font-black tracking-tight text-slate-800 dark:text-white">Store Settings <span class="text-[10px] font-bold text-slate-400 ml-2 italic uppercase tracking-widest" x-text="activeTab + ' Configuration'"></span></h1>
-                <div class="flex items-center gap-2 text-slate-400 font-medium mt-1">
-                    <a href="{{ route('dashboard') }}" class="hover:text-primary-600 transition-colors text-[10px] flex items-center gap-1 font-bold uppercase tracking-wider">
+                <h1 class="text-xl font-black tracking-tight text-text-primary dark:text-dark-text">Store Settings <span class="text-[10px] font-bold text-slate-400 ml-2 italic uppercase tracking-widest" x-text="activeTab + ' Configuration'"></span></h1>
+                <div class="flex items-center gap-2 text-text-muted font-medium mt-1">
+                    <a href="{{ route('dashboard') }}" class="hover:text-primary transition-colors text-[10px] flex items-center gap-1 font-bold uppercase tracking-wider">
                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
                          Home
                     </a>
                     <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
-                    <span class="text-slate-600 text-[10px] font-black uppercase tracking-wider">Store Settings</span>
+                    <span class="text-text-secondary text-[10px] font-black uppercase tracking-wider">Store Settings</span>
                 </div>
             </div>
         </div>
 
 
         <!-- TABS NAVIGATION -->
-        <div class="flex flex-wrap items-center gap-2 mb-4 p-1 bg-slate-100/50 dark:bg-slate-800/50 rounded-2xl w-fit">
-            <button @click="activeTab = 'store'" :class="activeTab === 'store' ? 'bg-white dark:bg-dark-card text-primary-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Store</button>
-            <button @click="activeTab = 'system'" :class="activeTab === 'system' ? 'bg-white dark:bg-dark-card text-primary-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">System</button>
-            <button @click="activeTab = 'sales'" :class="activeTab === 'sales' ? 'bg-white dark:bg-dark-card text-primary-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Sales</button>
-            <button @click="activeTab = 'prefixes'" :class="activeTab === 'prefixes' ? 'bg-white dark:bg-dark-card text-primary-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Prefixes</button>
+        <div class="flex flex-wrap items-center gap-2 mb-4 p-1 bg-background/60 dark:bg-slate-800/50 rounded-2xl w-fit border border-border dark:border-dark-border">
+            <button @click="activeTab = 'store'" :class="activeTab === 'store' ? 'bg-card dark:bg-dark-card text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary'" class="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Store</button>
+            <button @click="activeTab = 'system'" :class="activeTab === 'system' ? 'bg-card dark:bg-dark-card text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary'" class="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">System</button>
+            <button @click="activeTab = 'sales'" :class="activeTab === 'sales' ? 'bg-card dark:bg-dark-card text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary'" class="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Sales</button>
+            <button @click="activeTab = 'prefixes'" :class="activeTab === 'prefixes' ? 'bg-card dark:bg-dark-card text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary'" class="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Prefixes</button>
         </div>
 
         <!-- MAIN CONTAINER -->
-        <div class="bg-white dark:bg-dark-card rounded-3xl border border-slate-100 dark:border-dark-border shadow-sm overflow-hidden p-5">
-            <form x-ref="storeForm" @submit="handleFormSubmit($event)" action="{{ route('settings.store.update') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+        <x-card class="overflow-hidden p-0">
+            <div class="px-5 py-3 border-b border-border dark:border-dark-border bg-background/40 dark:bg-white/5 flex items-center gap-2">
+                <div class="p-1.5 bg-primary/10 rounded-lg">
+                    <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                </div>
+                <h2 class="text-sm font-black text-text-primary dark:text-white uppercase tracking-widest">Store Configuration</h2>
+            </div>
+
+            <form x-ref="storeForm" @submit="handleFormSubmit($event)" action="{{ route('settings.store.update') }}" method="POST" enctype="multipart/form-data" class="space-y-6 p-5 md:p-6">
                 @csrf
-                
+
+                @if ($errors->any())
+                    <div class="rounded-xl border border-danger/30 bg-danger/5 px-4 py-3">
+                        <p class="text-[10px] font-black uppercase tracking-widest text-danger mb-1">Please fix the following errors</p>
+                        <ul class="list-disc pl-5 space-y-0.5">
+                            @foreach ($errors->all() as $error)
+                                <li class="text-[11px] font-semibold text-danger">{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 <!-- TAB 1: STORE -->
                 <div x-show="activeTab === 'store'" x-transition:enter="transition ease-out duration-300 transform opacity-0 scale-95" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-6">
                         <!-- Left Column -->
                         <div class="space-y-6">
                             <div class="group relative">
-                                <label class="absolute -top-1.5 left-3 bg-white dark:bg-dark-card px-1 text-[9px] font-black uppercase text-slate-400 tracking-widest z-10 opacity-70">Store Code <span class="text-rose-500">*</span></label>
-                                <input type="text" value="{{ $store->store_code }}" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-xl py-2 px-3 text-[11px] font-bold text-slate-400 outline-none cursor-not-allowed" readonly>
+                                <label class="absolute -top-1.5 left-3 bg-white dark:bg-dark-card px-1 text-[9px] font-black uppercase text-slate-400 tracking-widest z-10 opacity-70">Store Code <span class="text-danger">*</span></label>
+                                <input type="text" value="{{ $store->store_code }}" class="input-base !py-3 !text-[11px] !font-bold !text-text-muted !cursor-not-allowed" readonly>
                             </div>
                             <div class="group relative">
-                                <label class="absolute -top-1.5 left-3 bg-white dark:bg-dark-card px-1 text-[9px] font-black uppercase text-slate-400 tracking-widest z-10">Store Name <span class="text-rose-500">*</span></label>
-                                <input type="text" name="store_name" value="{{ old('store_name', $store->store_name) }}" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-xl py-2 px-3 text-[11px] font-bold text-slate-700 dark:text-slate-300 outline-none transition-all focus:border-primary-500 focus:bg-white dark:focus:bg-dark-card shadow-inner-sm" required>
+                                <label class="absolute -top-2 left-4 bg-card dark:bg-dark-card px-2 text-[9px] font-black uppercase text-text-muted tracking-widest z-10">Store Name <span class="text-danger">*</span></label>
+                                <input type="text" name="store_name" value="{{ old('store_name', $store->store_name) }}" class="input-base !py-3 !text-[11px] !font-bold" required>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="group relative">
-                                    <label class="absolute -top-1.5 left-3 bg-white dark:bg-dark-card px-1 text-[9px] font-black uppercase text-slate-400 tracking-widest z-10">Mobile <span class="text-rose-500">*</span></label>
-                                    <input type="text" name="mobile" value="{{ old('mobile', $store->mobile) }}" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-xl py-2 px-3 text-[11px] font-bold text-slate-700 dark:text-slate-300 outline-none transition-all focus:border-primary-500 shadow-inner-sm" required>
+                                    <label class="absolute -top-2 left-4 bg-card dark:bg-dark-card px-2 text-[9px] font-black uppercase text-text-muted tracking-widest z-10">Mobile <span class="text-danger">*</span></label>
+                                    <input type="text" name="mobile" value="{{ old('mobile', $store->mobile) }}" class="input-base !py-3 !text-[11px] !font-bold" required>
                                 </div>
                                 <div class="group relative">
-                                    <label class="absolute -top-1.5 left-3 bg-white dark:bg-dark-card px-1 text-[9px] font-black uppercase text-slate-400 tracking-widest z-10">Email <span class="text-rose-500">*</span></label>
-                                    <input type="email" name="email" value="{{ old('email', $store->email) }}" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-xl py-2 px-3 text-[11px] font-bold text-slate-700 dark:text-slate-300 outline-none transition-all focus:border-primary-500 shadow-inner-sm" required>
+                                    <label class="absolute -top-2 left-4 bg-card dark:bg-dark-card px-2 text-[9px] font-black uppercase text-text-muted tracking-widest z-10">Email <span class="text-danger">*</span></label>
+                                    <input type="email" name="email" value="{{ old('email', $store->email) }}" class="input-base !py-3 !text-[11px] !font-bold" required>
                                 </div>
                             </div>
                             <div class="group relative">
-                                <label class="absolute -top-1.5 left-3 bg-white dark:bg-dark-card px-1 text-[9px] font-black uppercase text-slate-400 tracking-widest z-10">Phone</label>
-                                <input type="text" name="phone" value="{{ old('phone', $store->phone) }}" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-xl py-2 px-3 text-[11px] font-bold text-slate-700 dark:text-slate-300 outline-none transition-all focus:border-primary-500 shadow-inner-sm">
+                                <label class="absolute -top-2 left-4 bg-card dark:bg-dark-card px-2 text-[9px] font-black uppercase text-text-muted tracking-widest z-10">Phone</label>
+                                <input type="text" name="phone" value="{{ old('phone', $store->phone) }}" class="input-base !py-3 !text-[11px] !font-bold">
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div class="group relative">
-                                    <label class="absolute -top-1.5 left-3 bg-white dark:bg-dark-card px-1 text-[9px] font-black uppercase text-slate-400 tracking-widest z-10">GST Number</label>
-                                    <input type="text" name="gst_no" value="{{ old('gst_no', $store->gst_no) }}" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-xl py-2 px-3 text-[11px] font-bold text-slate-700 dark:text-slate-300 outline-none transition-all focus:border-primary-500 shadow-inner-sm">
+                                    <label class="absolute -top-2 left-4 bg-card dark:bg-dark-card px-2 text-[9px] font-black uppercase text-text-muted tracking-widest z-10">GST Number</label>
+                                    <input type="text" name="gst_no" value="{{ old('gst_no', $store->gst_no) }}" class="input-base !py-3 !text-[11px] !font-bold">
                                 </div>
                                 <div class="group relative">
-                                    <label class="absolute -top-1.5 left-3 bg-white dark:bg-dark-card px-1 text-[9px] font-black uppercase text-slate-400 tracking-widest z-10">VAT Number</label>
-                                    <input type="text" name="vat_no" value="{{ old('vat_no', $store->vat_no) }}" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-xl py-2 px-3 text-[11px] font-bold text-slate-700 dark:text-slate-300 outline-none transition-all focus:border-primary-500 shadow-inner-sm">
+                                    <label class="absolute -top-2 left-4 bg-card dark:bg-dark-card px-2 text-[9px] font-black uppercase text-text-muted tracking-widest z-10">VAT Number</label>
+                                    <input type="text" name="vat_no" value="{{ old('vat_no', $store->vat_no) }}" class="input-base !py-3 !text-[11px] !font-bold">
                                 </div>
                                 <div class="group relative">
-                                    <label class="absolute -top-1.5 left-3 bg-white dark:bg-dark-card px-1 text-[9px] font-black uppercase text-slate-400 tracking-widest z-10">PAN Number</label>
-                                    <input type="text" name="pan_no" value="{{ old('pan_no', $store->pan_no) }}" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-xl py-2 px-3 text-[11px] font-bold text-slate-700 dark:text-slate-300 outline-none transition-all focus:border-primary-500 shadow-inner-sm">
+                                    <label class="absolute -top-2 left-4 bg-card dark:bg-dark-card px-2 text-[9px] font-black uppercase text-text-muted tracking-widest z-10">PAN Number</label>
+                                    <input type="text" name="pan_no" value="{{ old('pan_no', $store->pan_no) }}" class="input-base !py-3 !text-[11px] !font-bold">
                                 </div>
                             </div>
                             <div class="group relative">
-                                <label class="absolute -top-1.5 left-3 bg-white dark:bg-dark-card px-1 text-[9px] font-black uppercase text-slate-400 tracking-widest z-10">Store Website</label>
-                                <input type="url" name="store_website" value="{{ old('store_website', $store->store_website) }}" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-xl py-2 px-3 text-[11px] font-bold text-slate-700 dark:text-slate-300 outline-none transition-all focus:border-primary-500 shadow-inner-sm">
+                                <label class="absolute -top-2 left-4 bg-card dark:bg-dark-card px-2 text-[9px] font-black uppercase text-text-muted tracking-widest z-10">Store Website</label>
+                                <input type="url" name="store_website" value="{{ old('store_website', $store->store_website) }}" class="input-base !py-3 !text-[11px] !font-bold">
                             </div>
                         </div>
 
                         <!-- Right Column -->
                         <div class="space-y-6">
                             <div class="group relative">
-                                <label class="absolute -top-1.5 left-3 bg-white dark:bg-dark-card px-1 text-[9px] font-black uppercase text-slate-400 tracking-widest z-10 transition-colors group-focus-within:text-emerald-500">Bank Details</label>
-                                <textarea name="bank_details" rows="3" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-xl py-2 px-3 text-[11px] font-bold text-slate-700 dark:text-slate-300 outline-none transition-all focus:border-emerald-500 shadow-inner-sm resize-none">{{ old('bank_details', $store->bank_details) }}</textarea>
+                                <label class="absolute -top-1.5 left-3 bg-white dark:bg-dark-card px-1 text-[9px] font-black uppercase text-slate-400 tracking-widest z-10 transition-colors group-focus-within:text-success">Bank Details</label>
+                                <textarea name="bank_details" rows="3" class="input-base !py-3 !text-[11px] !font-bold resize-none">{{ old('bank_details', $store->bank_details) }}</textarea>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="group relative">
-                                    <label class="absolute -top-1.5 left-3 bg-white dark:bg-dark-card px-1 text-[9px] font-black uppercase text-slate-400 tracking-widest z-10">Country</label>
+                                    <label class="absolute -top-2 left-4 bg-card dark:bg-dark-card px-2 text-[9px] font-black uppercase text-text-muted tracking-widest z-10">Country</label>
                                     <x-searchable-select name="country" :options="$countries" labelKey="country" valueKey="country" emptyOption="Select Country" emptyValue="" placeholder="Select Country" model="country" change="fetchStates()" />
                                 </div>
                                 <div class="group relative">
-                                    <label class="absolute -top-1.5 left-3 bg-white dark:bg-dark-card px-1 text-[9px] font-black uppercase text-slate-400 tracking-widest z-10">State</label>
+                                    <label class="absolute -top-2 left-4 bg-card dark:bg-dark-card px-2 text-[9px] font-black uppercase text-text-muted tracking-widest z-10">State</label>
                                     <x-searchable-select name="state" :options="[]" labelKey="state" valueKey="state" emptyOption="Select State" emptyValue="" placeholder="Select State" model="state" optionsExpression="states" />
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="group relative">
-                                    <label class="absolute -top-1.5 left-3 bg-white dark:bg-dark-card px-1 text-[9px] font-black uppercase text-slate-400 tracking-widest z-10">City <span class="text-rose-500">*</span></label>
-                                    <input type="text" name="city" value="{{ old('city', $store->city) }}" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-xl py-2 px-3 text-[11px] font-bold text-slate-700 dark:text-slate-300 outline-none transition-all focus:border-primary-500 shadow-inner-sm" required>
+                                    <label class="absolute -top-2 left-4 bg-card dark:bg-dark-card px-2 text-[9px] font-black uppercase text-text-muted tracking-widest z-10">City <span class="text-danger">*</span></label>
+                                    <input type="text" name="city" value="{{ old('city', $store->city) }}" class="input-base !py-3 !text-[11px] !font-bold" required>
                                 </div>
                                 <div class="group relative">
-                                    <label class="absolute -top-1.5 left-3 bg-white dark:bg-dark-card px-1 text-[9px] font-black uppercase text-slate-400 tracking-widest z-10">Postcode</label>
-                                    <input type="text" name="postcode" value="{{ old('postcode', $store->postcode) }}" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-xl py-2 px-3 text-[11px] font-bold text-slate-700 dark:text-slate-300 outline-none transition-all focus:border-primary-500 shadow-inner-sm">
+                                    <label class="absolute -top-2 left-4 bg-card dark:bg-dark-card px-2 text-[9px] font-black uppercase text-text-muted tracking-widest z-10">Postcode</label>
+                                    <input type="text" name="postcode" value="{{ old('postcode', $store->postcode) }}" class="input-base !py-3 !text-[11px] !font-bold">
                                 </div>
                             </div>
                             <div class="group relative">
-                                <label class="absolute -top-1.5 left-3 bg-white dark:bg-dark-card px-1 text-[9px] font-black uppercase text-slate-400 tracking-widest z-10">Address</label>
+                                <label class="absolute -top-2 left-4 bg-card dark:bg-dark-card px-2 text-[9px] font-black uppercase text-text-muted tracking-widest z-10">Address</label>
                                 <textarea name="address" rows="2" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-xl py-2 px-3 text-[11px] font-bold text-slate-700 dark:text-slate-300 outline-none transition-all focus:border-primary-500 shadow-inner-sm resize-none">{{ old('address', $store->address) }}</textarea>
                             </div>
                             <div class="flex flex-col gap-2">
@@ -213,35 +255,35 @@
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-6">
                         <div class="space-y-6">
                             <div class="group relative">
-                                <label class="absolute -top-1.5 left-3 bg-white dark:bg-dark-card px-1 text-[9px] font-black uppercase text-slate-400 tracking-widest z-10">Timezone <span class="text-rose-500">*</span></label>
+                                <label class="absolute -top-2 left-4 bg-card dark:bg-dark-card px-2 text-[9px] font-black uppercase text-text-muted tracking-widest z-10">Timezone <span class="text-danger">*</span></label>
                                 <x-searchable-select name="timezone" :options="$timezones" labelKey="name" valueKey="id" placeholder="Select Timezone" :value="old('timezone', $store->timezone ?? 'Asia/Dhaka')" required />
                             </div>
                             <div class="group relative">
-                                <label class="absolute -top-1.5 left-3 bg-white dark:bg-dark-card px-1 text-[9px] font-black uppercase text-slate-400 tracking-widest z-10">Date Format <span class="text-rose-500">*</span></label>
-                                <select name="date_format" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-xl py-2 px-3 text-[11px] font-bold text-slate-700 outline-none appearance-none">
+                                <label class="absolute -top-2 left-4 bg-card dark:bg-dark-card px-2 text-[9px] font-black uppercase text-text-muted tracking-widest z-10">Date Format <span class="text-danger">*</span></label>
+                                <select name="date_format" class="input-base !py-3 !text-[11px] !font-bold appearance-none">
                                     <option value="d-m-Y" {{ old('date_format', $store->date_format) == 'd-m-Y' ? 'selected' : '' }}>dd-mm-yyyy</option>
                                     <option value="m-d-Y" {{ old('date_format', $store->date_format) == 'm-d-Y' ? 'selected' : '' }}>mm-dd-yyyy</option>
                                     <option value="Y-m-d" {{ old('date_format', $store->date_format) == 'Y-m-d' ? 'selected' : '' }}>yyyy-mm-dd</option>
                                 </select>
                             </div>
                             <div class="group relative">
-                                <label class="absolute -top-1.5 left-3 bg-white dark:bg-dark-card px-1 text-[9px] font-black uppercase text-slate-400 tracking-widest z-10">Time Format <span class="text-rose-500">*</span></label>
-                                <select name="time_format" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-xl py-2 px-3 text-[11px] font-bold text-slate-700 outline-none appearance-none">
+                                <label class="absolute -top-2 left-4 bg-card dark:bg-dark-card px-2 text-[9px] font-black uppercase text-text-muted tracking-widest z-10">Time Format <span class="text-danger">*</span></label>
+                                <select name="time_format" class="input-base !py-3 !text-[11px] !font-bold appearance-none">
                                     <option value="h:i a" {{ old('time_format', $store->time_format) == 'h:i a' ? 'selected' : '' }}>12 Hours</option>
                                     <option value="H:i" {{ old('time_format', $store->time_format) == 'H:i' ? 'selected' : '' }}>24 Hours</option>
                                 </select>
                             </div>
                             <div class="group relative">
-                                <label class="absolute -top-1.5 left-3 bg-white dark:bg-dark-card px-1 text-[9px] font-black uppercase text-slate-400 tracking-widest z-10">Currency <span class="text-rose-500">*</span></label>
+                                <label class="absolute -top-2 left-4 bg-card dark:bg-dark-card px-2 text-[9px] font-black uppercase text-text-muted tracking-widest z-10">Currency <span class="text-danger">*</span></label>
                                 <x-searchable-select name="currency_id" :options="$currencies" labelKey="currency_name" valueKey="id" placeholder="Select Currency" :value="old('currency_id', $store->currency_id)" model="selectedCurrencyId" required />
-                                <p class="text-[9px] font-medium text-slate-400 mt-1 pl-1">
+                                <p class="text-[9px] font-medium text-text-muted mt-1 pl-1">
                                     Changing currency here sets the active currency across POS, invoices, and reports.
-                                    <a href="{{ route('settings.currency') }}" class="text-primary-600 dark:text-primary-400 hover:underline font-bold">Manage Currencies &rarr;</a>
+                                    <a href="{{ route('settings.currency') }}" class="text-primary hover:underline font-bold">Manage Currencies &rarr;</a>
                                 </p>
                             </div>
                             <div class="group relative">
-                                <label class="absolute -top-1.5 left-3 bg-white dark:bg-dark-card px-1 text-[9px] font-black uppercase text-slate-400 tracking-widest z-10">Currency Symbol Placement <span class="text-rose-500">*</span></label>
-                                <select name="currency_placement" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-xl py-2 px-3 text-[11px] font-bold text-slate-700 outline-none appearance-none">
+                                <label class="absolute -top-2 left-4 bg-card dark:bg-dark-card px-2 text-[9px] font-black uppercase text-text-muted tracking-widest z-10">Currency Symbol Placement <span class="text-danger">*</span></label>
+                                <select name="currency_placement" class="input-base !py-3 !text-[11px] !font-bold appearance-none">
                                     <option value="before" {{ old('currency_placement', $store->currency_placement) == 'before' ? 'selected' : '' }}>Before Amount</option>
                                     <option value="after" {{ old('currency_placement', $store->currency_placement) == 'after' ? 'selected' : '' }}>After Amount</option>
                                 </select>
@@ -249,14 +291,14 @@
                         </div>
                         <div class="space-y-6">
                             <div class="group relative">
-                                <label class="absolute -top-1.5 left-3 bg-white dark:bg-dark-card px-1 text-[9px] font-black uppercase text-slate-400 tracking-widest z-10">Language <span class="text-rose-500">*</span></label>
+                                <label class="absolute -top-2 left-4 bg-card dark:bg-dark-card px-2 text-[9px] font-black uppercase text-text-muted tracking-widest z-10">Language <span class="text-danger">*</span></label>
                                 <x-searchable-select name="language_id" :options="$languages" labelKey="language" valueKey="id" placeholder="Select Language" :value="old('language_id', $store->language_id)" model="selectedLanguageId" required />
-                                <p class="text-[9px] font-medium text-slate-400 dark:text-slate-500 mt-1 italic">
+                                <p class="text-[9px] font-medium text-text-muted mt-1 italic">
                                     Changing store language sets the system-wide active language. <a href="{{ route('settings.languages.index') }}" class="text-primary-500 hover:underline font-bold">Manage languages &rarr;</a>
                                 </p>
                             </div>
                             <div class="flex items-center gap-4 px-2 pt-1" x-data="{ toggled: {{ $store->round_off ? 'true' : 'false' }} }">
-                                <span class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Enable Round Off?</span>
+                                <span class="text-[10px] font-black uppercase text-text-muted tracking-widest">Enable Round Off?</span>
                                 <input type="hidden" name="round_off" :value="toggled ? 1 : 0">
                                 <div class="relative inline-block w-9 h-5 cursor-pointer" @click="toggled = !toggled">
                                     <div :class="toggled ? 'bg-primary-500' : 'bg-slate-200'" class="w-full h-full rounded-full transition-colors duration-200"></div>
@@ -265,8 +307,8 @@
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="group relative">
-                                    <label class="absolute -top-1.5 left-3 bg-white dark:bg-dark-card px-1 text-[9px] font-black uppercase text-slate-400 tracking-widest z-10">Decimals <span class="text-rose-500">*</span></label>
-                                    <select name="decimals" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-xl py-2 px-3 text-[11px] font-bold text-slate-700 outline-none appearance-none">
+                                    <label class="absolute -top-2 left-4 bg-card dark:bg-dark-card px-2 text-[9px] font-black uppercase text-text-muted tracking-widest z-10">Decimals <span class="text-danger">*</span></label>
+                                    <select name="decimals" class="input-base !py-3 !text-[11px] !font-bold appearance-none">
                                         <option value="0" {{ old('decimals', $store->decimals) == 0 ? 'selected' : '' }}>0</option>
                                         <option value="1" {{ old('decimals', $store->decimals) == 1 ? 'selected' : '' }}>1</option>
                                         <option value="2" {{ old('decimals', $store->decimals) == 2 ? 'selected' : '' }}>2</option>
@@ -274,8 +316,8 @@
                                     </select>
                                 </div>
                                 <div class="group relative">
-                                    <label class="absolute -top-1.5 left-3 bg-white dark:bg-dark-card px-1 text-[9px] font-black uppercase text-slate-400 tracking-widest z-10">Decimals for Quantity <span class="text-rose-500">*</span></label>
-                                    <select name="qty_decimals" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-xl py-2 px-3 text-[11px] font-bold text-slate-700 outline-none appearance-none">
+                                    <label class="absolute -top-2 left-4 bg-card dark:bg-dark-card px-2 text-[9px] font-black uppercase text-text-muted tracking-widest z-10">Decimals for Quantity <span class="text-danger">*</span></label>
+                                    <select name="qty_decimals" class="input-base !py-3 !text-[11px] !font-bold appearance-none">
                                         <option value="0" {{ old('qty_decimals', $store->qty_decimals) == 0 ? 'selected' : '' }}>0</option>
                                         <option value="1" {{ old('qty_decimals', $store->qty_decimals) == 1 ? 'selected' : '' }}>1</option>
                                         <option value="2" {{ old('qty_decimals', $store->qty_decimals) == 2 ? 'selected' : '' }}>2</option>
@@ -298,7 +340,7 @@
                                         <div :class="toggled ? 'bg-primary-500' : 'bg-slate-200'" class="w-full h-full rounded-full transition-colors duration-200"></div>
                                         <div :class="toggled ? 'translate-x-4' : 'translate-x-0.5'" class="absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform duration-200 shadow-sm"></div>
                                     </div>
-                                    <span class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Show Amount in Words on Invoice</span>
+                                    <span class="text-[10px] font-black uppercase text-text-muted tracking-widest">Show Amount in Words on Invoice</span>
                                 </div>
                                 <div class="flex items-center gap-4 px-2" x-data="{ toggled: {{ $store->change_return ? 'true' : 'false' }} }">
                                     <input type="hidden" name="change_return" :value="toggled ? 1 : 0">
@@ -306,7 +348,7 @@
                                         <div :class="toggled ? 'bg-primary-500' : 'bg-slate-200'" class="w-full h-full rounded-full transition-colors duration-200"></div>
                                         <div :class="toggled ? 'translate-x-4' : 'translate-x-0.5'" class="absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform duration-200 shadow-sm"></div>
                                     </div>
-                                    <span class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Show Paid Amount and Change Return?</span>
+                                    <span class="text-[10px] font-black uppercase text-text-muted tracking-widest">Show Paid Amount and Change Return?</span>
                                 </div>
                             </div>
                             <div class="space-y-4 pt-1">
@@ -316,35 +358,35 @@
                                         <div :class="toggled ? 'bg-primary-500' : 'bg-slate-200'" class="w-full h-full rounded-full transition-colors duration-200"></div>
                                         <div :class="toggled ? 'translate-x-4' : 'translate-x-0.5'" class="absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform duration-200 shadow-sm"></div>
                                     </div>
-                                    <span class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Show Previous Balance on Invoice</span>
+                                    <span class="text-[10px] font-black uppercase text-text-muted tracking-widest">Show Previous Balance on Invoice</span>
                                 </div>
                             </div>
                          </div>
                          <div class="space-y-6 border-t border-slate-50 dark:border-dark-border pt-6">
                             <div class="group relative">
-                                <label class="absolute -top-1.5 left-3 bg-white dark:bg-dark-card px-1 text-[9px] font-black uppercase text-slate-400 tracking-widest z-10 transition-colors group-focus-within:text-primary-500">Sales Invoice Footer Text</label>
+                                <label class="absolute -top-1.5 left-3 bg-white dark:bg-dark-card px-1 text-[9px] font-black uppercase text-slate-400 tracking-widest z-10 transition-colors group-focus-within:text-primary">Sales Invoice Footer Text</label>
                                 <textarea name="sales_invoice_footer_text" rows="2" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-xl py-2 px-3 text-[11px] font-bold text-slate-700 outline-none transition-all focus:border-primary-500 shadow-inner-sm resize-none">{{ old('sales_invoice_footer_text', $store->sales_invoice_footer_text) }}</textarea>
                             </div>
                             <div class="space-y-3">
                                 <div class="flex flex-wrap items-center gap-6 px-1" x-data="{ visibility: {{ $store->t_and_c_status ? '1' : '0' }} }">
-                                    <span class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Invoice Terms and Conditions</span>
+                                    <span class="text-[10px] font-black uppercase text-text-muted tracking-widest">Invoice Terms and Conditions</span>
                                     <input type="hidden" name="t_and_c_status" :value="visibility">
                                     <div class="flex gap-3">
                                         <label class="flex items-center gap-2 cursor-pointer group" @click="visibility = 1">
                                             <div class="w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center p-0.5" :class="visibility == 1 ? 'border-primary-500' : 'border-slate-200'">
                                                 <div class="w-1.5 h-1.5 bg-primary-500 rounded-full" x-show="visibility == 1"></div>
                                             </div>
-                                            <span class="text-[9px] font-black uppercase text-slate-500 tracking-widest group-hover:text-primary-500 transition-colors" :class="visibility == 1 ? 'text-primary-500' : ''">Show on Invoice</span>
+                                            <span class="text-[9px] font-black uppercase text-text-secondary tracking-widest group-hover:text-primary transition-colors" :class="visibility == 1 ? 'text-primary-500' : ''">Show on Invoice</span>
                                         </label>
                                         <label class="flex items-center gap-2 cursor-pointer group" @click="visibility = 0">
                                             <div class="w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center p-0.5" :class="visibility == 0 ? 'border-primary-500' : 'border-slate-200'">
                                                 <div class="w-1.5 h-1.5 bg-primary-500 rounded-full" x-show="visibility == 0"></div>
                                             </div>
-                                            <span class="text-[9px] font-black uppercase text-slate-300 tracking-widest group-hover:text-primary-500 transition-colors" :class="visibility == 0 ? 'text-primary-500' : ''">Hide on Invoice</span>
+                                            <span class="text-[9px] font-black uppercase text-text-muted tracking-widest group-hover:text-primary transition-colors" :class="visibility == 0 ? 'text-primary-500' : ''">Hide on Invoice</span>
                                         </label>
                                     </div>
                                 </div>
-                                <textarea name="invoice_terms" rows="4" class="w-full bg-slate-50/20 dark:bg-slate-800/10 border border-slate-200 dark:border-dark-border rounded-2xl p-4 text-[10px] font-medium text-slate-500 leading-relaxed outline-none focus:border-emerald-500 shadow-inner-sm transition-all resize-none italic">{{ old('invoice_terms', $store->invoice_terms) }}</textarea>
+                                <textarea name="invoice_terms" rows="4" class="input-base !py-3 !text-[11px] !font-bold resize-none italic">{{ old('invoice_terms', $store->invoice_terms) }}</textarea>
                             </div>
                          </div>
                     </div>
@@ -352,106 +394,104 @@
 
                 <!-- TAB 4: PREFIXES -->
                 <div x-show="activeTab === 'prefixes'" x-cloak x-transition:enter="transition ease-out duration-300 transform opacity-0 scale-95">
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-y-4 gap-x-12">
-                        <!-- Left Column -->
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between group">
-                                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest min-w-[120px]">Category <span class="text-rose-500">*</span></label>
-                                <input type="text" name="category_init" value="{{ old('category_init', $store->category_init) }}" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-lg py-1.5 px-3 text-[11px] font-black text-slate-700 outline-none transition-all focus:border-primary-500 shadow-inner-sm">
+                    <!-- Compact responsive grid: same 19 fields, same order, same
+                         name= attributes — presentation/grouping only. -->
+                    <!-- Spacing matches the page convention used by the Store
+                         (gap-x-8 gap-y-6) / System (gap-x-8 gap-y-6) tabs. -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-8 gap-y-6">
+                            <div class="flex items-center justify-between gap-3 group">
+                                <label class="text-[10px] font-black uppercase text-text-muted tracking-widest min-w-[120px]">Category <span class="text-danger">*</span></label>
+                                <input type="text" name="category_init" value="{{ old('category_init', $store->category_init) }}" class="input-base !py-2 !text-[11px] !font-black">
                             </div>
-                            <div class="flex items-center justify-between group">
-                                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest min-w-[120px]">Supplier <span class="text-rose-500">*</span></label>
-                                <input type="text" name="supplier_init" value="{{ old('supplier_init', $store->supplier_init) }}" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-lg py-1.5 px-3 text-[11px] font-black text-slate-700 outline-none transition-all focus:border-primary-500 shadow-inner-sm">
+                            <div class="flex items-center justify-between gap-3 group">
+                                <label class="text-[10px] font-black uppercase text-text-muted tracking-widest min-w-[120px]">Supplier <span class="text-danger">*</span></label>
+                                <input type="text" name="supplier_init" value="{{ old('supplier_init', $store->supplier_init) }}" class="input-base !py-2 !text-[11px] !font-black">
                             </div>
-                            <div class="flex items-center justify-between group">
-                                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest min-w-[120px]">Purchase Return <span class="text-rose-500">*</span></label>
-                                <input type="text" name="purchase_return_init" value="{{ old('purchase_return_init', $store->purchase_return_init) }}" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-lg py-1.5 px-3 text-[11px] font-black text-slate-700 outline-none transition-all focus:border-primary-500 shadow-inner-sm">
+                            <div class="flex items-center justify-between gap-3 group">
+                                <label class="text-[10px] font-black uppercase text-text-muted tracking-widest min-w-[120px]">Purchase Return <span class="text-danger">*</span></label>
+                                <input type="text" name="purchase_return_init" value="{{ old('purchase_return_init', $store->purchase_return_init) }}" class="input-base !py-2 !text-[11px] !font-black">
                             </div>
-                            <div class="flex items-center justify-between group">
-                                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest min-w-[120px]">Sales <span class="text-rose-500">*</span></label>
-                                <input type="text" name="sales_init" value="{{ old('sales_init', $store->sales_init) }}" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-lg py-1.5 px-3 text-[11px] font-black text-slate-700 outline-none transition-all focus:border-primary-500 shadow-inner-sm">
+                            <div class="flex items-center justify-between gap-3 group">
+                                <label class="text-[10px] font-black uppercase text-text-muted tracking-widest min-w-[120px]">Sales <span class="text-danger">*</span></label>
+                                <input type="text" name="sales_init" value="{{ old('sales_init', $store->sales_init) }}" class="input-base !py-2 !text-[11px] !font-black">
                             </div>
-                            <div class="flex items-center justify-between group">
-                                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest min-w-[120px]">Expense <span class="text-rose-500">*</span></label>
-                                <input type="text" name="expense_init" value="{{ old('expense_init', $store->expense_init) }}" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-lg py-1.5 px-3 text-[11px] font-black text-slate-700 outline-none transition-all focus:border-primary-500 shadow-inner-sm">
+                            <div class="flex items-center justify-between gap-3 group">
+                                <label class="text-[10px] font-black uppercase text-text-muted tracking-widest min-w-[120px]">Expense <span class="text-danger">*</span></label>
+                                <input type="text" name="expense_init" value="{{ old('expense_init', $store->expense_init) }}" class="input-base !py-2 !text-[11px] !font-black">
                             </div>
-                            <div class="flex items-center justify-between group">
-                                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest min-w-[120px]">Quotation <span class="text-rose-500">*</span></label>
-                                <input type="text" name="quotation_init" value="{{ old('quotation_init', $store->quotation_init) }}" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-lg py-1.5 px-3 text-[11px] font-black text-slate-700 outline-none transition-all focus:border-primary-500 shadow-inner-sm">
+                            <div class="flex items-center justify-between gap-3 group">
+                                <label class="text-[10px] font-black uppercase text-text-muted tracking-widest min-w-[120px]">Quotation <span class="text-danger">*</span></label>
+                                <input type="text" name="quotation_init" value="{{ old('quotation_init', $store->quotation_init) }}" class="input-base !py-2 !text-[11px] !font-black">
                             </div>
-                            <div class="flex items-center justify-between group">
-                                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest min-w-[120px]">Sales Payment <span class="text-rose-500">*</span></label>
-                                <input type="text" name="sales_payment_init" value="{{ old('sales_payment_init', $store->sales_payment_init) }}" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-lg py-1.5 px-3 text-[11px] font-black text-slate-700 outline-none transition-all focus:border-primary-500 shadow-inner-sm">
+                            <div class="flex items-center justify-between gap-3 group">
+                                <label class="text-[10px] font-black uppercase text-text-muted tracking-widest min-w-[120px]">Sales Payment <span class="text-danger">*</span></label>
+                                <input type="text" name="sales_payment_init" value="{{ old('sales_payment_init', $store->sales_payment_init) }}" class="input-base !py-2 !text-[11px] !font-black">
                             </div>
-                            <div class="flex items-center justify-between group">
-                                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest min-w-[120px]">Purchase Payment <span class="text-rose-500">*</span></label>
-                                <input type="text" name="purchase_payment_init" value="{{ old('purchase_payment_init', $store->purchase_payment_init) }}" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-lg py-1.5 px-3 text-[11px] font-black text-slate-700 outline-none transition-all focus:border-primary-500 shadow-inner-sm">
+                            <div class="flex items-center justify-between gap-3 group">
+                                <label class="text-[10px] font-black uppercase text-text-muted tracking-widest min-w-[120px]">Purchase Payment <span class="text-danger">*</span></label>
+                                <input type="text" name="purchase_payment_init" value="{{ old('purchase_payment_init', $store->purchase_payment_init) }}" class="input-base !py-2 !text-[11px] !font-black">
                             </div>
-                            <div class="flex items-center justify-between group">
-                                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest min-w-[120px]">Expense Payment <span class="text-rose-500">*</span></label>
-                                <input type="text" name="expense_payment_init" value="{{ old('expense_payment_init', $store->expense_payment_init) }}" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-lg py-1.5 px-3 text-[11px] font-black text-slate-700 outline-none transition-all focus:border-primary-500 shadow-inner-sm">
+                            <div class="flex items-center justify-between gap-3 group">
+                                <label class="text-[10px] font-black uppercase text-text-muted tracking-widest min-w-[120px]">Expense Payment <span class="text-danger">*</span></label>
+                                <input type="text" name="expense_payment_init" value="{{ old('expense_payment_init', $store->expense_payment_init) }}" class="input-base !py-2 !text-[11px] !font-black">
                             </div>
-                        </div>
-
-                        <!-- Right Column -->
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between group">
-                                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest min-w-[120px]">Item <span class="text-rose-500">*</span></label>
-                                <input type="text" name="item_init" value="{{ old('item_init', $store->item_init) }}" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-lg py-1.5 px-3 text-[11px] font-black text-slate-700 outline-none transition-all focus:border-primary-500 shadow-inner-sm">
+                            <div class="flex items-center justify-between gap-3 group">
+                                <label class="text-[10px] font-black uppercase text-text-muted tracking-widest min-w-[120px]">Item <span class="text-danger">*</span></label>
+                                <input type="text" name="item_init" value="{{ old('item_init', $store->item_init) }}" class="input-base !py-2 !text-[11px] !font-black">
                             </div>
-                            <div class="flex items-center justify-between group">
-                                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest min-w-[120px]">Purchase <span class="text-rose-500">*</span></label>
-                                <input type="text" name="purchase_init" value="{{ old('purchase_init', $store->purchase_init) }}" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-lg py-1.5 px-3 text-[11px] font-black text-slate-700 outline-none transition-all focus:border-primary-500 shadow-inner-sm">
+                            <div class="flex items-center justify-between gap-3 group">
+                                <label class="text-[10px] font-black uppercase text-text-muted tracking-widest min-w-[120px]">Purchase <span class="text-danger">*</span></label>
+                                <input type="text" name="purchase_init" value="{{ old('purchase_init', $store->purchase_init) }}" class="input-base !py-2 !text-[11px] !font-black">
                             </div>
-                            <div class="flex items-center justify-between group">
-                                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest min-w-[120px]">Customer <span class="text-rose-500">*</span></label>
-                                <input type="text" name="customer_init" value="{{ old('customer_init', $store->customer_init) }}" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-lg py-1.5 px-3 text-[11px] font-black text-slate-700 outline-none transition-all focus:border-primary-500 shadow-inner-sm">
+                            <div class="flex items-center justify-between gap-3 group">
+                                <label class="text-[10px] font-black uppercase text-text-muted tracking-widest min-w-[120px]">Customer <span class="text-danger">*</span></label>
+                                <input type="text" name="customer_init" value="{{ old('customer_init', $store->customer_init) }}" class="input-base !py-2 !text-[11px] !font-black">
                             </div>
-                            <div class="flex items-center justify-between group">
-                                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest min-w-[120px]">Sales Return <span class="text-rose-500">*</span></label>
-                                <input type="text" name="sales_return_init" value="{{ old('sales_return_init', $store->sales_return_init) }}" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-lg py-1.5 px-3 text-[11px] font-black text-slate-700 outline-none transition-all focus:border-primary-500 shadow-inner-sm">
+                            <div class="flex items-center justify-between gap-3 group">
+                                <label class="text-[10px] font-black uppercase text-text-muted tracking-widest min-w-[120px]">Sales Return <span class="text-danger">*</span></label>
+                                <input type="text" name="sales_return_init" value="{{ old('sales_return_init', $store->sales_return_init) }}" class="input-base !py-2 !text-[11px] !font-black">
                             </div>
-                            <div class="flex items-center justify-between group">
-                                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest min-w-[120px]">Accounts <span class="text-rose-500">*</span></label>
-                                <input type="text" name="accounts_init" value="{{ old('accounts_init', $store->accounts_init) }}" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-lg py-1.5 px-3 text-[11px] font-black text-slate-700 outline-none transition-all focus:border-primary-500 shadow-inner-sm">
+                            <div class="flex items-center justify-between gap-3 group">
+                                <label class="text-[10px] font-black uppercase text-text-muted tracking-widest min-w-[120px]">Accounts <span class="text-danger">*</span></label>
+                                <input type="text" name="accounts_init" value="{{ old('accounts_init', $store->accounts_init) }}" class="input-base !py-2 !text-[11px] !font-black">
                             </div>
-                            <div class="flex items-center justify-between group">
-                                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest min-w-[120px]">Journal <span class="text-rose-500">*</span></label>
-                                <input type="text" name="journal_init" value="{{ old('journal_init', $store->journal_init) }}" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-lg py-1.5 px-3 text-[11px] font-black text-slate-700 outline-none transition-all focus:border-primary-500 shadow-inner-sm">
+                            <div class="flex items-center justify-between gap-3 group">
+                                <label class="text-[10px] font-black uppercase text-text-muted tracking-widest min-w-[120px]">Journal <span class="text-danger">*</span></label>
+                                <input type="text" name="journal_init" value="{{ old('journal_init', $store->journal_init) }}" class="input-base !py-2 !text-[11px] !font-black">
                             </div>
-                            <div class="flex items-center justify-between group">
-                                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest min-w-[120px]">Money Transfer <span class="text-rose-500">*</span></label>
-                                <input type="text" name="money_transfer_init" value="{{ old('money_transfer_init', $store->money_transfer_init) }}" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-lg py-1.5 px-3 text-[11px] font-black text-slate-700 outline-none transition-all focus:border-primary-500 shadow-inner-sm">
+                            <div class="flex items-center justify-between gap-3 group">
+                                <label class="text-[10px] font-black uppercase text-text-muted tracking-widest min-w-[120px]">Money Transfer <span class="text-danger">*</span></label>
+                                <input type="text" name="money_transfer_init" value="{{ old('money_transfer_init', $store->money_transfer_init) }}" class="input-base !py-2 !text-[11px] !font-black">
                             </div>
-                            <div class="flex items-center justify-between group">
-                                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest min-w-[120px]">Sales Return Payment <span class="text-rose-500">*</span></label>
-                                <input type="text" name="sales_return_payment_init" value="{{ old('sales_return_payment_init', $store->sales_return_payment_init) }}" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-lg py-1.5 px-3 text-[11px] font-black text-slate-700 outline-none transition-all focus:border-primary-500 shadow-inner-sm">
+                            <div class="flex items-center justify-between gap-3 group">
+                                <label class="text-[10px] font-black uppercase text-text-muted tracking-widest min-w-[120px]">Sales Return Payment <span class="text-danger">*</span></label>
+                                <input type="text" name="sales_return_payment_init" value="{{ old('sales_return_payment_init', $store->sales_return_payment_init) }}" class="input-base !py-2 !text-[11px] !font-black">
                             </div>
-                            <div class="flex items-center justify-between group">
-                                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest min-w-[120px]">Purchase Return Payment <span class="text-rose-500">*</span></label>
-                                <input type="text" name="purchase_return_payment_init" value="{{ old('purchase_return_payment_init', $store->purchase_return_payment_init) }}" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-lg py-1.5 px-3 text-[11px] font-black text-slate-700 outline-none transition-all focus:border-primary-500 shadow-inner-sm">
+                            <div class="flex items-center justify-between gap-3 group">
+                                <label class="text-[10px] font-black uppercase text-text-muted tracking-widest min-w-[120px]">Purchase Return Payment <span class="text-danger">*</span></label>
+                                <input type="text" name="purchase_return_payment_init" value="{{ old('purchase_return_payment_init', $store->purchase_return_payment_init) }}" class="input-base !py-2 !text-[11px] !font-black">
                             </div>
-                            <div class="flex items-center justify-between group">
-                                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest min-w-[130px]">Customers Advance Payments <span class="text-rose-500">*</span></label>
-                                <input type="text" name="cust_advance_init" value="{{ old('cust_advance_init', $store->cust_advance_init) }}" class="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-dark-border rounded-lg py-1.5 px-3 text-[11px] font-black text-slate-700 outline-none transition-all focus:border-primary-500 shadow-inner-sm">
+                            <div class="flex items-center justify-between gap-3 group">
+                                <label class="text-[10px] font-black uppercase text-text-muted tracking-widest min-w-[130px]">Customers Advance Payments <span class="text-danger">*</span></label>
+                                <input type="text" name="cust_advance_init" value="{{ old('cust_advance_init', $store->cust_advance_init) }}" class="input-base !py-2 !text-[11px] !font-black">
                             </div>
-                        </div>
                     </div>
                 </div>
 
                 <!-- PERSISTENT ACTION BUTTONS -->
                 <div class="flex flex-col md:flex-row justify-end items-center gap-3 pt-4 border-t border-slate-50 dark:border-dark-border">
-                    <button type="submit" class="w-full md:w-48 py-2.5 bg-emerald-500 text-white rounded-xl text-[11px] font-black uppercase tracking-[0.2em] shadow-lg shadow-emerald-200 dark:shadow-none hover:bg-emerald-600 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                        Save Settings
+                    <button type="submit" :disabled="isSubmitting" class="btn-primary w-full md:w-48 !bg-emerald-500 hover:!bg-emerald-600 !py-3 !text-[11px] uppercase tracking-widest disabled:opacity-50 disabled:pointer-events-none">
+                         <svg x-show="!isSubmitting" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                         <svg x-show="isSubmitting" x-cloak class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                        <span x-text="isSubmitting ? 'Saving...' : 'Save Settings'"></span>
                     </button>
-                    <a href="{{ route('dashboard') }}" class="w-full md:w-32 py-2.5 bg-amber-500 text-white rounded-xl text-[11px] font-black uppercase tracking-[0.2em] shadow-lg shadow-amber-200 dark:shadow-none hover:bg-amber-600 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                    <a href="{{ route('dashboard') }}" class="btn-secondary w-full md:w-32 !bg-amber-500 !border-amber-500 !text-white hover:!bg-amber-600 !py-3 !text-[11px] uppercase tracking-widest">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
                         Close
                     </a>
                 </div>
             </form>
-        </div>
+        </x-card>
 
         <!-- CURRENCY SWITCH CONFIRMATION MODAL -->
         <div x-show="showCurrencyConfirmModal" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>

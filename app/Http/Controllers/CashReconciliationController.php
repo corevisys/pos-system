@@ -1093,7 +1093,12 @@ class CashReconciliationController extends Controller
         $cashRefunds = (float) $salesReturnsQuery->sum('payment');
 
         // 4. Cash Expenses
+        // PROTECTED CONTRACT: filter shape (store_id + payment_type='Cash' +
+        // account_id + expense_date) must be preserved. delete_bit=0 is added
+        // because db_expense now uses soft-delete (Phase 1) and a deleted
+        // expense must never be counted.
         $cashExpenses = (float) DbExpense::where('store_id', $storeId)
+            ->where('delete_bit', 0)
             ->where('payment_type', 'Cash')
             ->where('account_id', $accountId)
             ->whereDate('expense_date', $date)

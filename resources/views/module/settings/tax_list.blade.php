@@ -1,127 +1,106 @@
 <x-app-layout title="Tax List">
     <div>
-        
         <!-- HEADER & BREADCRUMBS -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-6">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
             <div>
-                <h1 class="text-xl font-black tracking-tight text-slate-800 dark:text-white">Tax List <span class="text-[10px] font-bold text-slate-400 ml-2 italic uppercase tracking-widest">View/Search Tax</span></h1>
-                <div class="flex items-center gap-2 text-slate-400 font-medium mt-1">
-                    <a href="{{ route('dashboard') }}" class="hover:text-primary-600 transition-colors text-[10px] flex items-center gap-1 font-bold uppercase tracking-wider">
-                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-                         Home
+                <h1 class="text-xl font-black tracking-tight text-text-primary dark:text-dark-text">Tax List <span class="text-[10px] font-bold text-text-muted ml-2 italic uppercase tracking-widest">View/Search Tax</span></h1>
+                <div class="flex items-center gap-2 text-text-muted font-medium mt-1">
+                    <a href="{{ route('dashboard') }}" class="hover:text-primary transition-colors text-[10px] flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                        Home
                     </a>
                     <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
-                    <span class="text-slate-600 text-[10px] font-black uppercase tracking-wider">Tax List</span>
+                    <span class="text-text-secondary text-[10px] font-bold uppercase tracking-widest">Tax List</span>
                 </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 gap-8">
-            
+        <!-- SHARED SEARCH BAR (server-side, filters both lists) -->
+        <form action="{{ route('settings.tax') }}" method="GET" class="card p-3 mb-4 flex flex-wrap justify-between items-center gap-3">
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="relative group">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search tax name..." class="input-base !w-56 !py-1.5 !pl-8 !pr-3 !text-[10px] !rounded-xl shadow-sm">
+                    <svg class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+                <button type="submit" class="btn-primary !py-1.5 !px-3 text-[10px] font-black uppercase tracking-widest">Search</button>
+                @if(request('search'))
+                    <a href="{{ route('settings.tax') }}" class="text-[9px] font-black uppercase tracking-wider text-danger hover:underline">Clear</a>
+                @endif
+            </div>
+        </form>
+
+        <div class="grid grid-cols-1 gap-6">
+
             <!-- SECTION 1: TAX LIST -->
-            <div class="space-y-3" x-data="{ 
-                showAddModal: false, 
+            <div class="space-y-3" x-data="{
+                showAddModal: false,
                 showEditModal: false,
                 editId: null,
                 editName: '',
                 editRate: '',
-                editStatus: 1
+                editStatus: 1,
+                isSubmitting: false
             }">
                 <div class="flex justify-between items-center px-1">
-                    <h2 class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Tax List</h2>
-                    <button @click="showAddModal = true" class="px-3 py-1.5 bg-rose-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-md shadow-rose-200/50 dark:shadow-none flex items-center justify-center gap-2">
+                    <h2 class="text-[10px] font-black uppercase text-text-muted tracking-[0.2em]">Tax List</h2>
+                    <button @click="showAddModal = true" class="btn-primary !py-1.5 !px-3 !text-[10px] tracking-widest">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>
                         New Tax
                     </button>
                 </div>
 
-                <div class="bg-white dark:bg-dark-card rounded-2xl border border-slate-100 dark:border-dark-border overflow-hidden shadow-sm">
-                    <!-- Table Controls -->
-                    <div class="p-3 border-b border-slate-50 dark:border-dark-border bg-slate-50/20 dark:bg-white/5 flex flex-wrap justify-between items-center gap-4">
-                        <div class="flex items-center gap-2">
-                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Show</label>
-                            <select class="bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border rounded-lg py-1 px-1.5 text-[10px] font-bold outline-none cursor-pointer">
-                                <option>10</option>
-                                <option>25</option>
-                            </select>
-                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Entries</label>
-                        </div>
-
-                        <div class="flex flex-wrap items-center gap-2">
-                            <div class="flex bg-slate-50 dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200 dark:border-dark-border">
-                                <button class="px-2 py-1 text-[9px] font-black uppercase tracking-widest text-primary-600 hover:bg-white dark:hover:bg-dark-card rounded-md transition-all">Copy</button>
-                                <button class="px-2 py-1 text-[9px] font-black uppercase tracking-widest text-primary-600 hover:bg-white dark:hover:bg-dark-card rounded-md transition-all">Excel</button>
-                                <button class="px-2 py-1 text-[9px] font-black uppercase tracking-widest text-primary-600 hover:bg-white dark:hover:bg-dark-card rounded-md transition-all">PDF</button>
-                                <button class="px-2 py-1 text-[9px] font-black uppercase tracking-widest text-primary-600 hover:bg-white dark:hover:bg-dark-card rounded-md transition-all">Print</button>
-                                <button class="px-2 py-1 text-[9px] font-black uppercase tracking-widest text-primary-600 hover:bg-white dark:hover:bg-dark-card rounded-md transition-all">CSV</button>
-                                <button class="px-2 py-1 text-[9px] font-black uppercase tracking-widest text-primary-600 hover:bg-white dark:hover:bg-dark-card rounded-md transition-all text font-bold">Cols</button>
-                            </div>
-                            <div class="relative group">
-                                <input type="text" placeholder="Search..." class="bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border rounded-lg py-1 px-7 text-[10px] font-bold focus:ring-1 focus:ring-primary-500 outline-none w-32 focus:w-48 transition-all shadow-sm">
-                                <svg class="w-3.5 h-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Table Content -->
+                <x-card padding="p-0" class="overflow-hidden">
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-dark-border">
+                        <table class="w-full text-left">
+                            <thead class="bg-background dark:bg-dark-bg border-b border-border dark:border-dark-border">
                                 <tr>
-                                    <th class="px-4 py-3 w-8 text-center">
-                                        <input type="checkbox" class="w-3 h-3 rounded border-slate-300 text-primary-600 focus:ring-primary-500">
-                                    </th>
-                                    <th class="px-4 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Tax Name</th>
-                                    <th class="px-4 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Tax(%)</th>
-                                    <th class="px-4 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
-                                    <th class="px-4 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Action</th>
+                                    <th class="px-4 py-2.5 text-[9px] font-black text-text-muted uppercase tracking-widest">Tax Name</th>
+                                    <th class="px-4 py-2.5 text-[9px] font-black text-text-muted uppercase tracking-widest">Tax(%)</th>
+                                    <th class="px-4 py-2.5 text-[9px] font-black text-text-muted uppercase tracking-widest text-center">Status</th>
+                                    <th class="px-4 py-2.5 text-[9px] font-black text-text-muted uppercase tracking-widest text-center">Action</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-50 dark:divide-dark-border">
+                            <tbody class="divide-y divide-border-light dark:divide-dark-border">
                                 @forelse ($taxes as $tax)
                                     <tr class="hover:bg-slate-50/30 dark:hover:bg-slate-800/30 transition-colors group">
-                                        <td class="px-4 py-2.5 text-center">
-                                            <input type="checkbox" class="w-3 h-3 rounded border-slate-300 text-primary-600 focus:ring-primary-500">
+                                        <td class="px-4 py-1.5">
+                                            <span class="text-[11px] font-bold text-text-primary dark:text-dark-text">{{ $tax->tax_name }}</span>
                                         </td>
-                                        <td class="px-4 py-2.5">
-                                            <span class="text-[11px] font-bold text-slate-700 dark:text-slate-200">{{ $tax->tax_name }}</span>
+                                        <td class="px-4 py-1.5">
+                                            <span class="text-[10px] font-black tabular-nums text-text-secondary dark:text-text-muted">{{ $tax->tax }}</span>
                                         </td>
-                                        <td class="px-4 py-2.5">
-                                            <span class="text-[10px] font-black tabular-nums text-slate-600 dark:text-slate-400">{{ $tax->tax }}</span>
+                                        <td class="px-4 py-1.5 text-center">
+                                            <span class="{{ $tax->status ? 'bg-success/10 text-success border-success/20' : 'bg-danger/10 text-danger border-danger/20' }} px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest border">
+                                                {{ $tax->status ? 'Active' : 'Inactive' }}
+                                            </span>
                                         </td>
-                                        <td class="px-4 py-2.5 text-center">
-                                            @if ($tax->status)
-                                                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-600 rounded-[4px] text-[8px] font-black uppercase tracking-widest">Active</span>
-                                            @else
-                                                <span class="px-2 py-0.5 bg-rose-100 text-rose-600 rounded-[4px] text-[8px] font-black uppercase tracking-widest">Inactive</span>
-                                            @endif
-                                        </td>
-                                        <td class="px-4 py-2.5 text-center">
-                                             <div x-data="{ open: false }" class="relative inline-block text-left">
-                                                <button @click="open = !open" class="px-2.5 py-1 bg-white border border-slate-200 dark:bg-dark-card dark:border-dark-border rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-1 hover:border-primary-500 transition-all shadow-sm text-slate-600 dark:text-slate-300">
-                                                    Action
-                                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
-                                                </button>
-                                                <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-28 origin-top-right rounded-xl bg-white dark:bg-dark-card shadow-xl border border-slate-100 dark:border-dark-border z-20 overflow-hidden" x-cloak>
-                                                    <div class="py-1">
-                                                        <button @click="editId = {{ $tax->id }}; editName = '{{ $tax->tax_name }}'; editRate = '{{ $tax->tax }}'; editStatus = {{ $tax->status }}; showEditModal = true; open = false;" class="w-full text-left block px-3 py-2 text-[9px] font-bold text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-500/10 transition-colors uppercase tracking-widest">Edit</button>
-                                                        <form :action="'/settings/tax/' + {{ $tax->id }}" method="POST" onsubmit="return confirm('Are you sure?')">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="w-full text-left block px-3 py-2 text-[9px] font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors uppercase tracking-widest border-t border-slate-50 dark:border-dark-border italic">Delete</button>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                             </div>
+                                        <td class="px-4 py-1.5 text-center">
+                                            <x-dropdown align="right" width="40">
+                                                <x-slot name="trigger">
+                                                    <button type="button" class="btn-primary px-3 py-1 !text-[9px] uppercase tracking-widest flex items-center gap-1.5 leading-none">
+                                                        Action
+                                                        <svg class="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                                                    </button>
+                                                </x-slot>
+                                                <x-slot name="content">
+                                                    <button
+                                                        @click="editId = @js($tax->id); editName = @js($tax->tax_name); editRate = @js((string) $tax->tax); editStatus = @js((int) $tax->status); showEditModal = true"
+                                                        class="w-full text-left block px-4 py-2 text-sm text-text-primary dark:text-dark-text hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors uppercase tracking-widest">
+                                                        Edit
+                                                    </button>
+                                                    <form :action="'/settings/tax/' + @js($tax->id)" method="POST" onsubmit="return confirm('Are you sure?')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="w-full text-left block px-4 py-2 text-sm text-danger hover:bg-danger-light dark:hover:bg-danger/10 transition-colors uppercase tracking-widest">Delete</button>
+                                                    </form>
+                                                </x-slot>
+                                            </x-dropdown>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="px-4 py-8 text-center">
-                                            <div class="flex flex-col items-center justify-center gap-2">
-                                                <svg class="w-8 h-8 text-slate-100 dark:text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0a2 2 0 01-2 2H6a2 2 0 01-2-2m16 0l-8 8-8-8"></path></svg>
-                                                <span class="text-[9px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest">No taxes found</span>
-                                            </div>
+                                        <td colspan="4" class="px-6 py-8 text-center">
+                                            <p class="text-[9px] font-black text-text-muted uppercase tracking-widest italic leading-none">No taxes found</p>
                                         </td>
                                     </tr>
                                 @endforelse
@@ -129,11 +108,15 @@
                         </table>
                     </div>
 
-                    <!-- Footer -->
-                    <div class="p-3 border-t border-slate-50 dark:border-dark-border bg-slate-50/20 dark:bg-white/5 flex flex-wrap justify-between items-center gap-4">
-                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">Showing {{ $taxes->count() }} entries</p>
+                    <div class="px-4 py-3 border-t border-border dark:border-dark-border bg-background/40 dark:bg-white/5 flex flex-wrap justify-between items-center gap-3">
+                        <p class="text-[8px] font-black text-text-muted uppercase tracking-widest italic leading-none">
+                            Showing {{ $taxes->firstItem() ?? 0 }} to {{ $taxes->lastItem() ?? 0 }} of {{ $taxes->total() }} entries
+                        </p>
+                        <div class="flex gap-1">
+                            {{ $taxes->links() }}
+                        </div>
                     </div>
-                </div>
+                </x-card>
 
                 <!-- ADD TAX MODAL -->
                 <div x-show="showAddModal" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
@@ -142,36 +125,36 @@
                             <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
                         </div>
                         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                        <div x-show="showAddModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="inline-block align-bottom bg-white dark:bg-dark-card rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-100 dark:border-dark-border">
-                            <form action="/settings/tax" method="POST">
+                        <div x-show="showAddModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="inline-block align-bottom card rounded-2xl text-left overflow-hidden shadow-modal transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                            <form action="/settings/tax" method="POST" @submit="isSubmitting = true">
                                 @csrf
                                 <input type="hidden" name="group_bit" value="0">
-                                <div class="px-6 py-4 border-b border-slate-50 dark:border-dark-border flex justify-between items-center">
-                                    <h3 class="text-xs font-black uppercase tracking-[0.2em] text-slate-800 dark:text-white">Add Individual Tax</h3>
-                                    <button @click="showAddModal = false" type="button" class="text-slate-400 hover:text-rose-600 transition-colors">
+                                <div class="px-6 py-4 border-b border-border dark:border-dark-border flex justify-between items-center">
+                                    <h3 class="text-xs font-black uppercase tracking-[0.2em] text-text-primary dark:text-dark-text">Add Individual Tax</h3>
+                                    <button @click="showAddModal = false" type="button" class="text-text-muted hover:text-danger transition-colors">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                     </button>
                                 </div>
                                 <div class="px-6 py-6 space-y-4">
                                     <div class="space-y-1">
-                                        <label class="text-[9px] font-black uppercase tracking-widest text-slate-400">Tax Name</label>
-                                        <input type="text" name="tax_name" required placeholder="e.g. VAT" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-dark-border rounded-xl text-xs font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-text-muted">Tax Name <span class="text-danger">*</span></label>
+                                        <input type="text" name="tax_name" required placeholder="e.g. VAT" class="input-base">
                                     </div>
                                     <div class="space-y-1">
-                                        <label class="text-[9px] font-black uppercase tracking-widest text-slate-400">Tax Rate (%)</label>
-                                        <input type="number" name="tax" required step="0.01" placeholder="0.00" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-dark-border rounded-xl text-xs font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-text-muted">Tax Rate (%) <span class="text-danger">*</span></label>
+                                        <input type="number" name="tax" required step="0.01" placeholder="0.00" class="input-base">
                                     </div>
                                     <div class="space-y-1">
-                                        <label class="text-[9px] font-black uppercase tracking-widest text-slate-400">Status</label>
-                                        <select name="status" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-dark-border rounded-xl text-xs font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-text-muted">Status</label>
+                                        <select name="status" class="input-base">
                                             <option value="1">Active</option>
                                             <option value="0">Inactive</option>
                                         </select>
                                     </div>
                                 </div>
-                                <div class="px-6 py-4 bg-slate-50/50 dark:bg-white/5 border-t border-slate-50 dark:border-dark-border flex justify-end gap-3">
-                                    <button @click="showAddModal = false" type="button" class="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-700 transition-colors">Cancel</button>
-                                    <button type="submit" class="px-6 py-2 bg-rose-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-200/50 dark:shadow-none">Save Tax</button>
+                                <div class="px-6 py-4 bg-background/50 dark:bg-white/5 border-t border-border dark:border-dark-border flex justify-end gap-3">
+                                    <button @click="showAddModal = false" type="button" class="btn-secondary">Cancel</button>
+                                    <button type="submit" :disabled="isSubmitting" class="btn-primary disabled:opacity-60 disabled:cursor-not-allowed">Save Tax</button>
                                 </div>
                             </form>
                         </div>
@@ -185,35 +168,35 @@
                             <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
                         </div>
                         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                        <div x-show="showEditModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="inline-block align-bottom bg-white dark:bg-dark-card rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-100 dark:border-dark-border">
-                            <form :action="'/settings/tax/' + editId" method="POST">
+                        <div x-show="showEditModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="inline-block align-bottom card rounded-2xl text-left overflow-hidden shadow-modal transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                            <form :action="'/settings/tax/' + editId" method="POST" @submit="isSubmitting = true">
                                 @csrf
-                                <div class="px-6 py-4 border-b border-slate-50 dark:border-dark-border flex justify-between items-center">
-                                    <h3 class="text-xs font-black uppercase tracking-[0.2em] text-slate-800 dark:text-white">Edit Tax</h3>
-                                    <button @click="showEditModal = false" type="button" class="text-slate-400 hover:text-rose-600 transition-colors">
+                                <div class="px-6 py-4 border-b border-border dark:border-dark-border flex justify-between items-center">
+                                    <h3 class="text-xs font-black uppercase tracking-[0.2em] text-text-primary dark:text-dark-text">Edit Tax</h3>
+                                    <button @click="showEditModal = false" type="button" class="text-text-muted hover:text-danger transition-colors">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                     </button>
                                 </div>
                                 <div class="px-6 py-6 space-y-4">
                                     <div class="space-y-1">
-                                        <label class="text-[9px] font-black uppercase tracking-widest text-slate-400">Tax Name</label>
-                                        <input type="text" name="tax_name" required x-model="editName" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-dark-border rounded-xl text-xs font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-text-muted">Tax Name <span class="text-danger">*</span></label>
+                                        <input type="text" name="tax_name" required x-model="editName" class="input-base">
                                     </div>
                                     <div class="space-y-1">
-                                        <label class="text-[9px] font-black uppercase tracking-widest text-slate-400">Tax Rate (%)</label>
-                                        <input type="number" name="tax" required step="0.01" x-model="editRate" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-dark-border rounded-xl text-xs font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-text-muted">Tax Rate (%) <span class="text-danger">*</span></label>
+                                        <input type="number" name="tax" required step="0.01" x-model="editRate" class="input-base">
                                     </div>
                                     <div class="space-y-1">
-                                        <label class="text-[9px] font-black uppercase tracking-widest text-slate-400">Status</label>
-                                        <select name="status" x-model="editStatus" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-dark-border rounded-xl text-xs font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-text-muted">Status</label>
+                                        <select name="status" x-model="editStatus" class="input-base">
                                             <option value="1">Active</option>
                                             <option value="0">Inactive</option>
                                         </select>
                                     </div>
                                 </div>
-                                <div class="px-6 py-4 bg-slate-50/50 dark:bg-white/5 border-t border-slate-50 dark:border-dark-border flex justify-end gap-3">
-                                    <button @click="showEditModal = false" type="button" class="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-700 transition-colors">Cancel</button>
-                                    <button type="submit" class="px-6 py-2 bg-rose-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-200/50 dark:shadow-none">Update Tax</button>
+                                <div class="px-6 py-4 bg-background/50 dark:bg-white/5 border-t border-border dark:border-dark-border flex justify-end gap-3">
+                                    <button @click="showEditModal = false" type="button" class="btn-secondary">Cancel</button>
+                                    <button type="submit" :disabled="isSubmitting" class="btn-primary disabled:opacity-60 disabled:cursor-not-allowed">Update Tax</button>
                                 </div>
                             </form>
                         </div>
@@ -222,112 +205,89 @@
             </div>
 
             <!-- SECTION 2: TAX GROUPS -->
-            <div class="space-y-3" x-data="{ 
+            <div class="space-y-3" x-data="{
                 showAddGroupModal: false,
                 showEditGroupModal: false,
                 editGroupId: null,
                 editGroupName: '',
                 editGroupSubtaxes: [],
-                editGroupStatus: 1
+                editGroupStatus: 1,
+                isSubmitting: false
             }">
                 <div class="flex justify-between items-center px-1">
-                    <h2 class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Tax Groups</h2>
-                    <button @click="showAddGroupModal = true" class="px-3 py-1.5 bg-rose-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-md shadow-rose-200/50 dark:shadow-none flex items-center justify-center gap-2">
+                    <h2 class="text-[10px] font-black uppercase text-text-muted tracking-[0.2em]">Tax Groups</h2>
+                    <button @click="showAddGroupModal = true" class="btn-primary !py-1.5 !px-3 !text-[10px] tracking-widest">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>
                         New Tax Group
                     </button>
                 </div>
 
-                <div class="bg-white dark:bg-dark-card rounded-2xl border border-slate-100 dark:border-dark-border overflow-hidden shadow-sm">
-                    <!-- Table Controls -->
-                    <div class="p-3 border-b border-slate-50 dark:border-dark-border bg-slate-50/20 dark:bg-white/5 flex flex-wrap justify-between items-center gap-4">
-                        <div class="flex items-center gap-2">
-                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Show</label>
-                            <select class="bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border rounded-lg py-1 px-1.5 text-[10px] font-bold outline-none cursor-pointer">
-                                <option>10</option>
-                                <option>25</option>
-                            </select>
-                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Entries</label>
-                        </div>
-
-                        <div class="flex flex-wrap items-center gap-2">
-                            <div class="flex bg-slate-50 dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200 dark:border-dark-border">
-                                <button class="px-2 py-1 text-[9px] font-black uppercase tracking-widest text-primary-600 hover:bg-white dark:hover:bg-dark-card rounded-md transition-all">Copy</button>
-                                <button class="px-2 py-1 text-[9px] font-black uppercase tracking-widest text-primary-600 hover:bg-white dark:hover:bg-dark-card rounded-md transition-all">Excel</button>
-                                <button class="px-2 py-1 text-[9px] font-black uppercase tracking-widest text-primary-600 hover:bg-white dark:hover:bg-dark-card rounded-md transition-all">PDF</button>
-                                <button class="px-2 py-1 text-[9px] font-black uppercase tracking-widest text-primary-600 hover:bg-white dark:hover:bg-dark-card rounded-md transition-all">Print</button>
-                                <button class="px-2 py-1 text-[9px] font-black uppercase tracking-widest text-primary-600 hover:bg-white dark:hover:bg-dark-card rounded-md transition-all">CSV</button>
-                                <button class="px-2 py-1 text-[9px] font-black uppercase tracking-widest text-primary-600 hover:bg-white dark:hover:bg-dark-card rounded-md transition-all text font-bold">Cols</button>
-                            </div>
-                            <div class="relative group">
-                                <input type="text" placeholder="Search..." class="bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border rounded-lg py-1 px-7 text-[10px] font-bold focus:ring-1 focus:ring-primary-500 outline-none w-32 focus:w-48 transition-all shadow-sm">
-                                <svg class="w-3.5 h-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Table Content -->
+                <x-card padding="p-0" class="overflow-hidden">
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-dark-border">
+                        <table class="w-full text-left">
+                            <thead class="bg-background dark:bg-dark-bg border-b border-border dark:border-dark-border">
                                 <tr>
-                                    <th class="px-4 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Tax Name</th>
-                                    <th class="px-4 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Tax(%)</th>
-                                    <th class="px-4 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Sub Taxes</th>
-                                    <th class="px-4 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
-                                    <th class="px-4 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Action</th>
+                                    <th class="px-4 py-2.5 text-[9px] font-black text-text-muted uppercase tracking-widest">Tax Name</th>
+                                    <th class="px-4 py-2.5 text-[9px] font-black text-text-muted uppercase tracking-widest">Tax(%)</th>
+                                    <th class="px-4 py-2.5 text-[9px] font-black text-text-muted uppercase tracking-widest">Sub Taxes</th>
+                                    <th class="px-4 py-2.5 text-[9px] font-black text-text-muted uppercase tracking-widest text-center">Status</th>
+                                    <th class="px-4 py-2.5 text-[9px] font-black text-text-muted uppercase tracking-widest text-center">Action</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-50 dark:divide-dark-border">
+                            <tbody class="divide-y divide-border-light dark:divide-dark-border">
                                 @forelse ($taxGroups as $group)
                                     <tr class="hover:bg-slate-50/30 dark:hover:bg-slate-800/30 transition-colors group">
-                                        <td class="px-4 py-2.5">
-                                            <span class="text-[11px] font-bold text-slate-700 dark:text-slate-200">{{ $group->tax_name }}</span>
+                                        <td class="px-4 py-1.5">
+                                            <span class="text-[11px] font-bold text-text-primary dark:text-dark-text">{{ $group->tax_name }}</span>
                                         </td>
-                                        <td class="px-4 py-2.5">
-                                            <span class="text-[10px] font-black tabular-nums text-slate-600 dark:text-slate-400">{{ $group->tax }}</span>
+                                        <td class="px-4 py-1.5">
+                                            <span class="text-[10px] font-black tabular-nums text-text-secondary dark:text-text-muted">{{ $group->tax }}</span>
                                         </td>
-                                        <td class="px-4 py-2.5">
-                                            <span class="text-[10px] font-black tabular-nums text-slate-600 dark:text-slate-400">
+                                        <td class="px-4 py-1.5">
+                                            <span class="text-[10px] font-black tabular-nums text-text-secondary dark:text-text-muted">
                                                 @php
-                                                    $subtaxNames = \App\Models\DbTax::whereIn('id', explode(',', $group->subtax_ids))->pluck('tax_name')->toArray();
-                                                    echo implode(', ', $subtaxNames);
+                                                    // Phase 1.6: names pre-resolved once in the controller
+                                                    // ($subtaxNames keyed by id) instead of a per-row query.
+                                                    $names = collect(explode(',', (string) $group->subtax_ids))
+                                                        ->map(fn($id) => $subtaxNames[(int) $id] ?? null)
+                                                        ->filter()
+                                                        ->all();
+                                                    echo implode(', ', $names);
                                                 @endphp
                                             </span>
                                         </td>
-                                        <td class="px-4 py-2.5 text-center">
-                                            @if ($group->status)
-                                                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-600 rounded-[4px] text-[8px] font-black uppercase tracking-widest">Active</span>
-                                            @else
-                                                <span class="px-2 py-0.5 bg-rose-100 text-rose-600 rounded-[4px] text-[8px] font-black uppercase tracking-widest">Inactive</span>
-                                            @endif
+                                        <td class="px-4 py-1.5 text-center">
+                                            <span class="{{ $group->status ? 'bg-success/10 text-success border-success/20' : 'bg-danger/10 text-danger border-danger/20' }} px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest border">
+                                                {{ $group->status ? 'Active' : 'Inactive' }}
+                                            </span>
                                         </td>
-                                        <td class="px-4 py-2.5 text-center">
-                                             <div x-data="{ open: false }" class="relative inline-block text-left">
-                                                <button @click="open = !open" class="px-2.5 py-1 bg-white border border-slate-200 dark:bg-dark-card dark:border-dark-border rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-1 hover:border-primary-500 transition-all shadow-sm text-slate-600 dark:text-slate-300">
-                                                    Action
-                                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
-                                                </button>
-                                                <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-28 origin-top-right rounded-xl bg-white dark:bg-dark-card shadow-xl border border-slate-100 dark:border-dark-border z-20 overflow-hidden" x-cloak>
-                                                    <div class="py-1">
-                                                        <button @click="editGroupId = {{ $group->id }}; editGroupName = '{{ $group->tax_name }}'; editGroupSubtaxes = {{ json_encode(explode(',', $group->subtax_ids)) }}; editGroupStatus = {{ $group->status }}; showEditGroupModal = true; open = false;" class="w-full text-left block px-3 py-2 text-[9px] font-bold text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-500/10 transition-colors uppercase tracking-widest">Edit</button>
-                                                        <form :action="'/settings/tax/' + {{ $group->id }}" method="POST" onsubmit="return confirm('Are you sure?')">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="w-full text-left block px-3 py-2 text-[9px] font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors uppercase tracking-widest border-t border-slate-50 dark:border-dark-border italic">Delete</button>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                             </div>
+                                        <td class="px-4 py-1.5 text-center">
+                                            <x-dropdown align="right" width="40">
+                                                <x-slot name="trigger">
+                                                    <button type="button" class="btn-primary px-3 py-1 !text-[9px] uppercase tracking-widest flex items-center gap-1.5 leading-none">
+                                                        Action
+                                                        <svg class="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                                                    </button>
+                                                </x-slot>
+                                                <x-slot name="content">
+                                                    <button
+                                                        @click="editGroupId = @js($group->id); editGroupName = @js($group->tax_name); editGroupSubtaxes = @js(explode(',', $group->subtax_ids)); editGroupStatus = @js((int) $group->status); showEditGroupModal = true"
+                                                        class="w-full text-left block px-4 py-2 text-sm text-text-primary dark:text-dark-text hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors uppercase tracking-widest">
+                                                        Edit
+                                                    </button>
+                                                    <form :action="'/settings/tax/' + @js($group->id)" method="POST" onsubmit="return confirm('Are you sure?')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="w-full text-left block px-4 py-2 text-sm text-danger hover:bg-danger-light dark:hover:bg-danger/10 transition-colors uppercase tracking-widest">Delete</button>
+                                                    </form>
+                                                </x-slot>
+                                            </x-dropdown>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="px-4 py-8 text-center">
-                                            <div class="flex flex-col items-center justify-center gap-2">
-                                                <svg class="w-8 h-8 text-slate-100 dark:text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0a2 2 0 01-2 2H6a2 2 0 01-2-2m16 0l-8 8-8-8"></path></svg>
-                                                <span class="text-[9px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest">No tax groups found</span>
-                                            </div>
+                                        <td colspan="5" class="px-6 py-8 text-center">
+                                            <p class="text-[9px] font-black text-text-muted uppercase tracking-widest italic leading-none">No tax groups found</p>
                                         </td>
                                     </tr>
                                 @endforelse
@@ -335,11 +295,15 @@
                         </table>
                     </div>
 
-                    <!-- Footer -->
-                    <div class="p-3 border-t border-slate-50 dark:border-dark-border bg-slate-50/20 dark:bg-white/5 flex flex-wrap justify-between items-center gap-4">
-                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">Showing {{ $taxGroups->count() }} entries</p>
+                    <div class="px-4 py-3 border-t border-border dark:border-dark-border bg-background/40 dark:bg-white/5 flex flex-wrap justify-between items-center gap-3">
+                        <p class="text-[8px] font-black text-text-muted uppercase tracking-widest italic leading-none">
+                            Showing {{ $taxGroups->firstItem() ?? 0 }} to {{ $taxGroups->lastItem() ?? 0 }} of {{ $taxGroups->total() }} entries
+                        </p>
+                        <div class="flex gap-1">
+                            {{ $taxGroups->links() }}
+                        </div>
                     </div>
-                </div>
+                </x-card>
 
                 <!-- ADD TAX GROUP MODAL -->
                 <div x-show="showAddGroupModal" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
@@ -348,44 +312,44 @@
                             <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
                         </div>
                         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                        <div x-show="showAddGroupModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="inline-block align-bottom bg-white dark:bg-dark-card rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-100 dark:border-dark-border">
-                            <form action="{{ route('settings.tax.store') }}" method="POST">
+                        <div x-show="showAddGroupModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="inline-block align-bottom card rounded-2xl text-left overflow-hidden shadow-modal transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                            <form action="{{ route('settings.tax.store') }}" method="POST" @submit="isSubmitting = true">
                                 @csrf
                                 <input type="hidden" name="group_bit" value="1">
-                                <input type="hidden" name="tax" value="0"> <!-- Calculated on backend or via JS if needed, but the model has it -->
-                                <div class="px-6 py-4 border-b border-slate-50 dark:border-dark-border flex justify-between items-center">
-                                    <h3 class="text-xs font-black uppercase tracking-[0.2em] text-slate-800 dark:text-white">Add Tax Group</h3>
-                                    <button @click="showAddGroupModal = false" type="button" class="text-slate-400 hover:text-rose-600 transition-colors">
+                                <input type="hidden" name="tax" value="0">
+                                <div class="px-6 py-4 border-b border-border dark:border-dark-border flex justify-between items-center">
+                                    <h3 class="text-xs font-black uppercase tracking-[0.2em] text-text-primary dark:text-dark-text">Add Tax Group</h3>
+                                    <button @click="showAddGroupModal = false" type="button" class="text-text-muted hover:text-danger transition-colors">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                     </button>
                                 </div>
                                 <div class="px-6 py-6 space-y-4">
                                     <div class="space-y-1">
-                                        <label class="text-[9px] font-black uppercase tracking-widest text-slate-400">Group Name</label>
-                                        <input type="text" name="tax_name" required placeholder="e.g. Sales Tax Group" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-dark-border rounded-xl text-xs font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-text-muted">Group Name <span class="text-danger">*</span></label>
+                                        <input type="text" name="tax_name" required placeholder="e.g. Sales Tax Group" class="input-base">
                                     </div>
                                     <div class="space-y-1">
-                                        <label class="text-[9px] font-black uppercase tracking-widest text-slate-400">Select Sub Taxes</label>
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-text-muted">Select Sub Taxes</label>
                                         <div class="grid grid-cols-2 gap-2 mt-2">
-                                            @foreach ($taxes as $tax)
-                                                <label class="flex items-center gap-2 p-2 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-dark-border cursor-pointer hover:bg-slate-100 transition-colors">
-                                                    <input type="checkbox" name="subtax_ids_array[]" value="{{ $tax->id }}" class="w-3.5 h-3.5 rounded border-slate-300 text-rose-600 focus:ring-rose-500/20">
-                                                    <span class="text-[10px] font-bold text-slate-600 dark:text-slate-300">{{ $tax->tax_name }} ({{ $tax->tax }}%)</span>
+                                            @foreach ($allTaxes as $tax)
+                                                <label class="flex items-center gap-2 p-2 rounded-input bg-background dark:bg-white/5 border border-border dark:border-dark-border cursor-pointer hover:bg-slate-100 transition-colors">
+                                                    <input type="checkbox" name="subtax_ids_array[]" value="{{ $tax->id }}" class="w-3.5 h-3.5 rounded border-slate-300 text-primary focus:ring-primary/30">
+                                                    <span class="text-[10px] font-bold text-text-secondary dark:text-dark-text">{{ $tax->tax_name }} ({{ $tax->tax }}%)</span>
                                                 </label>
                                             @endforeach
                                         </div>
                                     </div>
                                     <div class="space-y-1">
-                                        <label class="text-[9px] font-black uppercase tracking-widest text-slate-400">Status</label>
-                                        <select name="status" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-dark-border rounded-xl text-xs font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-text-muted">Status</label>
+                                        <select name="status" class="input-base">
                                             <option value="1">Active</option>
                                             <option value="0">Inactive</option>
                                         </select>
                                     </div>
                                 </div>
-                                <div class="px-6 py-4 bg-slate-50/50 dark:bg-white/5 border-t border-slate-50 dark:border-dark-border flex justify-end gap-3">
-                                    <button @click="showAddGroupModal = false" type="button" class="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-700 transition-colors">Cancel</button>
-                                    <button type="submit" class="px-6 py-2 bg-rose-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-200/50 dark:shadow-none">Save Group</button>
+                                <div class="px-6 py-4 bg-background/50 dark:bg-white/5 border-t border-border dark:border-dark-border flex justify-end gap-3">
+                                    <button @click="showAddGroupModal = false" type="button" class="btn-secondary">Cancel</button>
+                                    <button type="submit" :disabled="isSubmitting" class="btn-primary disabled:opacity-60 disabled:cursor-not-allowed">Save Group</button>
                                 </div>
                             </form>
                         </div>
@@ -399,42 +363,42 @@
                             <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
                         </div>
                         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                        <div x-show="showEditGroupModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="inline-block align-bottom bg-white dark:bg-dark-card rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-100 dark:border-dark-border">
-                            <form :action="'/settings/tax/' + editGroupId" method="POST">
+                        <div x-show="showEditGroupModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="inline-block align-bottom card rounded-2xl text-left overflow-hidden shadow-modal transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                            <form :action="'/settings/tax/' + editGroupId" method="POST" @submit="isSubmitting = true">
                                 @csrf
-                                <div class="px-6 py-4 border-b border-slate-50 dark:border-dark-border flex justify-between items-center">
-                                    <h3 class="text-xs font-black uppercase tracking-[0.2em] text-slate-800 dark:text-white">Edit Tax Group</h3>
-                                    <button @click="showEditGroupModal = false" type="button" class="text-slate-400 hover:text-rose-600 transition-colors">
+                                <div class="px-6 py-4 border-b border-border dark:border-dark-border flex justify-between items-center">
+                                    <h3 class="text-xs font-black uppercase tracking-[0.2em] text-text-primary dark:text-dark-text">Edit Tax Group</h3>
+                                    <button @click="showEditGroupModal = false" type="button" class="text-text-muted hover:text-danger transition-colors">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                     </button>
                                 </div>
                                 <div class="px-6 py-6 space-y-4">
                                     <div class="space-y-1">
-                                        <label class="text-[9px] font-black uppercase tracking-widest text-slate-400">Group Name</label>
-                                        <input type="text" name="tax_name" required x-model="editGroupName" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-dark-border rounded-xl text-xs font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-text-muted">Group Name <span class="text-danger">*</span></label>
+                                        <input type="text" name="tax_name" required x-model="editGroupName" class="input-base">
                                     </div>
                                     <div class="space-y-1">
-                                        <label class="text-[9px] font-black uppercase tracking-widest text-slate-400">Select Sub Taxes</label>
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-text-muted">Select Sub Taxes</label>
                                         <div class="grid grid-cols-2 gap-2 mt-2">
-                                            @foreach ($taxes as $tax)
-                                                <label class="flex items-center gap-2 p-2 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-dark-border cursor-pointer hover:bg-slate-100 transition-colors">
-                                                    <input type="checkbox" name="subtax_ids_array[]" value="{{ $tax->id }}" :checked="editGroupSubtaxes.includes('{{ $tax->id }}')" class="w-3.5 h-3.5 rounded border-slate-300 text-rose-600 focus:ring-rose-500/20">
-                                                    <span class="text-[10px] font-bold text-slate-600 dark:text-slate-300">{{ $tax->tax_name }} ({{ $tax->tax }}%)</span>
+                                            @foreach ($allTaxes as $tax)
+                                                <label class="flex items-center gap-2 p-2 rounded-input bg-background dark:bg-white/5 border border-border dark:border-dark-border cursor-pointer hover:bg-slate-100 transition-colors">
+                                                    <input type="checkbox" name="subtax_ids_array[]" value="{{ $tax->id }}" :checked="editGroupSubtaxes.includes(@js((string) $tax->id))" class="w-3.5 h-3.5 rounded border-slate-300 text-primary focus:ring-primary/30">
+                                                    <span class="text-[10px] font-bold text-text-secondary dark:text-dark-text">{{ $tax->tax_name }} ({{ $tax->tax }}%)</span>
                                                 </label>
                                             @endforeach
                                         </div>
                                     </div>
                                     <div class="space-y-1">
-                                        <label class="text-[9px] font-black uppercase tracking-widest text-slate-400">Status</label>
-                                        <select name="status" x-model="editGroupStatus" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-dark-border rounded-xl text-xs font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-text-muted">Status</label>
+                                        <select name="status" x-model="editGroupStatus" class="input-base">
                                             <option value="1">Active</option>
                                             <option value="0">Inactive</option>
                                         </select>
                                     </div>
                                 </div>
-                                <div class="px-6 py-4 bg-slate-50/50 dark:bg-white/5 border-t border-slate-50 dark:border-dark-border flex justify-end gap-3">
-                                    <button @click="showEditGroupModal = false" type="button" class="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-700 transition-colors">Cancel</button>
-                                    <button type="submit" class="px-6 py-2 bg-rose-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-200/50 dark:shadow-none">Update Group</button>
+                                <div class="px-6 py-4 bg-background/50 dark:bg-white/5 border-t border-border dark:border-dark-border flex justify-end gap-3">
+                                    <button @click="showEditGroupModal = false" type="button" class="btn-secondary">Cancel</button>
+                                    <button type="submit" :disabled="isSubmitting" class="btn-primary disabled:opacity-60 disabled:cursor-not-allowed">Update Group</button>
                                 </div>
                             </form>
                         </div>

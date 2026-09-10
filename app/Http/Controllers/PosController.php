@@ -53,11 +53,16 @@ class PosController extends Controller
     public function index(Request $request)
     {
         $customers = DbCustomer::where('status', 1)->get();
-        $warehouses = DbWarehouse::where('status', 1)->get();
+        // Phase 4: store-scoped + active-only warehouse dropdown.
+        $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->where('delete_bit', 0)->get();
         $categories = DbCategory::where('status', 1)->where('store_id', current_store_id())->get();
         $brands = DbBrand::where('status', 1)->where('store_id', current_store_id())->get();
-        $taxes = DbTax::where('status', 1)->get();
-        $paymentTypes = DbPaymentType::where('status', 1)->get();
+        $taxes = DbTax::where('status', 1)
+            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->get();
+        $paymentTypes = DbPaymentType::where('status', 1)
+            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->get();
         $accounts = AcAccount::where('status', 1)->get();
 
         $today = Carbon::today()->format('Y-m-d');
@@ -1076,7 +1081,8 @@ class PosController extends Controller
         // A5: real pagination (was ->get() with a decorative "Show entries" box)
         $holds = $query->paginate($request->limit ?? 10);
 
-        $warehouses = DbWarehouse::where('status', 1)->get();
+        // Phase 4: store-scoped + active-only warehouse dropdown.
+        $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->where('delete_bit', 0)->get();
 
         return view('module.sales.hold_list', compact('holds', 'warehouses', 'filteredTotal'));
     }

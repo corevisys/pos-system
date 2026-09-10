@@ -12,10 +12,30 @@ class LanguageController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $languages = DbLanguage::orderBy('status', 'desc')->orderBy('language', 'asc')->get();
-        $activeLanguage = $languages->firstWhere('status', 1);
+        if (auth()->check() && !auth()->user()->hasPermission('language_view')) {
+            abort(403, 'Unauthorized access to view languages.');
+        }
+
+        $query = DbLanguage::orderBy('status', 'desc')->orderBy('language', 'asc');
+
+        // Server-side search (mirrors Customers/Suppliers list pattern).
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where('language', 'like', "%{$search}%");
+        }
+
+        $limit = in_array((int) $request->input('limit', 10), [10, 25, 50, 100], true)
+            ? (int) $request->input('limit', 10)
+            : 10;
+
+        $languages = $query->paginate($limit)->withQueryString();
+
+        // activeLanguage is derived from the FULL result set, not the current page,
+        // so the banner stays correct even when the active row is on another page.
+        $activeLanguage = DbLanguage::where('status', 1)->first();
+
         return view('module.settings.languages.index', compact('languages', 'activeLanguage'));
     }
 
@@ -24,6 +44,10 @@ class LanguageController extends Controller
      */
     public function create()
     {
+        if (auth()->check() && !auth()->user()->hasPermission('language_view')) {
+            abort(403, 'Unauthorized access to view languages.');
+        }
+
         return view('module.settings.languages.create');
     }
 
@@ -32,6 +56,10 @@ class LanguageController extends Controller
      */
     public function store(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('language_view')) {
+            abort(403, 'Unauthorized access to add languages.');
+        }
+
         $request->validate([
             'language' => 'required|string|unique:db_languages,language|max:255',
             'status' => 'required|integer|in:0,1',
@@ -68,6 +96,10 @@ class LanguageController extends Controller
      */
     public function edit($id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('language_view')) {
+            abort(403, 'Unauthorized access to view languages.');
+        }
+
         $language = DbLanguage::findOrFail($id);
         return view('module.settings.languages.edit', compact('language'));
     }
@@ -77,6 +109,10 @@ class LanguageController extends Controller
      */
     public function update(Request $request, $id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('language_view')) {
+            abort(403, 'Unauthorized access to edit languages.');
+        }
+
         $language = DbLanguage::findOrFail($id);
         $newStatus = (int) $request->status;
 
@@ -127,6 +163,10 @@ class LanguageController extends Controller
      */
     public function activate(Request $request, $id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('language_view')) {
+            abort(403, 'Unauthorized access to activate languages.');
+        }
+
         $language = DbLanguage::activateLanguage((int) $id);
 
         $message = "Language '{$language->language}' activated successfully as the system language.";
@@ -148,6 +188,10 @@ class LanguageController extends Controller
      */
     public function destroy(Request $request, $id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('language_view')) {
+            abort(403, 'Unauthorized access to delete languages.');
+        }
+
         $language = DbLanguage::findOrFail($id);
 
         if ($language->status == 1) {

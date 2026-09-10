@@ -576,8 +576,14 @@ class QuotationController extends Controller
                 ], 422);
             }
 
-            // Stock Availability Verification for all items
+            // Stock Availability Verification for all items — SKIP service lines
+            // (service_bit=1): services are non-inventory billable items and have no
+            // warehouse stock to verify, so they must never block a conversion.
             foreach ($quotationItems as $qItem) {
+                if ($qItem->item && (int) $qItem->item->service_bit === 1) {
+                    continue;
+                }
+
                 $whItem = DbWarehouseItem::where('warehouse_id', $quotation->warehouse_id)
                     ->where('item_id', $qItem->item_id)
                     ->lockForUpdate()
@@ -645,16 +651,18 @@ class QuotationController extends Controller
                     'status' => 1,
                 ]);
 
-                // Decrement stock in catalog and warehouse
+                // Decrement stock in catalog and warehouse — SKIP for service lines
+                // (service_bit=1): services are non-inventory billable items and must
+                // never decrement db_items.stock or db_warehouseitems.available_qty.
                 $dbItem = DbItem::find($qItem->item_id);
-                if ($dbItem) {
+                if ($dbItem && (int) $dbItem->service_bit !== 1) {
                     $dbItem->decrement('stock', $qItem->quotation_qty);
                 }
 
                 $whItem = DbWarehouseItem::where('warehouse_id', $quotation->warehouse_id)
                     ->where('item_id', $qItem->item_id)
                     ->first();
-                if ($whItem) {
+                if ($whItem && $dbItem && (int) $dbItem->service_bit !== 1) {
                     $whItem->decrement('available_qty', $qItem->quotation_qty);
                 }
 

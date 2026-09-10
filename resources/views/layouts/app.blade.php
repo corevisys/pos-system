@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}"
-    x-data="{ darkMode: localStorage.getItem('darkMode') === 'true', sidebarOpen: true }" :class="{ 'dark': darkMode }">
+    x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }" :class="{ 'dark': darkMode }">
 
 <head>
     <meta charset="utf-8">
@@ -28,7 +28,25 @@
     <div class="flex min-h-screen overflow-hidden" x-data="{ 
             notificationsOpen: false, 
             profileOpen: false,
-            sidebarOpen: window.innerWidth >= 1024,
+            sidebarOpen: true,
+            handleMenuClick(menu, url, event) {
+                if (!this.sidebarOpen) {
+                    if (event && (event.ctrlKey || event.metaKey || event.button === 1)) {
+                        window.open(url, '_blank');
+                    } else {
+                        window.location.href = url;
+                    }
+                } else {
+                    this.toggleMenu(menu);
+                }
+            },
+            triggerUpgradeAction() {
+                if (window.showSuccess) {
+                    window.showSuccess('Corevisys POS Pro: Advanced insights & multi-store support are coming soon!');
+                } else {
+                    alert('Corevisys POS Pro: Advanced insights & multi-store support are coming soon!');
+                }
+            },
             expandedMenus: {
                 'users': {{ request()->routeIs('users.*') ? 'true' : 'false' }},
                 'sales': {{ request()->routeIs('sales.*') ? 'true' : 'false' }},
@@ -120,7 +138,7 @@
                     <!-- Dashboard -->
                     @if(auth()->user()->hasPermission('dashboard_view_dashboard_data'))
                         <a href="{{ route('dashboard') }}"
-                            class="flex items-center w-full gap-2 px-3 py-2 rounded-lg transition-all duration-200 group text-sm font-medium {{ request()->routeIs('dashboard') ? 'bg-primary text-white' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/5' }}">
+                            class="relative flex items-center w-full gap-2 px-3 py-2 rounded-lg transition-all duration-200 group text-sm font-medium {{ request()->routeIs('dashboard') ? 'bg-primary text-white' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/5' }}">
                             <svg class="w-4 h-4 transition-transform group-hover:scale-110" fill="none"
                                 stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -128,14 +146,18 @@
                                 </path>
                             </svg>
                             <span>Dashboard</span>
+                            <x-sidebar-tooltip text="Dashboard" />
                         </a>
                     @endif
 
                     <!-- User Management -->
                     @if(auth()->user()->hasPermission('users_view') || auth()->user()->hasPermission('roles_view'))
+                        @php
+                            $usersDefaultUrl = auth()->user()->hasPermission('users_view') ? route('users.list') : route('users.roles');
+                        @endphp
                         <div>
-                            <button @click="toggleMenu('users')"
-                                class="flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between">
+                            <button type="button" @click="handleMenuClick('users', '{{ $usersDefaultUrl }}', $event)"
+                                class="relative flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between cursor-pointer">
                                 <div class="flex items-center gap-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -150,6 +172,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M19 9l-7 7-7-7"></path>
                                 </svg>
+                                <x-sidebar-tooltip text="Users" />
                             </button>
                             <div x-show="expandedMenus['users']" x-collapse class="pl-12 space-y-1 mt-1">
                                 @if(auth()->user()->hasPermission('users_view'))
@@ -168,9 +191,12 @@
 
                     <!-- Sales -->
                     @if(auth()->user()->hasPermission('sales_include_pos_view') || auth()->user()->hasPermission('sales_include_pos_add') || auth()->user()->hasPermission('sales_return_view'))
+                        @php
+                            $salesDefaultUrl = auth()->user()->hasPermission('sales_include_pos_add') ? route('sales.pos') : (auth()->user()->hasPermission('sales_include_pos_view') ? route('sales.list') : route('sales.returns'));
+                        @endphp
                         <div>
-                            <button @click="toggleMenu('sales')"
-                                class="flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between">
+                            <button type="button" @click="handleMenuClick('sales', '{{ $salesDefaultUrl }}', $event)"
+                                class="relative flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between cursor-pointer">
                                 <div class="flex items-center gap-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -184,6 +210,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M19 9l-7 7-7-7"></path>
                                 </svg>
+                                <x-sidebar-tooltip text="Sales" />
                             </button>
                             <div x-show="expandedMenus['sales']" x-collapse class="pl-12 space-y-1 mt-1">
                                 @if(auth()->user()->hasPermission('sales_include_pos_add'))
@@ -222,9 +249,12 @@
 
                     <!-- Contacts -->
                     @if(auth()->user()->hasPermission('customers_view') || auth()->user()->hasPermission('suppliers_view'))
+                        @php
+                            $contactsDefaultUrl = auth()->user()->hasPermission('customers_view') ? route('contacts.customers.list') : (auth()->user()->hasPermission('suppliers_view') ? route('contacts.suppliers.list') : route('contacts.customers.add'));
+                        @endphp
                         <div>
-                            <button @click="toggleMenu('contacts')"
-                                class="flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between">
+                            <button type="button" @click="handleMenuClick('contacts', '{{ $contactsDefaultUrl }}', $event)"
+                                class="relative flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between cursor-pointer">
                                 <div class="flex items-center gap-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -239,6 +269,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M19 9l-7 7-7-7"></path>
                                 </svg>
+                                <x-sidebar-tooltip text="Contacts" />
                             </button>
                             <div x-show="expandedMenus['contacts']" x-collapse class="pl-12 space-y-1 mt-1">
                                 @if(auth()->user()->hasPermission('customers_add'))
@@ -277,9 +308,12 @@
 
                     <!-- Advance -->
                     @if(auth()->user()->hasPermission('customers_advance_payments_view'))
+                        @php
+                            $advanceDefaultUrl = route('advance.list');
+                        @endphp
                         <div>
-                            <button @click="toggleMenu('advance')"
-                                class="flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between">
+                            <button type="button" @click="handleMenuClick('advance', '{{ $advanceDefaultUrl }}', $event)"
+                                class="relative flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between cursor-pointer">
                                 <div class="flex items-center gap-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -294,6 +328,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M19 9l-7 7-7-7"></path>
                                 </svg>
+                                <x-sidebar-tooltip text="Advance" />
                             </button>
                             <div x-show="expandedMenus['advance']" x-collapse class="pl-12 space-y-1 mt-1">
                                 @if(auth()->user()->hasPermission('customers_advance_payments_add'))
@@ -310,9 +345,12 @@
 
                     <!-- Coupons -->
                     @if(auth()->user()->hasPermission('discount_coupon_view') || auth()->user()->hasPermission('customer_coupon_view'))
+                        @php
+                            $couponsDefaultUrl = auth()->user()->hasPermission('customer_coupon_view') ? route('coupons.customer.list') : (auth()->user()->hasPermission('discount_coupon_view') ? route('coupons.master') : route('coupons.customer.create'));
+                        @endphp
                         <div>
-                            <button @click="toggleMenu('coupons')"
-                                class="flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between">
+                            <button type="button" @click="handleMenuClick('coupons', '{{ $couponsDefaultUrl }}', $event)"
+                                class="relative flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between cursor-pointer">
                                 <div class="flex items-center gap-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -329,6 +367,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M19 9l-7 7-7-7"></path>
                                 </svg>
+                                <x-sidebar-tooltip text="Coupons" />
                             </button>
                             <div x-show="expandedMenus['coupons']" x-collapse class="pl-12 space-y-1 mt-1">
                                 @if(auth()->user()->hasPermission('customer_coupon_add'))
@@ -357,9 +396,12 @@
 
                     <!-- Quotation -->
                     @if(auth()->user()->hasPermission('quotation_view'))
+                        @php
+                            $quotationDefaultUrl = route('quotation.list');
+                        @endphp
                         <div>
-                            <button @click="toggleMenu('quotation')"
-                                class="flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between">
+                            <button type="button" @click="handleMenuClick('quotation', '{{ $quotationDefaultUrl }}', $event)"
+                                class="relative flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between cursor-pointer">
                                 <div class="flex items-center gap-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -374,6 +416,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M19 9l-7 7-7-7"></path>
                                 </svg>
+                                <x-sidebar-tooltip text="Quotation" />
                             </button>
                             <div x-show="expandedMenus['quotation']" x-collapse class="pl-12 space-y-1 mt-1">
                                 @if(auth()->user()->hasPermission('quotation_add'))
@@ -390,9 +433,12 @@
 
                     <!-- Purchase -->
                     @if(auth()->user()->hasPermission('purchase_view') || auth()->user()->hasPermission('purchase_add') || auth()->user()->hasPermission('purchase_return_view'))
+                        @php
+                            $purchaseDefaultUrl = auth()->user()->hasPermission('purchase_view') ? route('purchase.list') : (auth()->user()->hasPermission('purchase_add') ? route('purchase.new') : route('purchase.returns'));
+                        @endphp
                         <div>
-                            <button @click="toggleMenu('purchase')"
-                                class="flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between">
+                            <button type="button" @click="handleMenuClick('purchase', '{{ $purchaseDefaultUrl }}', $event)"
+                                class="relative flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between cursor-pointer">
                                 <div class="flex items-center gap-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -406,6 +452,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M19 9l-7 7-7-7"></path>
                                 </svg>
+                                <x-sidebar-tooltip text="Purchase" />
                             </button>
                             <div x-show="expandedMenus['purchase']" x-collapse class="pl-12 space-y-1 mt-1">
                                 @if(auth()->user()->hasPermission('purchase_add'))
@@ -429,9 +476,12 @@
 
                     <!-- Accounts -->
                     @if(auth()->user()->hasPermission('accounts_view'))
+                        @php
+                            $accountsDefaultUrl = route('accounts.list');
+                        @endphp
                         <div>
-                            <button @click="toggleMenu('accounts')"
-                                class="flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between">
+                            <button type="button" @click="handleMenuClick('accounts', '{{ $accountsDefaultUrl }}', $event)"
+                                class="relative flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between cursor-pointer">
                                 <div class="flex items-center gap-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -446,6 +496,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M19 9l-7 7-7-7"></path>
                                 </svg>
+                                <x-sidebar-tooltip text="Accounts" />
                             </button>
                             <div x-show="expandedMenus['accounts']" x-collapse class="pl-12 space-y-1 mt-1">
                                 @if(auth()->user()->hasPermission('accounts_add'))
@@ -484,9 +535,12 @@
 
                     <!-- Items -->
                     @if(auth()->user()->hasPermission('items_view') || auth()->user()->hasPermission('services_view'))
+                        @php
+                            $itemsDefaultUrl = auth()->user()->hasPermission('items_view') ? route('items.list') : route('items.service.list');
+                        @endphp
                         <div>
-                            <button @click="toggleMenu('items')"
-                                class="flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between">
+                            <button type="button" @click="handleMenuClick('items', '{{ $itemsDefaultUrl }}', $event)"
+                                class="relative flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between cursor-pointer">
                                 <div class="flex items-center gap-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -500,6 +554,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M19 9l-7 7-7-7"></path>
                                 </svg>
+                                <x-sidebar-tooltip text="Items" />
                             </button>
                             <div x-show="expandedMenus['items']" x-collapse class="pl-12 space-y-1 mt-1">
                                 @if(auth()->user()->hasPermission('items_add'))
@@ -551,20 +606,18 @@
                                         class="block w-full text-left text-sm py-2 {{ request()->routeIs('items.import') ? 'text-primary-600 font-bold' : 'text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400' }}">Import
                                         Items</a>
                                 @endif
-                                @if(auth()->user()->hasPermission('items_import_services'))
-                                    <a href="{{ route('items.service.import') }}"
-                                        class="block w-full text-left text-sm py-2 {{ request()->routeIs('items.service.import') ? 'text-primary-600 font-bold' : 'text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400' }}">Import
-                                        Services</a>
-                                @endif
                             </div>
                         </div>
                     @endif
 
                     <!-- Stock -->
                     @if(auth()->user()->hasPermission('stock_adjustment_view') || auth()->user()->hasPermission('stock_transfer_view'))
+                        @php
+                            $stockDefaultUrl = auth()->user()->hasPermission('stock_adjustment_view') ? route('stock.adjustment') : route('stock.transfer');
+                        @endphp
                         <div>
-                            <button @click="toggleMenu('stock')"
-                                class="flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between">
+                            <button type="button" @click="handleMenuClick('stock', '{{ $stockDefaultUrl }}', $event)"
+                                class="relative flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between cursor-pointer">
                                 <div class="flex items-center gap-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -579,6 +632,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M19 9l-7 7-7-7"></path>
                                 </svg>
+                                <x-sidebar-tooltip text="Stock" />
                             </button>
                             <div x-show="expandedMenus['stock']" x-collapse class="pl-12 space-y-1 mt-1">
                                 @if(auth()->user()->hasPermission('stock_adjustment_view'))
@@ -597,9 +651,12 @@
 
                     <!-- Expenses -->
                     @if(auth()->user()->hasPermission('expense_view'))
+                        @php
+                            $expensesDefaultUrl = route('expenses.list');
+                        @endphp
                         <div>
-                            <button @click="toggleMenu('expenses')"
-                                class="flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between">
+                            <button type="button" @click="handleMenuClick('expenses', '{{ $expensesDefaultUrl }}', $event)"
+                                class="relative flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between cursor-pointer">
                                 <div class="flex items-center gap-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -614,6 +671,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M19 9l-7 7-7-7"></path>
                                 </svg>
+                                <x-sidebar-tooltip text="Expenses" />
                             </button>
                             <div x-show="expandedMenus['expenses']" x-collapse class="pl-12 space-y-1 mt-1">
                                 <a href="{{ route('expenses.list') }}"
@@ -630,9 +688,12 @@
 
                     <!-- Messaging -->
                     @if(auth()->user()->hasPermission('sms_whatsapp_send_message') || auth()->user()->hasPermission('sms_whatsapp_message_template_view') || auth()->user()->hasPermission('sms_whatsapp_message_api_view') || auth()->user()->hasPermission('sms_whatsapp_message_settings'))
+                        @php
+                            $messagingDefaultUrl = auth()->user()->hasPermission('sms_whatsapp_message_api_view') ? route('sms.history') : (auth()->user()->hasPermission('sms_whatsapp_send_message') ? route('sms.send') : (auth()->user()->hasPermission('sms_whatsapp_message_template_view') ? route('sms.templates') : route('messaging.settings')));
+                        @endphp
                         <div>
-                            <button @click="toggleMenu('messaging')"
-                                class="flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between">
+                            <button type="button" @click="handleMenuClick('messaging', '{{ $messagingDefaultUrl }}', $event)"
+                                class="relative flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between cursor-pointer">
                                 <div class="flex items-center gap-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -647,6 +708,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M19 9l-7 7-7-7"></path>
                                 </svg>
+                                <x-sidebar-tooltip text="Messaging" />
                             </button>
                             <div x-show="expandedMenus['messaging']" x-collapse class="pl-12 space-y-1 mt-1">
                                 @if(auth()->user()->hasPermission('sms_whatsapp_message_api_view'))
@@ -685,9 +747,12 @@
 
                     <!-- Reports -->
                     @if(auth()->user()->hasPermission('reports_view'))
+                        @php
+                            $reportsDefaultUrl = route('reports.sales_summary');
+                        @endphp
                         <div>
-                            <button @click="toggleMenu('reports')"
-                                class="flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between">
+                            <button type="button" @click="handleMenuClick('reports', '{{ $reportsDefaultUrl }}', $event)"
+                                class="relative flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between cursor-pointer">
                                 <div class="flex items-center gap-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -702,6 +767,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M19 9l-7 7-7-7"></path>
                                 </svg>
+                                <x-sidebar-tooltip text="Reports" />
                             </button>
                             <div x-show="expandedMenus['reports']" x-collapse class="pl-12 space-y-1 mt-1">
                                 <a href="{{ route('reports.sales_summary') }}"
@@ -798,9 +864,12 @@
 
                     <!-- Warehouse -->
                     @if(auth()->user()->hasPermission('warehouse_view'))
+                        @php
+                            $warehouseDefaultUrl = auth()->user()->hasPermission('warehouse_view') ? route('warehouse.list') : route('warehouse.add');
+                        @endphp
                         <div>
-                            <button @click="toggleMenu('warehouse')"
-                                class="flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between">
+                            <button type="button" @click="handleMenuClick('warehouse', '{{ $warehouseDefaultUrl }}', $event)"
+                                class="relative flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between cursor-pointer">
                                 <div class="flex items-center gap-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -815,6 +884,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M19 9l-7 7-7-7"></path>
                                 </svg>
+                                <x-sidebar-tooltip text="Warehouse" />
                             </button>
                             <div x-show="expandedMenus['warehouse']" x-collapse class="pl-12 space-y-1 mt-1">
                                 @if(auth()->user()->hasPermission('warehouse_add'))
@@ -833,9 +903,12 @@
 
                     <!-- Settings -->
                     @if(auth()->user()->hasPermission('store_settings_view') || auth()->user()->hasPermission('language_view') || auth()->user()->hasPermission('country_view') || auth()->user()->hasPermission('state_view') || auth()->user()->hasPermission('tax_view') || auth()->user()->hasPermission('unit_view') || auth()->user()->hasPermission('payment_types_view') || auth()->user()->hasPermission('site_settings_view') || auth()->user()->hasPermission('smtp_settings_view') || auth()->user()->hasPermission('currency_view') || auth()->user()->hasPermission('change_password') || auth()->user()->hasPermission('database_backup') || auth()->user()->hasPermission('sms_whatsapp_message_settings'))
+                        @php
+                            $settingsDefaultUrl = auth()->user()->hasPermission('store_settings_view') ? route('settings.store') : route('settings.languages.index');
+                        @endphp
                         <div>
-                            <button @click="toggleMenu('settings')"
-                                class="flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between">
+                            <button type="button" @click="handleMenuClick('settings', '{{ $settingsDefaultUrl }}', $event)"
+                                class="relative flex items-center w-full gap-2 px-3 py-2 rounded-xl transition-all duration-200 group font-bold text-[13px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 justify-between cursor-pointer">
                                 <div class="flex items-center gap-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -850,6 +923,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M19 9l-7 7-7-7"></path>
                                 </svg>
+                                <x-sidebar-tooltip text="Settings" />
                             </button>
                             <div x-show="expandedMenus['settings']" x-collapse class="pl-12 space-y-1 mt-1">
                                 @if(auth()->user()->hasPermission('store_settings_view'))
@@ -921,15 +995,36 @@
                 </nav>
 
                 <!-- Sidebar Footer/Premium -->
-                <div class="p-4">
-                    <div
-                        class="p-3 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-dark-border">
-                        <p class="text-[9px] font-black text-primary-600 uppercase tracking-widest mb-1">Upgrade Now</p>
-                        <p class="text-[10px] text-slate-500 font-medium mb-2">Advanced insights & multi-store support.
-                        </p>
-                        <button
-                            class="w-full py-1.5 bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border rounded-lg text-[10px] font-bold hover:bg-slate-50 transition-colors">Go
-                            Pro</button>
+                <div class="sidebar-upgrade-wrapper mt-auto">
+                    <!-- Expanded state: full Upgrade card -->
+                    <div x-show="sidebarOpen" x-cloak class="sidebar-upgrade-expanded p-4">
+                        <div
+                            class="p-3 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-dark-border">
+                            <p class="text-[9px] font-black text-primary-600 uppercase tracking-widest mb-1">Upgrade Now</p>
+                            <p class="text-[10px] text-slate-500 font-medium mb-2">Advanced insights & multi-store support.
+                            </p>
+                            <button
+                                type="button"
+                                @click="triggerUpgradeAction()"
+                                class="w-full py-1.5 bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border rounded-lg text-[10px] font-bold hover:bg-slate-50 transition-colors cursor-pointer">Go
+                                Pro</button>
+                        </div>
+                    </div>
+
+                    <!-- Collapsed state: compact icon only -->
+                    <div x-show="!sidebarOpen" x-cloak class="sidebar-upgrade-collapsed py-4 px-2 flex justify-center items-center">
+                        <div class="relative group group/upgrade flex justify-center">
+                            <button type="button"
+                                @click="triggerUpgradeAction()"
+                                title="Upgrade to Pro"
+                                aria-label="Upgrade to Pro"
+                                class="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-primary-50 dark:hover:bg-primary-950/40 border border-slate-200 dark:border-dark-border hover:border-primary-300 dark:hover:border-primary-700/50 text-primary-600 dark:text-primary-400 flex items-center justify-center transition-all shadow-xs hover:scale-105 cursor-pointer">
+                                <svg class="w-5 h-5 transition-transform group-hover/upgrade:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                                </svg>
+                            </button>
+                            <x-sidebar-tooltip text="Upgrade to Pro" />
+                        </div>
                     </div>
                 </div>
             </div>

@@ -151,8 +151,18 @@ test('3. Deleting expense removes AcTransaction and restores account balance', f
     $account->refresh();
     expect((float)$account->balance)->toBe(1000.0);
 
-    // AcTransaction must be deleted
-    expect(AcTransaction::where('ref_expense_id', $expense->id)->first())->toBeNull();
+    // Phase 1 (Expenses rollout): soft-delete + non-destructive reversal. The row
+    // is retained with delete_bit=1 and an offsetting EXPENSE REVERSAL entry is
+    // posted (audit trail) — it is no longer hard-deleted as before.
+    $expense->refresh();
+    expect((int)$expense->delete_bit)->toBe(1);
+
+    $reversal = AcTransaction::where('ref_expense_id', $expense->id)
+        ->where('transaction_type', 'EXPENSE REVERSAL')
+        ->where('credit_amt', 250.00)
+        ->first();
+    expect($reversal)->not->toBeNull();
+    expect(AcTransaction::where('ref_expense_id', $expense->id)->where('transaction_type', 'EXPENSE')->count())->toBe(1);
 });
 
 test('4. Cash transactions ledger displays EXPENSE entries with account name and debit amount', function () {

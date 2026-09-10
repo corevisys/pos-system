@@ -14,6 +14,10 @@ class CurrencyController extends Controller
      */
     public function index()
     {
+        if (auth()->check() && !auth()->user()->hasPermission('currency_view')) {
+            abort(403, 'Unauthorized access to view currencies.');
+        }
+
         $currencies = DbCurrency::orderBy('status', 'desc')->orderBy('currency_name', 'asc')->get();
         $activeCurrency = $currencies->firstWhere('status', 1);
         return view('module.settings.currency_list', compact('currencies', 'activeCurrency'));
@@ -24,6 +28,10 @@ class CurrencyController extends Controller
      */
     public function store(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('currency_view')) {
+            abort(403, 'Unauthorized access to add currencies.');
+        }
+
         $request->validate([
             'currency_name' => 'required|string|max:255',
             'currency_code' => 'required|string|max:10',
@@ -65,6 +73,10 @@ class CurrencyController extends Controller
      */
     public function update(Request $request, $id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('currency_view')) {
+            abort(403, 'Unauthorized access to edit currencies.');
+        }
+
         $request->validate([
             'currency_name' => 'required|string|max:255',
             'currency_code' => 'required|string|max:10',
@@ -120,6 +132,10 @@ class CurrencyController extends Controller
      */
     public function activate(Request $request, $id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('currency_view')) {
+            abort(403, 'Unauthorized access to activate currencies.');
+        }
+
         $currency = DbCurrency::activateCurrency((int) $id);
 
         $message = "Currency '{$currency->currency_name}' activated successfully as the system currency.";
@@ -141,6 +157,10 @@ class CurrencyController extends Controller
      */
     public function destroy(Request $request, $id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('currency_view')) {
+            abort(403, 'Unauthorized access to delete currencies.');
+        }
+
         $currency = DbCurrency::findOrFail($id);
 
         if ($currency->status == 1) {

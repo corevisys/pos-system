@@ -39,7 +39,11 @@ class ReportController extends Controller
 {
     public function profitLoss()
     {
-        $store = DbStore::first(); // Assuming single store for now, or get by current user's store
+        // Resolve the acting store (the reporting user's own store) rather than
+        // DbStore::first(), so a Store-B user's P&L header shows Store B, not Store 1.
+        $store = function_exists('store_settings') && store_settings()
+            ? store_settings()
+            : DbStore::first();
         return view('module.reports.profit_loss', compact('store'));
     }
 
@@ -286,7 +290,8 @@ class ReportController extends Controller
 
 
             // --- 6. Expenses ---
-            $expensesQuery = DbExpense::query();
+            // Exclude soft-deleted (delete_bit=1) expenses (Phase 1 soft-delete).
+            $expensesQuery = DbExpense::query()->where('delete_bit', 0);
             $expensesQuery = $dateCondition($expensesQuery, 'expense_date');
             
             $data['expenses']['total'] = $expensesQuery->sum('expense_amt');
@@ -1117,7 +1122,8 @@ class ReportController extends Controller
     public function salesReturnReport()
     {
         $customers = DbCustomer::where('status', 1)->get();
-        $warehouses = DbWarehouse::where('status', 1)->get();
+        // Phase 4: store-scoped + active-only warehouse dropdown.
+        $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->where('delete_bit', 0)->get();
         return view('module.reports.sales_return', compact('customers', 'warehouses'));
     }
 
@@ -1174,7 +1180,8 @@ class ReportController extends Controller
     public function sellerPointsReport()
     {
         $users = User::where('status', 1)->get();
-        $warehouses = DbWarehouse::where('status', 1)->get();
+        // Phase 4: store-scoped + active-only warehouse dropdown.
+        $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->where('delete_bit', 0)->get();
         $items = DbItem::where('status', 1)->get();
         return view('module.reports.seller_points', compact('users', 'warehouses', 'items'));
     }
@@ -1241,7 +1248,8 @@ class ReportController extends Controller
 
     public function purchaseReport()
     {
-        $warehouses = DbWarehouse::where('status', 1)->get();
+        // Phase 4: store-scoped + active-only warehouse dropdown.
+        $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->where('delete_bit', 0)->get();
         $suppliers = DbSupplier::where('status', 1)->get();
         return view('module.reports.purchase', compact('warehouses', 'suppliers'));
     }
@@ -1303,7 +1311,8 @@ class ReportController extends Controller
 
     public function purchaseReturnReport()
     {
-        $warehouses = DbWarehouse::where('status', 1)->get();
+        // Phase 4: store-scoped + active-only warehouse dropdown.
+        $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->where('delete_bit', 0)->get();
         $suppliers = DbSupplier::where('status', 1)->get();
         return view('module.reports.purchase_return', compact('warehouses', 'suppliers'));
     }
@@ -1373,6 +1382,7 @@ class ReportController extends Controller
             $categoryId = $request->category_id;
 
             $query = DbExpense::with(['category'])
+                ->where('delete_bit', 0)
                 ->whereBetween('expense_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')]);
 
             if ($categoryId && $categoryId !== 'all') {
@@ -1411,7 +1421,8 @@ class ReportController extends Controller
 
     public function stockReport()
     {
-        $warehouses = DbWarehouse::where('status', 1)->get();
+        // Phase 4: store-scoped + active-only warehouse dropdown.
+        $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->where('delete_bit', 0)->get();
         $categories = DbCategory::where('status', 1)->get();
         $brands = DbBrand::where('status', 1)->get();
         return view('module.reports.stock', compact('warehouses', 'categories', 'brands'));
@@ -1517,7 +1528,8 @@ class ReportController extends Controller
 
     public function salesItemReport()
     {
-        $warehouses = DbWarehouse::where('status', 1)->get();
+        // Phase 4: store-scoped + active-only warehouse dropdown.
+        $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->where('delete_bit', 0)->get();
         $categories = DbCategory::where('status', 1)->get();
         $items = DbItem::where('status', 1)->where('child_bit', 0)->get();
         return view('module.reports.sales_item', compact('warehouses', 'categories', 'items'));
@@ -1591,7 +1603,8 @@ class ReportController extends Controller
 
     public function returnItemsReport()
     {
-        $warehouses = DbWarehouse::where('status', 1)->get();
+        // Phase 4: store-scoped + active-only warehouse dropdown.
+        $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->where('delete_bit', 0)->get();
         $items = DbItem::where('status', 1)->where('child_bit', 0)->get();
         return view('module.reports.return_items', compact('warehouses', 'items'));
     }
@@ -1787,8 +1800,10 @@ class ReportController extends Controller
     public function salesSummary()
     {
         // Cache dropdown lists for 3600 seconds as per established pattern
-        $warehouses = Cache::remember('db_warehouses_list', 3600, function () {
-            return DbWarehouse::where('status', 1)->select('id', 'warehouse_name')->get();
+        // Phase 4: store-scoped + active-only + per-store cache key (no cross-store leak).
+        $storeId = current_store_id();
+        $warehouses = Cache::remember('db_warehouses_list_s' . $storeId, 3600, function () use ($storeId) {
+            return DbWarehouse::where('store_id', $storeId)->where('status', 1)->where('delete_bit', 0)->select('id', 'warehouse_name')->get();
         });
 
         $categories = Cache::remember('db_categories_list', 3600, function () {
@@ -2100,8 +2115,10 @@ class ReportController extends Controller
 
     public function cashReconciliationReport()
     {
-        $warehouses = Cache::remember('db_warehouses_list', 3600, function () {
-            return DbWarehouse::where('status', 1)->select('id', 'warehouse_name')->get();
+        // Phase 4: store-scoped + active-only + per-store cache key.
+        $storeId = current_store_id();
+        $warehouses = Cache::remember('db_warehouses_list_s' . $storeId, 3600, function () use ($storeId) {
+            return DbWarehouse::where('store_id', $storeId)->where('status', 1)->where('delete_bit', 0)->select('id', 'warehouse_name')->get();
         });
         $accounts = Cache::remember('db_accounts_list', 3600, function () {
             return AcAccount::where('status', 1)->where('delete_bit', 0)->select('id', 'account_name', 'account_code')->get();
@@ -2388,7 +2405,8 @@ class ReportController extends Controller
             $purchasePaymentsTotal = (float) $purchasePaymentsQuery->sum('debit_amt');
 
             // Expense Category breakdown
-            $expensesByCategory = DbExpense::whereDate('expense_date', '>=', $startDateStr)
+            $expensesByCategory = DbExpense::where('delete_bit', 0)
+                ->whereDate('expense_date', '>=', $startDateStr)
                 ->whereDate('expense_date', '<=', $endDateStr)
                 ->whereIn('account_id', $accountIds)
                 ->join('db_expense_category', 'db_expense.category_id', '=', 'db_expense_category.id')

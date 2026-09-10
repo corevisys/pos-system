@@ -4,31 +4,127 @@ use App\Models\DbStore;
 use App\Providers\AppServiceProvider;
 use App\Support\StoreSettingsCache;
 
-if (!function_exists('store_settings')) {
+if (!function_exists('default_store_id')) {
     /**
-     * Memoized store settings for the current request / process lifecycle.
-     * Guarantees DbStore::first() is only queried ONCE per request.
+     * Resolve the fallback store id used when no user is authenticated
+     * (CLI, queue workers, unauthenticated test requests).
      *
-     * @param bool $fresh Force reload from database
-     * @return DbStore|null
+     * Order:
+     * 1. A previously memoized 'default' store id
+     * 2. The first db_store row
+     * 3. Hard fallback 1
+     *
+     * Kept free of any current_store_id()/store_settings() call so it can be
+     * used to break the mutual recursion between those two functions.
+     *
+     * @param bool $fresh Force a re-read from the database
+     * @return int
      */
-    function store_settings(bool $fresh = false): ?DbStore
+    function default_store_id(bool $fresh = false): int
     {
-        if ($fresh || StoreSettingsCache::$store === null) {
-            StoreSettingsCache::$store = DbStore::first();
-            if ($fresh && class_exists(AppServiceProvider::class)) {
-                AppServiceProvider::resolveCurrencySymbol(true);
-                AppServiceProvider::configureStoreTimezone(true);
+        if (!$fresh && array_key_exists('default', StoreSettingsCache::$store)) {
+            $cached = StoreSettingsCache::$store['default'];
+            if ($cached && !empty($cached->id)) {
+                return (int) $cached->id;
             }
         }
-        return StoreSettingsCache::$store;
+
+        try {
+            $id = DbStore::query()->orderBy('id')->value('id');
+            if (!empty($id)) {
+                return (int) $id;
+            }
+        } catch (\Throwable $e) {
+            // Table may not exist yet (fresh migrations)
+        }
+
+        return 1;
+    }
+}
+
+if (!function_exists('store_id_cache_key')) {
+    /**
+     * Build the per-store cache key ('s{id}'), or 'default' when no acting
+     * store id can be resolved.
+     */
+    function store_id_cache_key(?int $storeId = null): string
+    {
+        $resolved = $storeId;
+        if ($resolved === null) {
+            $resolved = (auth()->check() && !empty(auth()->user()->store_id))
+                ? (int) auth()->user()->store_id
+                : default_store_id();
+        }
+        return $resolved ? 's' . $resolved : 'default';
+    }
+}
+
+if (!function_exists('store_settings')) {
+    /**
+     * Memoized store settings for the current request / process lifecycle,
+     * keyed by the acting store's id so a multi-store deployment never serves
+     * the first db_store row to a different store (the "cached-query
+     * store-scoping trap" fixed in Warehouse).
+     *
+     * When a user is authenticated their User->store_id is authoritative;
+     * otherwise the default (first) store is used.
+     *
+     * @param bool $fresh Force reload from database
+     * @param int|null $storeId Acting store id (null = resolve current)
+     * @return DbStore|null
+     */
+    function store_settings(bool $fresh = false, ?int $storeId = null): ?DbStore
+    {
+        $resolvedStoreId = $storeId;
+        if ($resolvedStoreId === null && auth()->check() && !empty(auth()->user()->store_id)) {
+            $resolvedStoreId = (int) auth()->user()->store_id;
+        }
+
+        // No acting store (unauthenticated / CLI): resolve the default (first)
+        // store once and memoize it under BOTH 'default' and 's{id}', so the
+        // provider and later authenticated requests reuse the same row without
+        // re-querying db_store.
+        if ($resolvedStoreId === null) {
+            if ($fresh || !array_key_exists('default', StoreSettingsCache::$store)) {
+                try {
+                    $defaultStore = DbStore::query()->orderBy('id')->first();
+                } catch (\Throwable $e) {
+                    // db_store may not exist yet during early boot (fresh migrations)
+                    $defaultStore = null;
+                }
+                StoreSettingsCache::$store['default'] = $defaultStore;
+                if ($defaultStore && !empty($defaultStore->id)) {
+                    StoreSettingsCache::$store['s' . $defaultStore->id] = $defaultStore;
+                    if ($fresh && class_exists(AppServiceProvider::class)) {
+                        AppServiceProvider::resolveCurrencySymbol(true, (int) $defaultStore->id);
+                        AppServiceProvider::configureStoreTimezone(true, (int) $defaultStore->id);
+                    }
+                }
+            }
+            return StoreSettingsCache::$store['default'];
+        }
+
+        $cacheKey = 's' . $resolvedStoreId;
+        if ($fresh || !array_key_exists($cacheKey, StoreSettingsCache::$store)) {
+            try {
+                StoreSettingsCache::$store[$cacheKey] = DbStore::where('id', $resolvedStoreId)->first();
+            } catch (\Throwable $e) {
+                StoreSettingsCache::$store[$cacheKey] = null;
+                return null;
+            }
+            if ($fresh && class_exists(AppServiceProvider::class)) {
+                AppServiceProvider::resolveCurrencySymbol(true, $resolvedStoreId);
+                AppServiceProvider::configureStoreTimezone(true, $resolvedStoreId);
+            }
+        }
+        return StoreSettingsCache::$store[$cacheKey];
     }
 }
 
 if (!function_exists('flush_store_settings_cache')) {
     /**
-     * Drop the process-lifetime memoization for the active store, timezone and
-     * currency symbol so the next store_settings()/resolveCurrencySymbol()/
+     * Drop the process-lifetime memoization for all stores, timezones and
+     * currency symbols so the next store_settings()/resolveCurrencySymbol()/
      * configureStoreTimezone() call re-reads from the database.
      *
      * Used by the test suite (tests/TestCase.php) between test cases so a store
@@ -46,7 +142,7 @@ if (!function_exists('current_store_id')) {
      *
      * Hierarchy:
      * 1. Authenticated user's store_id: auth()->user()->store_id (if logged in)
-     * 2. Active store settings ID: store_settings($fresh)?->id (memoized)
+     * 2. Memoized default store id (first db_store row)
      * 3. Fallback default ID: 1
      *
      * @param bool $fresh Force reload from database
@@ -58,12 +154,7 @@ if (!function_exists('current_store_id')) {
             return (int) auth()->user()->store_id;
         }
 
-        $store = store_settings($fresh);
-        if ($store && !empty($store->id)) {
-            return (int) $store->id;
-        }
-
-        return 1;
+        return default_store_id($fresh);
     }
 }
 

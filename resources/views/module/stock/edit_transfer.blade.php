@@ -139,12 +139,26 @@
                         </div>
 
                         <div>
-                            <label class="text-[9px] font-black uppercase text-rose-500 tracking-widest block mb-1.5 pl-1 italic">From Warehouse (Source) *</label>
+                            <label class="text-[9px] font-black uppercase text-rose-500 tracking-widest block mb-1.5 pl-1 italic flex items-center gap-1">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+                                From Warehouse (Source) *
+                            </label>
                             <x-searchable-select :options="$warehouses" labelKey="warehouse_name" valueKey="id" placeholder="Select Source" model="form.warehouse_from" />
                         </div>
 
+                        <!-- Directional flow indicator -->
+                        <div class="flex items-center justify-center -my-1">
+                            <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500">
+                                <svg class="w-3 h-3 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 7h10m0 0l-4-4m4 4l-4 4m10 6H10m0 0l4-4m-4 4l4 4"></path></svg>
+                                <span class="text-[8px] font-black uppercase tracking-widest">→</span>
+                            </div>
+                        </div>
+
                         <div>
-                            <label class="text-[9px] font-black uppercase text-emerald-500 tracking-widest block mb-1.5 pl-1 italic">To Warehouse (Destination) *</label>
+                            <label class="text-[9px] font-black uppercase text-emerald-500 tracking-widest block mb-1.5 pl-1 italic flex items-center gap-1">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+                                To Warehouse (Destination) *
+                            </label>
                             <x-searchable-select :options="$warehouses" labelKey="warehouse_name" valueKey="id" placeholder="Select Destination" model="form.warehouse_to" />
                         </div>
                     </div>

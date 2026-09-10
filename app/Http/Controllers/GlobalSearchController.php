@@ -89,7 +89,6 @@ class GlobalSearchController extends Controller
         ['label' => 'Variants List', 'module' => 'Items', 'route' => 'items.variants', 'permission' => 'variant_view', 'keywords' => ['product variations', 'sizes', 'colors', 'attributes']],
         ['label' => 'Print Labels', 'module' => 'Items', 'route' => 'items.labels', 'permission' => 'items_print_labels', 'keywords' => ['barcode printing', 'item stickers', 'price tags']],
         ['label' => 'Import Items', 'module' => 'Items', 'route' => 'items.import', 'permission' => 'items_import_items', 'keywords' => ['csv upload products', 'bulk item import']],
-        ['label' => 'Import Services', 'module' => 'Items', 'route' => 'items.service.import', 'permission' => 'items_import_services', 'keywords' => ['csv upload services', 'bulk service import']],
 
         // ── Stock Management ────────────────────────────────────────────────
         ['label' => 'Adjustment List', 'module' => 'Stock', 'route' => 'stock.adjustment', 'permission' => 'stock_adjustment_view', 'keywords' => ['stock adjustments', 'inventory count', 'waste']],
@@ -468,7 +467,8 @@ class GlobalSearchController extends Controller
 
         // ── 10. Stock Transfers ────────────────────────────────────────────
         if ($user->isSuperAdmin() || $user->hasPermission('stock_transfer_view')) {
-            $results = DbStockTransfer::where(function ($q2) use ($like) {
+            $results = DbStockTransfer::where('store_id', $user->store_id)
+                ->where(function ($q2) use ($like) {
                     $q2->where('reference_no', 'like', $like)
                         ->orWhere('note', 'like', $like);
                 })
@@ -491,7 +491,8 @@ class GlobalSearchController extends Controller
 
         // ── 11. Stock Adjustments ──────────────────────────────────────────
         if ($user->isSuperAdmin() || $user->hasPermission('stock_adjustment_view')) {
-            $results = DbStockAdjustment::where(function ($q2) use ($like) {
+            $results = DbStockAdjustment::where('store_id', $user->store_id)
+                ->where(function ($q2) use ($like) {
                     $q2->where('reference_no', 'like', $like)
                         ->orWhere('adjustment_note', 'like', $like);
                 })
@@ -514,7 +515,8 @@ class GlobalSearchController extends Controller
 
         // ── 12. Expenses ───────────────────────────────────────────────────
         if ($user->isSuperAdmin() || $user->hasPermission('expense_view')) {
-            $results = DbExpense::where(function ($q2) use ($like) {
+            $results = DbExpense::where('delete_bit', 0)
+                ->where(function ($q2) use ($like) {
                     $q2->where('expense_code', 'like', $like)
                         ->orWhere('reference_no', 'like', $like)
                         ->orWhere('expense_for', 'like', $like);

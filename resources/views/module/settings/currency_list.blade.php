@@ -202,7 +202,7 @@
                     <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
                 </div>
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                <div x-show="showConfirmModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="inline-block align-bottom bg-white dark:bg-dark-card rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full border border-slate-100 dark:border-dark-border">
+                <div x-show="showConfirmModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="inline-block align-bottom card rounded-2xl text-left overflow-hidden shadow-modal transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
                     <div class="px-6 py-5 border-b border-slate-50 dark:border-dark-border flex items-center gap-3">
                         <div class="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
@@ -220,13 +220,13 @@
                             Continue?
                         </p>
                     </div>
-                    <div class="px-6 py-4 bg-slate-50/50 dark:bg-white/5 border-t border-slate-50 dark:border-dark-border flex justify-end items-center gap-3">
-                        <button @click="showConfirmModal = false; targetCurrencyId = null;" type="button" class="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">
+                    <div class="px-6 py-4 bg-background/50 dark:bg-white/5 border-t border-border dark:border-dark-border flex justify-end items-center gap-3">
+                        <button @click="showConfirmModal = false; targetCurrencyId = null;" type="button" class="btn-secondary">
                             Cancel
                         </button>
                         <form :action="'/settings/currency/' + targetCurrencyId + '/activate'" method="POST" class="inline">
                             @csrf
-                            <button type="submit" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-200/50 dark:shadow-none flex items-center gap-1.5">
+                            <button type="submit" class="btn-primary !bg-success hover:!bg-success/90 flex items-center gap-1.5">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
                                 Confirm & Activate
                             </button>
@@ -243,42 +243,42 @@
                     <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
                 </div>
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                <div x-show="showAddModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="inline-block align-bottom bg-white dark:bg-dark-card rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-100 dark:border-dark-border">
+                <div x-show="showAddModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="inline-block align-bottom card rounded-2xl text-left overflow-hidden shadow-modal transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                     <form action="{{ route('settings.currency.store') }}" method="POST">
                         @csrf
-                        <div class="px-6 py-4 border-b border-slate-50 dark:border-dark-border flex justify-between items-center">
-                            <h3 class="text-xs font-black uppercase tracking-[0.2em] text-slate-800 dark:text-white">Add Currency</h3>
-                            <button @click="showAddModal = false" type="button" class="text-slate-400 hover:text-rose-600 transition-colors">
+                        <div class="px-6 py-4 border-b border-border dark:border-dark-border flex justify-between items-center">
+                            <h3 class="text-xs font-black uppercase tracking-[0.2em] text-text-primary dark:text-dark-text">Add Currency</h3>
+                            <button @click="showAddModal = false" type="button" class="text-text-muted hover:text-danger transition-colors">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                             </button>
                         </div>
                         <div class="px-6 py-6 space-y-4">
                             <div class="space-y-1">
-                                <label class="text-[9px] font-black uppercase tracking-widest text-slate-400">Currency Name</label>
-                                <input type="text" name="currency_name" required placeholder="e.g. US Dollar" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-dark-border rounded-xl text-xs font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all">
+                                <label class="text-[9px] font-black uppercase tracking-widest text-text-muted">Currency Name</label>
+                                <input type="text" name="currency_name" required placeholder="e.g. US Dollar" class="input-base">
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div class="space-y-1">
-                                    <label class="text-[9px] font-black uppercase tracking-widest text-slate-400">Currency Code</label>
-                                    <input type="text" name="currency_code" required placeholder="e.g. USD" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-dark-border rounded-xl text-xs font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all">
+                                    <label class="text-[9px] font-black uppercase tracking-widest text-text-muted">Currency Code</label>
+                                    <input type="text" name="currency_code" required placeholder="e.g. USD" class="input-base">
                                 </div>
                                 <div class="space-y-1">
-                                    <label class="text-[9px] font-black uppercase tracking-widest text-slate-400">Currency Symbol</label>
-                                    <input type="text" name="symbol" required placeholder="e.g. $" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-dark-border rounded-xl text-xs font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all">
+                                    <label class="text-[9px] font-black uppercase tracking-widest text-text-muted">Currency Symbol</label>
+                                    <input type="text" name="symbol" required placeholder="e.g. $" class="input-base">
                                 </div>
                             </div>
                             <div class="space-y-1">
-                                <label class="text-[9px] font-black uppercase tracking-widest text-slate-400">Status</label>
-                                <select name="status" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-dark-border rounded-xl text-xs font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all">
+                                <label class="text-[9px] font-black uppercase tracking-widest text-text-muted">Status</label>
+                                <select name="status" class="input-base">
                                     <option value="0">Inactive</option>
                                     <option value="1">Active (Sets as primary active currency)</option>
                                 </select>
-                                <p class="text-[9px] font-medium text-slate-400 italic">Setting to Active will automatically deactivate any other active currency.</p>
+                                <p class="text-[9px] font-medium text-text-muted italic">Setting to Active will automatically deactivate any other active currency.</p>
                             </div>
                         </div>
-                        <div class="px-6 py-4 bg-slate-50/50 dark:bg-white/5 border-t border-slate-50 dark:border-dark-border flex justify-end gap-3">
-                            <button @click="showAddModal = false" type="button" class="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-700 transition-colors">Cancel</button>
-                            <button type="submit" class="px-6 py-2 bg-rose-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-200/50 dark:shadow-none">Save Currency</button>
+                        <div class="px-6 py-4 bg-background/50 dark:bg-white/5 border-t border-border dark:border-dark-border flex justify-end gap-3">
+                            <button @click="showAddModal = false" type="button" class="btn-secondary">Cancel</button>
+                            <button type="submit" class="btn-primary">Save Currency</button>
                         </div>
                     </form>
                 </div>
@@ -292,56 +292,56 @@
                     <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
                 </div>
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                <div x-show="showEditModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="inline-block align-bottom bg-white dark:bg-dark-card rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-100 dark:border-dark-border">
+                <div x-show="showEditModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="inline-block align-bottom card rounded-2xl text-left overflow-hidden shadow-modal transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                     <form :action="'/settings/currency/' + editId" method="POST">
                         @csrf
-                        <div class="px-6 py-4 border-b border-slate-50 dark:border-dark-border flex justify-between items-center">
-                            <h3 class="text-xs font-black uppercase tracking-[0.2em] text-slate-800 dark:text-white">Edit Currency</h3>
-                            <button @click="showEditModal = false" type="button" class="text-slate-400 hover:text-rose-600 transition-colors">
+                        <div class="px-6 py-4 border-b border-border dark:border-dark-border flex justify-between items-center">
+                            <h3 class="text-xs font-black uppercase tracking-[0.2em] text-text-primary dark:text-dark-text">Edit Currency</h3>
+                            <button @click="showEditModal = false" type="button" class="text-text-muted hover:text-danger transition-colors">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                             </button>
                         </div>
                         <div class="px-6 py-6 space-y-4">
                             <div class="space-y-1">
-                                <label class="text-[9px] font-black uppercase tracking-widest text-slate-400">Currency Name</label>
-                                <input type="text" name="currency_name" required x-model="editName" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-dark-border rounded-xl text-xs font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all">
+                                <label class="text-[9px] font-black uppercase tracking-widest text-text-muted">Currency Name</label>
+                                <input type="text" name="currency_name" required x-model="editName" class="input-base">
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div class="space-y-1">
-                                    <label class="text-[9px] font-black uppercase tracking-widest text-slate-400">Currency Code</label>
-                                    <input type="text" name="currency_code" required x-model="editCode" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-dark-border rounded-xl text-xs font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all">
+                                    <label class="text-[9px] font-black uppercase tracking-widest text-text-muted">Currency Code</label>
+                                    <input type="text" name="currency_code" required x-model="editCode" class="input-base">
                                 </div>
                                 <div class="space-y-1">
-                                    <label class="text-[9px] font-black uppercase tracking-widest text-slate-400">Currency Symbol</label>
-                                    <input type="text" name="symbol" required x-model="editSymbol" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-dark-border rounded-xl text-xs font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all">
+                                    <label class="text-[9px] font-black uppercase tracking-widest text-text-muted">Currency Symbol</label>
+                                    <input type="text" name="symbol" required x-model="editSymbol" class="input-base">
                                 </div>
                             </div>
                             <div class="space-y-1">
-                                <label class="text-[9px] font-black uppercase tracking-widest text-slate-400">Status</label>
+                                <label class="text-[9px] font-black uppercase tracking-widest text-text-muted">Status</label>
                                 <template x-if="isCurrentlyActive">
                                     <div>
                                         <input type="hidden" name="status" value="1">
-                                        <div class="w-full px-4 py-2.5 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40 rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-300 flex items-center justify-between">
+                                        <div class="w-full px-4 py-2.5 bg-success/10 border border-success/20 rounded-xl text-xs font-bold text-success flex items-center justify-between">
                                             <span>Active (System Primary)</span>
-                                            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                            <svg class="w-4 h-4 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
                                         </div>
-                                        <p class="text-[9px] font-medium text-slate-400 italic mt-1">To change active currency, activate another currency from the list.</p>
+                                        <p class="text-[9px] font-medium text-text-muted italic mt-1">To change active currency, activate another currency from the list.</p>
                                     </div>
                                 </template>
                                 <template x-if="!isCurrentlyActive">
                                     <div>
-                                        <select name="status" x-model="editStatus" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-dark-border rounded-xl text-xs font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all">
+                                        <select name="status" x-model="editStatus" class="input-base">
                                             <option value="0">Inactive</option>
                                             <option value="1">Active (Sets as primary active currency)</option>
                                         </select>
-                                        <p class="text-[9px] font-medium text-slate-400 italic mt-1">Changing to Active will automatically deactivate the currently active currency.</p>
+                                        <p class="text-[9px] font-medium text-text-muted italic mt-1">Changing to Active will automatically deactivate the currently active currency.</p>
                                     </div>
                                 </template>
                             </div>
                         </div>
-                        <div class="px-6 py-4 bg-slate-50/50 dark:bg-white/5 border-t border-slate-50 dark:border-dark-border flex justify-end gap-3">
-                            <button @click="showEditModal = false" type="button" class="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-700 transition-colors">Cancel</button>
-                            <button type="submit" class="px-6 py-2 bg-rose-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-200/50 dark:shadow-none">Update Currency</button>
+                        <div class="px-6 py-4 bg-background/50 dark:bg-white/5 border-t border-border dark:border-dark-border flex justify-end gap-3">
+                            <button @click="showEditModal = false" type="button" class="btn-secondary">Cancel</button>
+                            <button type="submit" class="btn-primary">Update Currency</button>
                         </div>
                     </form>
                 </div>

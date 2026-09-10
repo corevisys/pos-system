@@ -74,16 +74,30 @@ class SaleInvoiceController extends Controller
      */
     private function prepareInvoiceData(DbSale $sale, string $paperSize, string $mode): array
     {
-        $store = DbStore::first();
-        if (!$store && $sale->store_id) {
-            $store = DbStore::find($sale->store_id);
+        // Resolve the invoice header store from the SALE's store_id (not the
+        // acting user), so an invoice always renders the store that owns it.
+        // store_settings() memoizes the row under 's{id}', so the currency
+        // symbol resolver below AND the layout's store-name binding reuse this
+        // same row — a single request that renders an invoice therefore issues
+        // exactly ONE db_store SELECT (see the exact-count guarantee test).
+        // Falls back to the memoized default store only when the sale carries
+        // no store_id (pre-multi-store rows).
+        $invoiceStoreId = $sale->store_id ? (int) $sale->store_id : null;
+        $store = function_exists('store_settings')
+            ? store_settings(false, $invoiceStoreId)
+            : ($invoiceStoreId ? DbStore::where('id', $invoiceStoreId)->first() : DbStore::first());
+        if (!$store && $invoiceStoreId) {
+            $store = DbStore::find($invoiceStoreId);
         }
+        $invoiceStoreId = $store->id ?? $invoiceStoreId;
 
-        // Resolve the active currency symbol via the single source of truth.
+        // Resolve the active currency symbol via the single source of truth,
+        // keyed to the sale's store so a multi-store deployment never renders
+        // another store's currency on this invoice.
         // NOTE: db_store has no currency_code column — it has currency_id (FK to db_currency).
         // The old code read $store->currency_code which always returned null, causing every
         // invoice/PDF to silently display '$' regardless of the configured active currency.
-        $currencySymbol = AppServiceProvider::resolveCurrencySymbol();
+        $currencySymbol = AppServiceProvider::resolveCurrencySymbol(false, $invoiceStoreId);
 
         // Store logo base64 encoder for reliable DomPDF rendering without local file URL issues
         $logoBase64 = null;

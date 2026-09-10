@@ -88,9 +88,12 @@ class PurchaseController extends Controller
         $perPage = (int) $request->input('per_page', 10);
         $purchases = $query->paginate($perPage)->withQueryString();
 
-        $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->get();
+        // Phase 4: store-scoped + active-only warehouse dropdown.
+        $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->where('delete_bit', 0)->get();
         $accounts = AcAccount::where('store_id', current_store_id())->where('status', 1)->get();
-        $paymentTypes = DbPaymentType::where('status', 1)->get();
+        $paymentTypes = DbPaymentType::where('status', 1)
+            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->get();
 
         return view('module.purchase.purchase_list', compact('purchases', 'warehouses', 'stats', 'accounts', 'paymentTypes'));
     }
@@ -98,12 +101,19 @@ class PurchaseController extends Controller
     public function create()
     {
         $suppliers = DbSupplier::where('status', 1)->get();
-        $warehouses = DbWarehouse::where('status', 1)->get();
-        $taxes = DbTax::where('status', 1)->get();
-        $paymentTypes = DbPaymentType::where('status', 1)->get();
+        // Phase 4: store-scoped + active-only warehouse dropdown.
+        $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->where('delete_bit', 0)->get();
+        $taxes = DbTax::where('status', 1)
+            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->get();
+        $paymentTypes = DbPaymentType::where('status', 1)
+            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->get();
         $accounts = AcAccount::where('status', 1)->get();
         $categories = DbCategory::where('status', 1)->get();
-        $units = DbUnit::where('status', 1)->get();
+        $units = DbUnit::where('status', 1)
+            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->get();
         $brands = DbBrand::where('status', 1)->get();
 
         return view('module.purchase.new_purchase', compact('suppliers', 'warehouses', 'taxes', 'paymentTypes', 'accounts', 'categories', 'units', 'brands'));
@@ -593,7 +603,9 @@ class PurchaseController extends Controller
         $taxes = DbTax::where('status', 1)
             ->where(fn($q) => $q->where('store_id', current_store_id())->orWhereNull('store_id'))
             ->get();
-        $paymentTypes = DbPaymentType::where('status', 1)->get();
+        $paymentTypes = DbPaymentType::where('status', 1)
+            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->get();
         $accounts = AcAccount::where('status', 1)
             ->where(fn($q) => $q->where('store_id', current_store_id())->orWhereNull('store_id'))
             ->get();

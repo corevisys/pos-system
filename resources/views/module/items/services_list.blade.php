@@ -1,190 +1,268 @@
 <x-app-layout title="Services List">
-    <div>
-        
-        <!-- HEADER & BREADCRUMBS -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-6">
+    <div x-data="servicesListPage()">
+
+        <!-- HEADER & ACTIONS -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
             <div>
-                <h1 class="text-xl font-black tracking-tight text-slate-800 dark:text-white">Services List <span class="text-[10px] font-bold text-slate-400 ml-2 italic uppercase tracking-widest">Management</span></h1>
-                <div class="flex items-center gap-2 text-slate-400 font-medium mt-1">
-                    <a href="{{ route('dashboard') }}" class="hover:text-primary-600 transition-colors text-[10px] flex items-center gap-1 font-bold uppercase tracking-wider">
+                <h1 class="text-xl font-black tracking-tight text-text-primary dark:text-dark-text">Services <span class="text-[10px] font-bold text-text-muted ml-2 italic uppercase tracking-widest">List</span></h1>
+                <div class="flex items-center gap-2 text-text-muted font-medium mt-1">
+                    <a href="{{ route('dashboard') }}" class="hover:text-primary transition-colors text-[10px] flex items-center gap-1">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
                         Home
                     </a>
                     <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
-                    <span class="text-slate-600 text-[10px] font-black uppercase tracking-wider">Services List</span>
+                    <span class="text-text-secondary text-[10px] font-bold uppercase tracking-wider">Services List</span>
                 </div>
+                <p class="text-[10px] text-text-muted font-bold uppercase tracking-widest mt-1 px-1">Service Catalog Management</p>
             </div>
 
             <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                <a href="{{ route('items.service.add') }}" class="flex-grow md:flex-none px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200/50 dark:shadow-none flex items-center justify-center gap-2">
+                <a href="{{ route('items.service.add') }}" class="btn-primary w-full md:w-auto">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
                     New Service
                 </a>
             </div>
         </div>
 
-        <div class="space-y-6">
-            <!-- FILTERS -->
-            <div class="bg-white dark:bg-dark-card rounded-2xl border border-slate-100 dark:border-dark-border p-5 shadow-sm">
-                <h3 class="text-[11px] font-black uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
-                    <span class="w-1.5 h-4 bg-primary-500 rounded-full"></span>
-                    Filter Criteria
-                </h3>
-                <form action="{{ route('items.service.list') }}" method="GET" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <!-- Category -->
-                    <div class="group relative">
-                        <label class="absolute -top-1.5 left-3 px-1 bg-white dark:bg-dark-card text-[9px] font-black uppercase text-slate-400 tracking-widest z-10 transition-colors group-focus-within:text-primary-500">Category</label>
-                        <x-searchable-select name="category_id" :options="$categories" labelKey="category_name" valueKey="id" emptyOption="-All Categories-" emptyValue="" placeholder="All Categories" :value="request('category_id')" change="this.closest('form').submit()" />
+        <!-- FILTER BAR -->
+        <div class="card p-3 mb-4">
+            <form id="serviceFilterForm" x-ref="filterForm" action="{{ route('items.service.list') }}" method="GET" class="flex flex-wrap justify-between items-center gap-4">
+                <div class="flex flex-wrap items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <label class="text-[9px] font-black text-text-muted uppercase tracking-widest italic">Show</label>
+                        <select name="per_page" @change="submitFilters()" class="input-base !w-auto !py-1 !px-2 !text-[10px] !rounded-lg">
+                            <option value="10" {{ request('per_page') == 10 || !request('per_page') ? 'selected' : '' }}>10</option>
+                            <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
+                            <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                            <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
+                        </select>
+                        <label class="text-[9px] font-black text-text-muted uppercase tracking-widest italic">Entries</label>
                     </div>
 
-                    <!-- Search -->
-                    <div class="group relative">
-                        <label class="absolute -top-1.5 left-3 px-1 bg-white dark:bg-dark-card text-[9px] font-black uppercase text-slate-400 tracking-widest z-10 transition-colors group-focus-within:text-primary-500">Search</label>
-                        <div class="relative">
-                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Name/Code..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl py-2 px-3 pl-8 text-[11px] font-bold outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 transition-all">
-                            <svg class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <div class="flex items-center gap-2">
+                        <label class="text-[9px] font-black text-text-muted uppercase tracking-widest italic">Category</label>
+                        <div class="w-44">
+                            <x-searchable-select name="category_id" :options="$categories" labelKey="category_name" valueKey="id" emptyOption="All Categories" emptyValue="" placeholder="All Categories" :value="request('category_id')" change="submitFilters()" />
                         </div>
                     </div>
-                </form>
-            </div>
-
-            <!-- TABLE SECTION -->
-            <div class="bg-white dark:bg-dark-card rounded-3xl border border-slate-100 dark:border-dark-border overflow-hidden shadow-sm">
-                
-                <!-- Table Controls -->
-                <div class="px-4 py-3 border-b border-slate-50 dark:border-dark-border bg-slate-50/20 dark:bg-white/5 flex flex-wrap justify-between items-center gap-4">
-                    <div class="flex items-center gap-2">
-                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">Show</label>
-                        <select class="bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border rounded-lg py-1 px-1 text-[10px] font-bold outline-none focus:ring-1 focus:ring-primary-500 transition-all">
-                            <option>10</option>
-                            <option>25</option>
-                        </select>
-                    </div>
-
-                    <div class="flex bg-slate-100 dark:bg-slate-800 rounded-xl p-1 gap-1">
-                        <button class="px-3 py-1 text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-primary-600 hover:bg-white dark:hover:bg-dark-card rounded-lg transition-all">Copy</button>
-                        <button class="px-3 py-1 text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-primary-600 hover:bg-white dark:hover:bg-dark-card rounded-lg transition-all">Excel</button>
-                        <button class="px-3 py-1 text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-primary-600 hover:bg-white dark:hover:bg-dark-card rounded-lg transition-all">PDF</button>
-                    </div>
                 </div>
 
-                <!-- Table Content -->
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-dark-border">
-                            <tr>
-                                <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Service Info</th>
-                                <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Category</th>
-                                <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Base Price ({{ $currencySymbol }})</th>
-                                <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Sales Price ({{ $currencySymbol }})</th>
-                                <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
-                                <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-50 dark:divide-dark-border">
-                            @forelse($services as $service)
-                                <tr class="hover:bg-slate-50/30 dark:hover:bg-slate-800/30 transition-colors group">
-                                    <td class="px-6 py-2.5">
-                                        <div class="flex flex-col">
-                                            <span class="text-[11px] font-bold text-slate-700 dark:text-slate-200">{{ $service->item_name }}</span>
-                                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-tight">{{ $service->item_code }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-2.5">
-                                        <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400">{{ $service->category->category_name ?? '---' }}</span>
-                                    </td>
-                                    <td class="px-6 py-2.5 text-right font-mono">
-                                        <span class="text-[11px] font-medium text-slate-500">{{ format_currency($service->price) }}</span>
-                                    </td>
-                                    <td class="px-6 py-2.5 text-right font-mono">
-                                        <span class="text-[11px] font-black text-emerald-600 dark:text-emerald-400">{{ format_currency($service->sales_price) }}</span>
-                                    </td>
-                                    <td class="px-6 py-2.5 text-center">
-                                        <span class="px-2 py-0.5 {{ $service->status ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : 'bg-rose-500/10 text-rose-600 border-rose-500/20' }} rounded text-[8px] font-black uppercase tracking-widest border">
-                                            {{ $service->status ? 'Active' : 'Inactive' }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-2.5 text-center">
-                                         <div x-data="{ open: false }" class="relative inline-block text-left">
-                                            <button @click="open = !open" class="px-3 py-1 bg-rose-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-rose-700 transition-all shadow-sm">
-                                                Action
-                                                <svg class="w-2.5 h-2.5 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
-                                            </button>
-                                            <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-36 origin-top-right rounded-xl bg-white dark:bg-dark-card shadow-2xl border border-slate-100 dark:border-dark-border z-20 overflow-hidden" x-cloak>
-                                                <div class="py-1 text-left">
-                                                    <a href="{{ route('items.service.edit', $service->id) }}" class="block px-4 py-2 text-[10px] font-bold text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-500/10 transition-colors uppercase tracking-widest">Edit</a>
-                                                    <a href="javascript:void(0)" onclick="deleteService({{ $service->id }})" class="block px-4 py-2 text-[10px] font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors uppercase tracking-widest border-t border-slate-50 dark:border-dark-border italic">Delete</a>
-                                                </div>
-                                            </div>
-                                         </div>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6" class="px-6 py-10 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest italic">No services found</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Footer / Pagination -->
-                <div class="px-6 py-3 border-t border-slate-50 dark:border-dark-border bg-slate-50/20 dark:bg-white/5 flex flex-wrap justify-between items-center gap-4 text-[10px] font-bold text-slate-500">
-                    <p class="uppercase tracking-widest italic">
-                        Showing {{ $services->firstItem() ?? 0 }} to {{ $services->lastItem() ?? 0 }} of {{ $services->total() }} entries
-                    </p>
-                    <div class="pagination-container">
-                        {{ $services->onEachSide(1)->links() }}
+                <div class="flex flex-wrap items-center gap-2">
+                    <div class="flex items-center gap-1">
+                        <button type="button" @click="copyPageUrl()" class="btn-ghost px-2 py-1 text-[9px] font-black uppercase tracking-widest rounded-lg">Copy</button>
+                        <button type="submit" form="serviceFilterForm" formaction="{{ route('items.service.list', ['export' => 'csv']) }}" class="btn-ghost px-2 py-1 text-[9px] font-black uppercase tracking-widest rounded-lg">Excel</button>
+                        <button type="submit" form="serviceFilterForm" formaction="{{ route('items.service.list', ['export' => 'print']) }}" class="btn-ghost px-2 py-1 text-[9px] font-black uppercase tracking-widest rounded-lg">PDF</button>
+                    </div>
+                    <div class="relative group">
+                        <input type="text" name="search" x-model="searchTerm" @keydown.enter.prevent="submitFilters()" placeholder="Search..." class="input-base !w-40 !py-1.5 !pl-8 !pr-3 !text-[10px] !rounded-xl shadow-sm">
+                        <svg class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
                 </div>
-            </div>
-
+            </form>
         </div>
-    </div>
-</x-app-layout>
 
-@push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    function deleteService(id) {
-        Swal.fire({
-            title: 'Are you sure?',
-            text: "You won't be able to revert this!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#e11d48',
-            cancelButtonColor: '#64748b',
-            confirmButtonText: 'Yes, delete it!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                fetch(`/items/service/delete/${id}`, {
+        <!-- TABLE -->
+        <x-table>
+            <x-slot name="thead">
+                <tr>
+                    <th class="px-4 py-3 text-[9px] font-black text-text-muted uppercase tracking-widest whitespace-nowrap">Service Info</th>
+                    <th class="px-4 py-3 text-[9px] font-black text-text-muted uppercase tracking-widest whitespace-nowrap">Category</th>
+                    <th class="px-4 py-3 text-[9px] font-black text-text-muted uppercase tracking-widest text-right whitespace-nowrap">Base Price ({{ $currencySymbol }})</th>
+                    <th class="px-4 py-3 text-[9px] font-black text-text-muted uppercase tracking-widest text-right whitespace-nowrap">Sales Price ({{ $currencySymbol }})</th>
+                    <th class="px-4 py-3 text-[9px] font-black text-text-muted uppercase tracking-widest text-center whitespace-nowrap">Status</th>
+                    <th class="px-4 py-3 text-[9px] font-black text-text-muted uppercase tracking-widest text-center whitespace-nowrap">Action</th>
+                </tr>
+            </x-slot>
+
+            @forelse($services as $service)
+                <tr class="hover:bg-slate-50/30 dark:hover:bg-slate-800/30 transition-colors group">
+                    <td class="px-4 py-2">
+                        <div class="flex flex-col">
+                            <span class="text-[11px] font-bold text-text-primary dark:text-dark-text">{{ $service->item_name }}</span>
+                            <span class="text-[9px] font-black text-text-muted uppercase tracking-tight">{{ $service->item_code }}</span>
+                        </div>
+                    </td>
+                    <td class="px-4 py-2 whitespace-nowrap">
+                        <span class="text-[10px] font-bold text-text-secondary">{{ $service->category->category_name ?? '---' }}</span>
+                    </td>
+                    <td class="px-4 py-2 text-right whitespace-nowrap">
+                        <span class="text-[11px] font-medium text-text-secondary tabular-nums">{{ format_currency($service->price) }}</span>
+                    </td>
+                    <td class="px-4 py-2 text-right whitespace-nowrap">
+                        <span class="text-[11px] font-black text-emerald-600 dark:text-emerald-400 tabular-nums">{{ format_currency($service->sales_price) }}</span>
+                    </td>
+                    <td class="px-4 py-2 text-center whitespace-nowrap">
+                        @if($service->status)
+                            <x-badge color="success">Active</x-badge>
+                        @else
+                            <x-badge color="neutral">Inactive</x-badge>
+                        @endif
+                    </td>
+                    <td class="px-4 py-2 text-center whitespace-nowrap">
+                        <x-dropdown align="right" width="40">
+                            <x-slot name="trigger">
+                                <button type="button" class="btn-primary !px-2.5 !py-1 text-[8px] flex items-center gap-1">
+                                    Action
+                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                                </button>
+                            </x-slot>
+
+                            <x-slot name="content">
+                                <x-dropdown-link :href="route('items.service.edit', $service->id)">Edit</x-dropdown-link>
+                                <button type="button" @click="toggleServiceStatus({{ $service->id }}, {{ $service->status ? '0' : '1' }}, '{{ $service->status ? 'deactivate' : 'activate' }}')" class="w-full text-left px-3 py-1.5 text-[9px] font-black uppercase tracking-widest {{ $service->status ? 'text-amber-600' : 'text-emerald-600' }} hover:bg-slate-50 dark:hover:bg-slate-500/10 transition-colors">
+                                    {{ $service->status ? 'Deactivate' : 'Activate' }}
+                                </button>
+                                <button type="button" @click="openDeleteModal({{ $service->id }}, '{{ addslashes($service->item_name) }}')" class="w-full text-left px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-danger hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors border-t border-border dark:border-dark-border">
+                                    Delete
+                                </button>
+                            </x-slot>
+                        </x-dropdown>
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="6" class="px-4 py-10 text-center">
+                        <div class="flex flex-col items-center gap-2 opacity-40">
+                            <svg class="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-text-muted">No Services Found!!</p>
+                        </div>
+                    </td>
+                </tr>
+            @endforelse
+        </x-table>
+
+        <!-- Footer / Pagination -->
+        <div class="mt-4 flex flex-wrap justify-between items-center gap-4">
+            <p class="text-[9px] font-black text-text-muted uppercase tracking-widest italic">
+                Showing {{ $services->firstItem() ?? 0 }} to {{ $services->lastItem() ?? 0 }} of {{ $services->total() }} entries
+            </p>
+            <div class="flex gap-1">
+                {{ $services->links() }}
+            </div>
+        </div>
+
+        <!-- DELETE CONFIRMATION MODAL -->
+        <x-modal name="confirm-delete-service" maxWidth="sm">
+            <div class="p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-danger flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-black text-text-primary dark:text-dark-text uppercase tracking-wider">Delete Service</h3>
+                        <p class="text-[11px] text-text-muted mt-0.5">Are you sure you want to delete <span class="font-bold text-text-primary dark:text-dark-text" x-text="deleteName"></span>?</p>
+                    </div>
+                </div>
+
+                <p class="text-[11px] text-text-muted mb-6 bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-border dark:border-dark-border">
+                    This will permanently remove the service from the catalog.
+                </p>
+
+                <div class="flex justify-end gap-2">
+                    <button type="button" @click="$dispatch('close-modal', 'confirm-delete-service')" class="btn-secondary">
+                        Cancel
+                    </button>
+                    <button type="button" @click="submitDelete($event.currentTarget)" class="btn-danger" :disabled="isDeleting">
+                        <span x-show="!isDeleting">Delete Service</span>
+                        <span x-show="isDeleting" class="flex items-center gap-2">
+                            <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                            Deleting...
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </x-modal>
+    </div>
+
+    @push('scripts')
+    <script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('servicesListPage', () => ({
+            searchTerm: @js(request('search')),
+            deleteId: null,
+            deleteName: '',
+            isDeleting: false,
+            isSubmitting: false,
+
+            submitFilters() {
+                if (this.isSubmitting) return;
+                this.isSubmitting = true;
+                this.$refs.filterForm.submit();
+                setTimeout(() => { this.isSubmitting = false; }, 1000);
+            },
+
+            copyPageUrl() {
+                if (navigator.clipboard?.writeText) {
+                    navigator.clipboard.writeText(window.location.href);
+                    if (window.showSuccess) window.showSuccess('Page URL copied to clipboard.');
+                }
+            },
+
+            openDeleteModal(id, name) {
+                this.deleteId = id;
+                this.deleteName = name;
+                $dispatch('open-modal', 'confirm-delete-service');
+            },
+
+            submitDelete(btn) {
+                if (!this.deleteId || this.isDeleting) return;
+                this.isDeleting = true;
+
+                if (btn && window.setButtonLoading) window.setButtonLoading(btn, 'Deleting...');
+
+                fetch('/items/service/delete/' + this.deleteId, {
                     method: 'DELETE',
                     headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     }
                 })
                 .then(response => response.json())
                 .then(data => {
+                    this.isDeleting = false;
                     if (data.success) {
-                        Swal.fire(
-                            'Deleted!',
-                            'Service has been deleted.',
-                            'success'
-                        ).then(() => {
-                            location.reload();
-                        });
+                        $dispatch('close-modal', 'confirm-delete-service');
+                        if (window.showSuccess) window.showSuccess('Service has been deleted.');
+                        setTimeout(() => window.location.reload(), 600);
                     } else {
-                        Swal.fire(
-                            'Error!',
-                            data.message || 'Something went wrong.',
-                            'error'
-                        );
+                        if (window.showError) window.showError(data.message || 'Something went wrong.');
                     }
+                })
+                .catch(error => {
+                    this.isDeleting = false;
+                    if (window.showError) window.showError('An unexpected error occurred. Please try again.');
+                })
+                .finally(() => {
+                    if (btn && window.resetButtonLoading) window.resetButtonLoading(btn);
+                });
+            },
+
+            toggleServiceStatus(id, newStatus, action) {
+                fetch('/items/service/toggle-status/' + id, {
+                    method: 'PATCH',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (window.showSuccess) window.showSuccess(data.message || 'Service updated.');
+                        setTimeout(() => window.location.reload(), 600);
+                    } else {
+                        if (window.showError) window.showError(data.message || 'Something went wrong.');
+                    }
+                })
+                .catch(() => {
+                    if (window.showError) window.showError('An unexpected error occurred. Please try again.');
                 });
             }
-        });
-    }
-</script>
-@endpush
+        }));
+    });
+    </script>
+    @endpush
+</x-app-layout>

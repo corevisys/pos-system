@@ -12,24 +12,45 @@ use Illuminate\Validation\Rule;
 
 class StoreSettingsController extends Controller
 {
+    /**
+     * Resolve the acting store from the authenticated user's store_id.
+     *
+     * There is no route-model binding on this page, so this explicit, scoped
+     * lookup IS the store-scoping guard: a user can only ever read/write their
+     * own store's settings, never DbStore::first().
+     */
+    private function resolveActingStore(): DbStore
+    {
+        $storeId = (int) auth()->user()->store_id;
+
+        if (empty($storeId)) {
+            abort(403, 'No store is associated with your account.');
+        }
+
+        $store = DbStore::where('id', $storeId)->first();
+
+        if (!$store) {
+            abort(404, 'Your store was not found.');
+        }
+
+        return $store;
+    }
+
     public function edit()
     {
-        // For now, we fetch the first store or create one if none exists
-        // In a multi-store setup, this would use auth()->user()->store_id
-        $store = DbStore::first();
-        
-        if (!$store) {
-            $store = DbStore::create([
-                'store_code' => 'ST0001',
-                'store_name' => 'My POS Store',
-                'status' => 1,
-            ]);
+        // Established in-controller gate pattern (mirrors WarehouseController:82,
+        // ExpenseController:154, DepositController:22). A hidden sidebar link is
+        // not access control.
+        if (auth()->check() && !auth()->user()->hasPermission('store_settings_view')) {
+            abort(403, 'Unauthorized access to store settings.');
         }
+
+        $store = $this->resolveActingStore();
 
         $languages = DB::table('db_languages')->get();
         $currencies = DB::table('db_currency')->get();
         $countries = DB::table('db_country')->get();
-        
+
         $states = collect();
         if ($store->country) {
             $states = DB::table('db_states')->where('country', $store->country)->get();
@@ -54,7 +75,12 @@ class StoreSettingsController extends Controller
 
     public function update(Request $request)
     {
-        $store = DbStore::firstOrFail();
+        if (auth()->check() && !auth()->user()->hasPermission('store_settings_edit')) {
+            abort(403, 'Unauthorized access to edit store settings.');
+        }
+
+        $store = $this->resolveActingStore();
+        $actingStoreId = (int) $store->id;
 
         $data = $request->validate([
             'store_name' => 'required|string|max:255',
@@ -72,30 +98,30 @@ class StoreSettingsController extends Controller
             'postcode' => 'nullable|string|max:50',
             'address' => 'nullable|string',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            
+
             // System Settings
             'timezone' => ['nullable', 'string', Rule::in(\DateTimeZone::listIdentifiers())],
             'date_format' => 'nullable|string',
             'time_format' => 'nullable|string',
-            'currency_id' => 'required|integer',
+            'currency_id' => 'required|integer|exists:db_currency,id',
             'currency_placement' => 'nullable|string',
-            'language_id' => 'nullable|integer',
+            'language_id' => 'nullable|integer|exists:db_languages,id',
             'round_off' => 'nullable|integer',
             'decimals' => 'nullable|integer',
             'qty_decimals' => 'nullable|integer',
-            
+
             // Sales Tab
-            'sales_discount' => 'nullable|numeric',
-            'sales_invoice_format_id' => 'nullable|integer',
-            'pos_invoice_format_id' => 'nullable|integer',
+            // NOTE: sales_discount, sales_invoice_format_id, pos_invoice_format_id
+            // and mrp_column were previously validated here with NO form control
+            // and NO consumer anywhere in the codebase (dead columns). The phantom
+            // rules were removed rather than adding UI for dead fields.
             'number_to_words' => 'nullable|integer',
             'change_return' => 'nullable|integer',
-            'mrp_column' => 'nullable|integer',
             'previous_balance_bit' => 'nullable|integer',
             'sales_invoice_footer_text' => 'nullable|string',
             't_and_c_status' => 'nullable|integer',
             'invoice_terms' => 'nullable|string',
-            
+
             // Prefixes Tab
             'category_init' => 'nullable|string|max:50',
             'supplier_init' => 'nullable|string|max:50',
@@ -131,13 +157,14 @@ class StoreSettingsController extends Controller
         );
 
         DB::transaction(function () use (
-            $store, 
-            $data, 
-            $request, 
-            $selectedCurrencyId, 
+            $store,
+            $data,
+            $request,
+            $selectedCurrencyId,
             $currencyNeedsActivation,
             $selectedLanguageId,
-            $languageNeedsActivation
+            $languageNeedsActivation,
+            $actingStoreId
         ) {
             if ($request->hasFile('logo')) {
                 if ($store->store_logo) {
@@ -149,14 +176,14 @@ class StoreSettingsController extends Controller
             $store->update($data);
 
             if ($currencyNeedsActivation) {
-                DbCurrency::activateCurrency($selectedCurrencyId);
+                DbCurrency::activateCurrency($selectedCurrencyId, $actingStoreId);
             }
 
             if ($languageNeedsActivation) {
-                DbLanguage::activateLanguage($selectedLanguageId);
+                DbLanguage::activateLanguage($selectedLanguageId, $actingStoreId);
             }
 
-            store_settings(true);
+            store_settings(true, $actingStoreId);
         });
 
         return redirect()->route('settings.store')->with('success', 'Store settings updated successfully.');

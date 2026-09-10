@@ -34,7 +34,8 @@ class SaleController extends Controller
     public function create()
     {
         $customers = DbCustomer::where('status', 1)->select('id', 'customer_name', 'customer_type')->get();
-        $warehouses = DbWarehouse::where('status', 1)->select('id', 'warehouse_name')->get();
+        // Phase 4: store-scoped + active-only warehouse dropdown.
+        $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->where('delete_bit', 0)->select('id', 'warehouse_name')->get();
         $accounts = AcAccount::where('status', 1)->select('id', 'account_name')->get();
         
         $categories = Cache::remember('db_categories_list', 3600, function () {
@@ -45,11 +46,19 @@ class SaleController extends Controller
             return DbBrand::where('status', 1)->select('id', 'brand_name')->get();
         });
         
-        $taxes = Cache::remember('db_taxes_list', 3600, function () {
-            return DbTax::where('status', 1)->select('id', 'tax_name', 'tax')->get();
+        // Phase 1.4: per-store tax cache key (was one global 'db_taxes_list' key,
+        // so a tax added by any store leaked into every store's dropdown until it
+        // expired) and store-scoped "current OR null" read.
+        $taxStoreId = current_store_id();
+        $taxes = Cache::remember('db_taxes_list_' . $taxStoreId, 3600, function () use ($taxStoreId) {
+            return DbTax::where('status', 1)
+                ->where(fn($w) => $w->where('store_id', $taxStoreId)->orWhereNull('store_id'))
+                ->select('id', 'tax_name', 'tax')->get();
         });
         
-        $paymentTypes = DbPaymentType::where('status', 1)->select('id', 'payment_type')->get();
+        $paymentTypes = DbPaymentType::where('status', 1)
+            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->select('id', 'payment_type')->get();
         
         $nextSalesCode = \App\Services\CodeGeneratorService::generate('sales');
         
@@ -65,12 +74,17 @@ class SaleController extends Controller
     {
         $sale = DbSale::with(['items.item.tax', 'customer', 'warehouse'])->findOrFail($id);
         $customers = DbCustomer::where('status', 1)->get();
-        $warehouses = DbWarehouse::where('status', 1)->get();
+        // Phase 4: store-scoped + active-only warehouse dropdown.
+        $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->where('delete_bit', 0)->get();
         $accounts = AcAccount::where('status', 1)->get();
         $categories = DbCategory::where('status', 1)->get();
         $brands = DbBrand::where('status', 1)->get();
-        $taxes = DbTax::where('status', 1)->get();
-        $paymentTypes = DbPaymentType::where('status', 1)->get();
+        $taxes = DbTax::where('status', 1)
+            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->get();
+        $paymentTypes = DbPaymentType::where('status', 1)
+            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->get();
 
         return view('module.sales.edit', compact('sale', 'customers', 'warehouses', 'accounts', 'categories', 'brands', 'taxes', 'paymentTypes'));
     }
@@ -180,7 +194,8 @@ class SaleController extends Controller
             'total_paid' => $filteredQuery->sum('paid_amount'),
         ];
 
-        $warehouses = DbWarehouse::all();
+        // Phase 4: store-scoped + active-only warehouse dropdown.
+        $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->where('delete_bit', 0)->get();
         $customers = DbCustomer::all();
         $users = User::all();
 
@@ -288,12 +303,19 @@ class SaleController extends Controller
                 ? $sale->returnItems->groupBy('item_id')->map->sum('return_qty')
                 : collect();
 
-            // Restore only the remaining, not-yet-returned quantity per item
+            // Restore only the remaining, not-yet-returned quantity per item — SKIP
+            // service lines (service_bit=1): their stock was never decremented at
+            // checkout, so it must not be incremented back on delete either.
             foreach ($sale->items as $item) {
                 $alreadyReturned = (float) ($returnedQtys[$item->item_id] ?? 0);
                 $remainingQty = max(0, (float) $item->sales_qty - $alreadyReturned);
 
                 if ($remainingQty <= 0.0001) {
+                    continue;
+                }
+
+                $dbItem = DbItem::find($item->item_id);
+                if ($dbItem && (int) $dbItem->service_bit === 1) {
                     continue;
                 }
 
@@ -650,7 +672,9 @@ class SaleController extends Controller
              'other_payments' => (clone $statsQuery)->where('payment_type', '!=', 'Cash')->sum('payment'),
         ];
 
-        $paymentTypes = \App\Models\DbPaymentType::where('status', 1)->orderBy('payment_type')->get();
+        $paymentTypes = \App\Models\DbPaymentType::where('status', 1)
+            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->orderBy('payment_type')->get();
         
         return view('module.sales.payments', compact('payments', 'globalStats', 'paymentTypes'));
     }
@@ -659,7 +683,9 @@ class SaleController extends Controller
     {
         $sale = DbSale::with(['customer', 'payments.account', 'warehouse', 'items.item'])->findOrFail($id);
         $accounts = \App\Models\AcAccount::where('status', 1)->get();
-        $paymentTypes = \App\Models\DbPaymentType::where('status', 1)->get();
+        $paymentTypes = \App\Models\DbPaymentType::where('status', 1)
+            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->get();
         return view('module.sales.receive_payment', compact('sale', 'accounts', 'paymentTypes'));
     }
 

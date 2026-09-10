@@ -14,7 +14,10 @@ class SmsSettingsController extends Controller
 {
     public function index()
     {
-        $store_id = session('store_id') ?? 1;
+        // Resolve the acting store (auth user's store_id, else default/1) rather
+        // than session('store_id') ?? 1 — that session key is never set, so the
+        // old code always edited store #1's config in a multi-store deployment.
+        $store_id = current_store_id();
         $store = DbStore::findOrFail($store_id);
 
         // Load HTTP Params
@@ -37,7 +40,7 @@ class SmsSettingsController extends Controller
 
     public function update(Request $request)
     {
-        $store_id = session('store_id') ?? 1;
+        $store_id = current_store_id();
         
         try {
             DB::beginTransaction();
@@ -132,7 +135,7 @@ class SmsSettingsController extends Controller
             'message' => 'required',
         ]);
 
-        $store_id = session('store_id') ?? 1;
+        $store_id = current_store_id();
         $store = DbStore::findOrFail($store_id);
         $sms_status = $store->sms_status;
 
@@ -158,7 +161,7 @@ class SmsSettingsController extends Controller
 
     public function autoSettings()
     {
-        $store_id = session('store_id') ?? 1;
+        $store_id = current_store_id();
         $store = DbStore::findOrFail($store_id);
 
         $eventTypes = [

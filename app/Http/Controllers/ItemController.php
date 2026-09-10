@@ -22,9 +22,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
+use App\Http\Controllers\Concerns\ImportsItems;
 
 class ItemController extends Controller
 {
+    use ImportsItems;
     public function index(Request $request)
     {
         // Store-scoped base query — cross-store item rows must never appear on this
@@ -129,9 +131,14 @@ class ItemController extends Controller
     {
         $categories = DbCategory::where('status', 1)->where('store_id', current_store_id())->get();
         $brands = DbBrand::where('status', 1)->where('store_id', current_store_id())->get();
-        $units = DbUnit::where('status', 1)->get();
-        $taxes = DbTax::where('status', 1)->get();
-        $warehouses = DbWarehouse::where('status', 1)->get();
+        $units = DbUnit::where('status', 1)
+            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->get();
+        $taxes = DbTax::where('status', 1)
+            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->get();
+        // Phase 4: store-scoped + active-only warehouse dropdown.
+        $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->where('delete_bit', 0)->get();
 
         // Generate Item Code
         $itemCode = \App\Services\CodeGeneratorService::generate('item');
@@ -455,9 +462,14 @@ class ItemController extends Controller
         $item = DbItem::with(['serials', 'warehouseItems'])->findOrFail($id);
         $categories = DbCategory::where('status', 1)->where('store_id', current_store_id())->get();
         $brands = DbBrand::where('status', 1)->where('store_id', current_store_id())->get();
-        $units = DbUnit::where('status', 1)->get();
-        $taxes = DbTax::where('status', 1)->get();
-        $warehouses = DbWarehouse::where('status', 1)->get();
+        $units = DbUnit::where('status', 1)
+            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->get();
+        $taxes = DbTax::where('status', 1)
+            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->get();
+        // Phase 4: store-scoped + active-only warehouse dropdown.
+        $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->where('delete_bit', 0)->get();
         
         $variants = DbItem::where('parent_id', $id)->with(['serials', 'parent', 'warehouseItems'])->get();
         
@@ -870,11 +882,16 @@ class ItemController extends Controller
             abort(403, 'Unauthorized access to Print Labels.');
         }
 
-        $store = DbStore::first();
+        // Resolve the acting store (the printing user's own store) rather than
+        // DbStore::first(), so a Store-B user never sees Store 1's name on a label.
+        $store = function_exists('store_settings') && store_settings()
+            ? store_settings()
+            : DbStore::first();
         $storeName = $store->store_name ?? 'COREVISYS POS';
         $categories = DbCategory::where('status', 1)->where('store_id', current_store_id())->get();
         $brands = DbBrand::where('status', 1)->where('store_id', current_store_id())->get();
-        $warehouses = DbWarehouse::where('status', 1)->get();
+        // Phase 4: store-scoped + active-only warehouse dropdown.
+        $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->where('delete_bit', 0)->get();
 
         $initialItems = [];
         $itemIds = $request->input('items', []);
@@ -981,7 +998,11 @@ class ItemController extends Controller
      */
     private function prepareLabelData(Request $request): array
     {
-        $store = DbStore::first();
+        // Same acting-store resolution as printLabels() — the request-provided
+        // store_name still overrides when supplied.
+        $store = function_exists('store_settings') && store_settings()
+            ? store_settings()
+            : DbStore::first();
         $storeName = $request->input('store_name', $store->store_name ?? 'COREVISYS POS');
         $preset = $request->input('preset', 'sheet_24');
         $showStore = $request->boolean('show_store', true);

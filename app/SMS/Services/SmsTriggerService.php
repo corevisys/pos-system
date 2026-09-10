@@ -338,19 +338,49 @@ class SmsTriggerService
 
             case 'CouponExpiry':
                 // Coupon expiry usually goes to the store admin so they can decide on re-engagement
-                $store = DbStore::find(1);
-                return $store->mobile ?? $store->phone ?? null;
+                return $this->resolveStoreContact($model);
 
             case 'LowStock':
             case 'WarehouseLowStock':
             case 'StockAdjustmentAlert':
             case 'EodSummary':
             case 'BackupCompletedAlert':
-                // These usually go to the admin/store phone
-                $store = DbStore::find(1);
-                return $store->mobile ?? $store->phone ?? null;
+                // These usually go to the admin/store phone — resolve the RELEVANT
+                // store's contact (the model's own store_id, else the acting
+                // store, else the first store) rather than always store #1.
+                return $this->resolveStoreContact($model);
         }
 
         return null;
+    }
+
+    /**
+     * Resolve the store contact (mobile ?? phone) for admin-type alert events.
+     *
+     * Preference order for the store:
+     * 1. The triggering model's own store_id (DbCoupon/DbItem/DbWarehouseItem/
+     *    DbStockAdjustmentItems all carry store_id), so a Store-B alert routes to
+     *    Store B's contact, never silently to Store 1.
+     * 2. The acting store (authenticated user's store) via store_settings().
+     * 3. The first db_store row (legacy single-store behaviour).
+     */
+    protected function resolveStoreContact($model): ?string
+    {
+        $storeId = null;
+
+        if (is_object($model) && !empty($model->store_id)) {
+            $storeId = (int) $model->store_id;
+        } elseif (function_exists('store_settings')) {
+            $acting = store_settings();
+            if ($acting && !empty($acting->id)) {
+                $storeId = (int) $acting->id;
+            }
+        }
+
+        $store = $storeId
+            ? DbStore::find($storeId)
+            : DbStore::query()->orderBy('id')->first();
+
+        return $store ? ($store->mobile ?? $store->phone ?? null) : null;
     }
 }

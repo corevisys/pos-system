@@ -31,7 +31,7 @@ function purchaseFlowUser(): User
 
 test('purchase, return, and signed stock adjustment keep stock and payment records consistent', function () {
     $user = purchaseFlowUser();
-    $warehouse = DbWarehouse::create(['warehouse_name' => 'Flow Warehouse', 'status' => 1]);
+    $warehouse = DbWarehouse::create(['warehouse_name' => 'Flow Warehouse', 'status' => 1, 'store_id' => 1]);
     $supplier = DbSupplier::create(['store_id' => 1, 'supplier_name' => 'Flow Supplier', 'status' => 1]);
     $account = AcAccount::create([
         'store_id' => 1,

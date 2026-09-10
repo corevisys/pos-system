@@ -15,7 +15,7 @@ class RolePermissionSeeder extends Seeder
     {
         $allPermissions = [
             'items_add', 'items_edit', 'items_delete', 'items_view',
-            'import_items', 'brand_add', 'brand_edit', 'brand_delete', 'brand_view',
+            'items_import_items', 'brand_add', 'brand_edit', 'brand_delete', 'brand_view',
             'customers_add', 'customers_edit', 'customers_delete', 'customers_view',
             'sales_add', 'sales_edit', 'sales_delete', 'sales_view',
             'sales_payment_view', 'sales_payment_add', 'sales_payment_delete',
@@ -27,6 +27,7 @@ class RolePermissionSeeder extends Seeder
             'sales_return_add', 'sales_return_edit', 'sales_return_delete', 'sales_return_view',
             'sales_return_report', 'sales_return_payment_view', 'sales_return_payment_add', 'sales_return_payment_delete',
             'payment_types_add', 'payment_types_edit', 'payment_types_delete', 'payment_types_view',
+            'language_view', 'country_view', 'state_view', 'currency_view',
             'import_customers', 'stock_transfer_add', 'stock_transfer_edit', 'stock_transfer_delete', 'stock_transfer_view',
             'seller_points_report', 'services_add', 'services_edit', 'services_delete', 'services_view',
             // Reserved: unused since the Import Services page/route was removed; kept for
@@ -46,7 +47,7 @@ class RolePermissionSeeder extends Seeder
             'purchase_payment_view', 'purchase_payment_add', 'purchase_payment_delete',
             'import_suppliers', 'warehouse_add', 'warehouse_edit', 'warehouse_delete', 'warehouse_view',
             'purchase_tax_report', 'users_add', 'users_edit', 'users_delete', 'users_view',
-            'store_edit', 'roles_add', 'roles_edit', 'roles_delete', 'roles_view',
+            'store_edit', 'store_settings_view', 'store_settings_edit', 'roles_add', 'roles_edit', 'roles_delete', 'roles_view',
             'expense_add', 'expense_edit', 'expense_delete', 'expense_view',
             'expense_report', 'profit_report', 'stock_report', 'item_sales_report',
             'expense_category_add', 'expense_category_edit', 'expense_category_delete', 'expense_category_view',
@@ -55,7 +56,7 @@ class RolePermissionSeeder extends Seeder
             'cash_transactions', 'show_all_users_sales_invoices', 'show_all_users_sales_return_invoices',
             'show_all_users_purchase_invoices', 'show_all_users_purchase_return_invoices',
             'show_all_users_expenses', 'show_all_users_quotations', 'subscription',
-            'smtp_settings', 'send_email', 'sms_settings', 'email_template_edit', 'email_template_view',
+            'smtp_settings_view', 'send_email', 'sms_settings', 'email_template_edit', 'email_template_view',
             'cust_adv_payments_add', 'cust_adv_payments_edit', 'cust_adv_payments_delete', 'cust_adv_payments_view',
             'gstr_1_report', 'gstr_2_report', 'delivery_sheet_report', 'load_sheet_report',
             'show_purchase_price', 'customer_orders_report',
@@ -83,7 +84,7 @@ class RolePermissionSeeder extends Seeder
                 'permissions' => [
                     'dashboard_view', 'dashboard_info_box_1', 'dashboard_info_box_2', 'dashboard_pur_sal_chart',
                     'dashboard_recent_items', 'dashboard_stock_alert', 'dashboard_trending_items_chart',
-                    'items_add', 'items_edit', 'items_view', 'import_items', 'brand_add', 'brand_edit', 'brand_view',
+                    'items_add', 'items_edit', 'items_view', 'items_import_items', 'brand_add', 'brand_edit', 'brand_view',
                     'items_category_add', 'items_category_edit', 'items_category_view',
                     'variant_add', 'variant_edit', 'variant_view', 'variant_delete',
                     'customers_add', 'customers_edit', 'customers_view', 'import_customers',

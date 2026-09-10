@@ -111,7 +111,6 @@ class NavigationShortcutService
                 ['label' => 'Variants List', 'page_key' => 'V', 'route' => 'items.variants', 'permission' => 'variant_view'],
                 ['label' => 'Print Labels', 'page_key' => 'P', 'route' => 'items.labels', 'permission' => 'items_print_labels'],
                 ['label' => 'Import Items', 'page_key' => 'I', 'route' => 'items.import', 'permission' => 'items_import_items'],
-                ['label' => 'Import Services', 'page_key' => 'M', 'route' => 'items.service.import', 'permission' => 'items_import_services'],
             ]
         ],
         'Stock' => [

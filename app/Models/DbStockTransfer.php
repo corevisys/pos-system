@@ -24,7 +24,8 @@ class DbStockTransfer extends Model
         'created_time',
         'system_ip',
         'system_name',
-        'status'
+        'status',
+        'delete_bit'
     ];
 
     public function items()

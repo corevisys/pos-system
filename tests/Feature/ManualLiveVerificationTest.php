@@ -175,7 +175,7 @@ class ManualLiveVerificationTest extends TestCase
     public function test_check3_decimals_0_immediate_reflection_and_cache_invalidation(): void
     {
         $store = DbStore::first();
-        $user = User::first() ?? User::factory()->create(['role_id' => 1]);
+        $user = User::first() ?? User::factory()->create(['role_id' => 1, 'store_id' => 1]);
 
         // POST update to /settings/store with decimals = 0
         $response = $this->actingAs($user)->post('/settings/store', [
@@ -205,7 +205,7 @@ class ManualLiveVerificationTest extends TestCase
     public function test_check4_currency_placement_after_live_flip(): void
     {
         $store = DbStore::first();
-        $user = User::first() ?? User::factory()->create(['role_id' => 1]);
+        $user = User::first() ?? User::factory()->create(['role_id' => 1, 'store_id' => 1]);
 
         // POST update to /settings/store with currency_placement = 'after'
         $response = $this->actingAs($user)->post('/settings/store', [

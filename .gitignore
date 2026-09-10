@@ -70,6 +70,8 @@ Thumbs.db
 # ---- Local testing / scratch ----
 /test_concur.sqlite
 /selects_discovery.txt
+/test_*.txt
+/test_full_after.txt
 
 # ---- Homestead / misc ----
 Homestead.json

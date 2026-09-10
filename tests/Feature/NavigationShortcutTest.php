@@ -20,7 +20,7 @@ class NavigationShortcutTest extends TestCase
         $this->seed();
     }
 
-    public function test_all_91_shortcuts_are_registered_and_have_valid_named_routes()
+    public function test_all_90_shortcuts_are_registered_and_have_valid_named_routes()
     {
         $superAdmin = User::where('role_id', 1)->first() ?? User::factory()->create(['role_id' => 1]);
         $shortcuts = NavigationShortcutService::getShortcutsForUser($superAdmin);
@@ -36,7 +36,7 @@ class NavigationShortcutTest extends TestCase
             }
         }
 
-        $this->assertEquals(91, $totalItems, 'Expected exactly 91 shortcut pages in total.');
+        $this->assertEquals(90, $totalItems, 'Expected exactly 90 shortcut pages in total.');
     }
 
     public function test_zero_module_key_and_zero_page_key_collisions()
@@ -61,10 +61,10 @@ class NavigationShortcutTest extends TestCase
             }
         }
 
-        $this->assertEquals(91, $totalItems);
+        $this->assertEquals(90, $totalItems);
     }
 
-    public function test_super_admin_has_full_permission_for_all_91_shortcuts()
+    public function test_super_admin_has_full_permission_for_all_90_shortcuts()
     {
         $superAdmin = User::where('role_id', 1)->first();
         if (!$superAdmin) {

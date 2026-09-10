@@ -95,7 +95,8 @@ class SalesReturnController extends Controller
         }
 
         $returns = $query->orderBy('id', 'desc')->paginate($request->limit ?? 10);
-        $warehouses = DbWarehouse::where('status', 1)->get();
+        // Phase 4: store-scoped + active-only warehouse dropdown.
+        $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->where('delete_bit', 0)->get();
 
         // Returnable sales for the "New Return" picker: sales that still have
         // at least one item with remaining returnable quantity (mirrors the
@@ -384,7 +385,13 @@ class SalesReturnController extends Controller
                     'returned_serials' => !empty($itemData['serials']) ? json_encode($itemData['serials']) : null,
                 ]);
 
-                // Increment Stock
+                // Increment Stock — SKIP service lines (service_bit=1): their stock was
+                // never decremented at checkout, so a return must not increment it here.
+                $dbItem = DbItem::find($itemData['item_id']);
+                if ($dbItem && (int) $dbItem->service_bit === 1) {
+                    continue;
+                }
+
                 DbItem::where('id', $itemData['item_id'])->increment('stock', $itemData['return_qty']);
                 $whItem = DbWarehouseItem::where('warehouse_id', $sale->warehouse_id)
                     ->where('item_id', $itemData['item_id'])
@@ -510,8 +517,14 @@ class SalesReturnController extends Controller
             DB::beginTransaction();
             $return = DbSalesReturn::with(['items', 'payments'])->findOrFail($id);
 
-            // Revert Stock
+            // Revert Stock — SKIP service lines (service_bit=1): their stock was never
+            // decremented at checkout, so deleting a return must not decrement it here.
             foreach ($return->items as $item) {
+                $dbItem = DbItem::find($item->item_id);
+                if ($dbItem && (int) $dbItem->service_bit === 1) {
+                    continue;
+                }
+
                 DbItem::where('id', $item->item_id)->decrement('stock', $item->return_qty);
                 $whItem = DbWarehouseItem::where('warehouse_id', $return->warehouse_id)
                     ->where('item_id', $item->item_id)

@@ -12,7 +12,14 @@ class SmtpSettingsController extends Controller
 {
     public function index()
     {
-        $store_id = session('store_id') ?? 1;
+        if (auth()->check() && !auth()->user()->hasPermission('smtp_settings_view')) {
+            abort(403, 'Unauthorized access to view SMTP settings.');
+        }
+
+        // Resolve the acting store (auth user's store_id, else default/1) rather
+        // than session('store_id') ?? 1 — that session key is never set, so the
+        // old code always edited store #1's SMTP config in a multi-store deployment.
+        $store_id = current_store_id();
         $store = DbStore::findOrFail($store_id);
 
         return view('module.settings.smtp', compact('store'));
@@ -20,6 +27,10 @@ class SmtpSettingsController extends Controller
 
     public function update(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('smtp_settings_view')) {
+            abort(403, 'Unauthorized access to edit SMTP settings.');
+        }
+
         $request->validate([
             'smtp_host' => 'required',
             'smtp_port' => 'required',
@@ -27,7 +38,7 @@ class SmtpSettingsController extends Controller
             'smtp_pass' => 'required',
         ]);
 
-        $store_id = session('store_id') ?? 1;
+        $store_id = current_store_id();
         $store = DbStore::findOrFail($store_id);
 
         $store->update([
@@ -43,11 +54,15 @@ class SmtpSettingsController extends Controller
 
     public function testSmtp(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('smtp_settings_view')) {
+            abort(403, 'Unauthorized access to send SMTP test emails.');
+        }
+
         $request->validate([
             'email' => 'required|email',
         ]);
 
-        $store_id = session('store_id') ?? 1;
+        $store_id = current_store_id();
         $store = DbStore::findOrFail($store_id);
 
         if ($store->smtp_status != 1) {

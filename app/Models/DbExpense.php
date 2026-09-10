@@ -29,6 +29,8 @@ class DbExpense extends Model
         'system_ip',
         'system_name',
         'status',
+        'delete_bit',
+        'ledger_version',
     ];
 
     public function category()

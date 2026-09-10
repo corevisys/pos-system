@@ -279,7 +279,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::match(['get', 'post'], 'labels/pdf', [App\Http\Controllers\ItemController::class, 'generatePdfLabels'])->name('labels.pdf');
         Route::get('search-items', [App\Http\Controllers\ItemController::class, 'searchItems'])->name('search.items');
         Route::get('labels/batch-items', [App\Http\Controllers\ItemController::class, 'getBatchItemsForLabels'])->name('labels.batch');
-        Route::view('import', 'module.items.import_items')->name('import');
+        Route::get('import', [App\Http\Controllers\ItemController::class, 'import'])->name('import');
+        Route::post('import', [App\Http\Controllers\ItemController::class, 'importStore'])->name('import.store');
+        Route::get('import/template', [App\Http\Controllers\ItemController::class, 'importTemplate'])->name('import.template');
     });
 
 
@@ -288,8 +290,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('adjustment', [App\Http\Controllers\StockAdjustmentController::class, 'index'])->name('adjustment');
         Route::get('adjustment/create', [App\Http\Controllers\StockAdjustmentController::class, 'create'])->name('adjustment.create');
         Route::post('adjustment/store', [App\Http\Controllers\StockAdjustmentController::class, 'store'])->name('adjustment.store');
+        Route::get('adjustment/{id}/show', [App\Http\Controllers\StockAdjustmentController::class, 'show'])->name('adjustment.show');
         Route::get('adjustment/{id}/edit', [App\Http\Controllers\StockAdjustmentController::class, 'edit'])->name('adjustment.edit');
         Route::post('adjustment/{id}/update', [App\Http\Controllers\StockAdjustmentController::class, 'update'])->name('adjustment.update');
+        Route::delete('adjustment/{id}', [App\Http\Controllers\StockAdjustmentController::class, 'destroy'])->name('adjustment.destroy');
         Route::get('adjustment/search-items', [App\Http\Controllers\StockAdjustmentController::class, 'searchItems'])->name('adjustment.search.items');
         Route::get('transfer', [App\Http\Controllers\StockTransferController::class, 'index'])->name('transfer');
         Route::get('transfer/create', [App\Http\Controllers\StockTransferController::class, 'create'])->name('transfer.create');
@@ -305,6 +309,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('list', [App\Http\Controllers\ExpenseController::class, 'index'])->name('list');
         Route::get('add', [App\Http\Controllers\ExpenseController::class, 'create'])->name('add');
         Route::post('store', [App\Http\Controllers\ExpenseController::class, 'store'])->name('store');
+        Route::get('edit/{id}', [App\Http\Controllers\ExpenseController::class, 'edit'])->name('edit');
+        Route::post('update/{id}', [App\Http\Controllers\ExpenseController::class, 'update'])->name('update');
         Route::delete('delete/{id}', [App\Http\Controllers\ExpenseController::class, 'destroy'])->name('delete');
         Route::get('categories', [App\Http\Controllers\ExpenseCategoryController::class, 'index'])->name('categories');
         Route::get('categories/add', [App\Http\Controllers\ExpenseCategoryController::class, 'create'])->name('categories.add');

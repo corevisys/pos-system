@@ -25,7 +25,7 @@ class PermissionSeeder extends Seeder
 
         $permissions = [
             'items_add', 'items_edit', 'items_delete', 'items_view',
-            'import_items', 'brand_add', 'brand_edit', 'brand_delete', 'brand_view',
+            'items_import_items', 'brand_add', 'brand_edit', 'brand_delete', 'brand_view',
             'customers_add', 'customers_edit', 'customers_delete', 'customers_view',
             'sales_add', 'sales_edit', 'sales_delete', 'sales_view',
             'sales_payment_view', 'sales_payment_add', 'sales_payment_delete',
@@ -37,8 +37,11 @@ class PermissionSeeder extends Seeder
             'sales_return_add', 'sales_return_edit', 'sales_return_delete', 'sales_return_view',
             'sales_return_report', 'sales_return_payment_view', 'sales_return_payment_add', 'sales_return_payment_delete',
             'payment_types_add', 'payment_types_edit', 'payment_types_delete', 'payment_types_view',
+            'language_view', 'country_view', 'state_view', 'currency_view',
             'import_customers', 'stock_transfer_add', 'stock_transfer_edit', 'stock_transfer_delete', 'stock_transfer_view',
             'seller_points_report', 'services_add', 'services_edit', 'services_delete', 'services_view',
+            // Reserved: unused since the Import Services page/route was removed; kept for
+            // a potential future re-implementation of bulk service import.
             'import_services', 'stock_adjustment_add', 'stock_adjustment_edit', 'stock_adjustment_delete', 'stock_adjustment_view',
             'variant_add', 'variant_edit', 'variant_delete', 'variant_view',
             'accounts_add', 'accounts_edit', 'accounts_delete', 'accounts_view',
@@ -54,7 +57,7 @@ class PermissionSeeder extends Seeder
             'purchase_payment_view', 'purchase_payment_add', 'purchase_payment_delete',
             'import_suppliers', 'warehouse_add', 'warehouse_edit', 'warehouse_delete', 'warehouse_view',
             'purchase_tax_report', 'users_add', 'users_edit', 'users_delete', 'users_view',
-            'store_edit', 'roles_add', 'roles_edit', 'roles_delete', 'roles_view',
+            'store_edit', 'store_settings_view', 'store_settings_edit', 'roles_add', 'roles_edit', 'roles_delete', 'roles_view',
             'expense_add', 'expense_edit', 'expense_delete', 'expense_view',
             'expense_report', 'profit_report', 'stock_report', 'item_sales_report',
             'expense_category_add', 'expense_category_edit', 'expense_category_delete', 'expense_category_view',
@@ -63,7 +66,7 @@ class PermissionSeeder extends Seeder
             'cash_transactions', 'show_all_users_sales_invoices', 'show_all_users_sales_return_invoices',
             'show_all_users_purchase_invoices', 'show_all_users_purchase_return_invoices',
             'show_all_users_expenses', 'show_all_users_quotations', 'subscription',
-            'smtp_settings', 'send_email', 'sms_settings', 'email_template_edit', 'email_template_view',
+            'smtp_settings_view', 'send_email', 'sms_settings', 'email_template_edit', 'email_template_view',
             'cust_adv_payments_add', 'cust_adv_payments_edit', 'cust_adv_payments_delete', 'cust_adv_payments_view',
             'gstr_1_report', 'gstr_2_report', 'delivery_sheet_report', 'load_sheet_report',
             'show_purchase_price', 'customer_orders_report',

@@ -73,7 +73,8 @@ class DashboardController extends Controller
             $todayRevenue = max(0, $todayRevenue - $todayInvoiceDiscounts);
         }
 
-        $todayExpenses = (float) DbExpense::whereDate('expense_date', $today)->sum('expense_amt');
+        // Exclude soft-deleted (delete_bit=1) expenses so deleted rows are not re-counted.
+        $todayExpenses = (float) DbExpense::where('delete_bit', 0)->whereDate('expense_date', $today)->sum('expense_amt');
 
         // Sales returns today
         $todayReturnData = DB::table('db_salesitemsreturn')

@@ -235,16 +235,31 @@ aside.sidebar-collapsed .sidebar-footer {
 	display: none;
 }
 
+aside.sidebar-collapsed .sidebar-upgrade-expanded {
+	display: none !important;
+}
+
+aside:not(.sidebar-collapsed) .sidebar-upgrade-collapsed {
+	display: none !important;
+}
+
+aside.sidebar-collapsed .sidebar-upgrade-collapsed {
+	display: flex !important;
+	justify-content: center;
+	align-items: center;
+}
+
 aside.sidebar-collapsed nav {
 	padding-left: 0.75rem;
 	padding-right: 0.75rem;
+	overflow: visible;
 }
 
 aside.sidebar-collapsed nav>div>div.pl-12 {
 	display: none !important;
 }
 
-aside.sidebar-collapsed nav span {
+aside.sidebar-collapsed nav span:not(.sidebar-tooltip) {
 	display: none;
 }
 
@@ -253,10 +268,25 @@ aside.sidebar-collapsed nav button {
 	justify-content: center;
 	padding-left: 0.5rem;
 	padding-right: 0.5rem;
+	cursor: pointer;
 }
 
 aside.sidebar-collapsed nav button>svg {
 	display: none;
+}
+
+/* ═══ Sidebar Collapsed Tooltips ═══ */
+.sidebar-tooltip {
+	display: none !important;
+}
+
+aside.sidebar-collapsed .sidebar-tooltip {
+	display: block !important;
+}
+
+aside.sidebar-collapsed .group:hover .sidebar-tooltip,
+aside.sidebar-collapsed .group\/upgrade:hover .sidebar-tooltip {
+	opacity: 1 !important;
 }
 
 /* ═══ App sidebar theming (THEME_REFERENCE §6 — Sidebar) ═══ */

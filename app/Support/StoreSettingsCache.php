@@ -5,39 +5,41 @@ namespace App\Support;
 use App\Models\DbStore;
 
 /**
- * Process-lifetime memoization holder for the active store's settings,
- * timezone, and currency symbol.
+ * Process-lifetime memoization holder for store settings, timezone, and
+ * currency symbol, keyed by store id.
  *
- * These values were previously kept in function/method-local `static` variables
- * (store_settings(), AppServiceProvider::configureStoreTimezone(),
- * AppServiceProvider::resolveCurrencySymbol()). Locals like that live for the
- * entire PHP process, so in the test suite a store row seeded by one test (e.g.
- * "SMS Store" in CustomerAddedSmsTest) would be cached and then leak into every
- * later test that calls store_settings() without $fresh — even after
- * RefreshDatabase has replaced the rows — causing cross-suite failures such as
- * PageTitleTest asserting <title>Dashboard - SMS Store</title>.
+ * Previously these values were kept in single static slots ($store,
+ * $timezone, $currencySymbol) with no store-id dimension, so in a multi-store
+ * deployment the FIRST row in db_store (DbStore::first()) was cached and
+ * served to every store — the same "cached-query store-scoping trap" already
+ * found and fixed in Warehouse.
+ *
+ * Each entry is keyed by 's{storeId}'; the special key 'default' is used when
+ * no store can be resolved (unauthenticated / CLI contexts). array_key_exists()
+ * is used to distinguish "not yet resolved" from "resolved to null" (i.e. the
+ * store row does not exist).
  *
  * Hoisting the cache here lets tests drop it between cases via
  * StoreSettingsCache::flush() while keeping production behaviour identical.
  */
 class StoreSettingsCache
 {
-    /** @var DbStore|null The memoized active store (null = not yet resolved). */
-    public static ?DbStore $store = null;
+    /** @var array<string, DbStore|null> The memoized store rows by cache key. */
+    public static array $store = [];
 
-    /** @var string|null The memoized resolved timezone identifier. */
-    public static ?string $timezone = null;
+    /** @var array<string, string|null> The memoized resolved timezone identifiers by cache key. */
+    public static array $timezone = [];
 
-    /** @var string|null The memoized active currency symbol. */
-    public static ?string $currencySymbol = null;
+    /** @var array<string, string|null> The memoized active currency symbols by cache key. */
+    public static array $currencySymbol = [];
 
     /**
      * Drop every memoized value so the next access re-reads from the database.
      */
     public static function flush(): void
     {
-        static::$store = null;
-        static::$timezone = null;
-        static::$currencySymbol = null;
+        static::$store = [];
+        static::$timezone = [];
+        static::$currencySymbol = [];
     }
 }
