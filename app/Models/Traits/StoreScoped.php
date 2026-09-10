@@ -9,7 +9,11 @@ trait StoreScoped
         static::addGlobalScope('store_id', function ($query) {
             if (function_exists('current_store_id') && auth()->check()) {
                 $storeId = current_store_id();
-                $query->where($query->getModel()->getTable() . '.store_id', $storeId);
+                $table = $query->getModel()->getTable();
+                $query->where(function ($q) use ($table, $storeId) {
+                    $q->where($table . '.store_id', $storeId)
+                      ->orWhereNull($table . '.store_id');
+                });
             }
         });
     }
