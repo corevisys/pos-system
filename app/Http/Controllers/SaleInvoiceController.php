@@ -28,7 +28,7 @@ class SaleInvoiceController extends Controller
             'warehouse',
             'serials',
             'emi.schedule'
-        ])->findOrFail($id);
+        ])->allStores()->findOrFail($id);
 
         $paperSize = strtolower($request->query('paper_size', 'a4'));
         if (!in_array($paperSize, ['a4', 'letter'], true)) {
