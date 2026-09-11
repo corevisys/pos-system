@@ -22,8 +22,8 @@ class MultiStoreDashboardController extends Controller
      */
     public function index(Request $request)
     {
-        // Permission gate — must have the dedicated slug
-        if (!auth()->user()->hasPermission('multi_store_dashboard_view')) {
+        // Double-gate defense-in-depth: must be Super Admin AND have the permission slug
+        if (!auth()->user()->isSuperAdmin() || !auth()->user()->hasPermission('multi_store_dashboard_view')) {
             abort(403, 'You do not have permission to view the Multi-Store Dashboard.');
         }
 

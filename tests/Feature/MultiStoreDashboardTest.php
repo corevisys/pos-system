@@ -292,3 +292,154 @@ test('Multi-Store Dashboard: network month purchases aggregates both stores', fu
     // 2000 + 1500 = 3500 combined
     expect((float) $networkStats['this_month_purchases'])->toEqual(3500.00);
 });
+
+// ============================================================================
+// GAP 1: ADMIN ROLE (NON-SUPER-ADMIN) IS DENIED ACCESS (403) VIA isSuperAdmin()
+// ============================================================================
+
+test('Multi-Store Dashboard: Admin role user with broad permissions (and even with permission slug) is denied access (403) because isSuperAdmin is false', function () {
+    $env = setupMultiStoreDashboardEnv();
+
+    // Create an Admin role (id=3, role_name = "Admin")
+    $adminRole = DbRole::firstOrCreate(['id' => 3], [
+        'store_id'  => $env['storeA']->id,
+        'role_name' => 'Admin',
+        'status'    => 1,
+    ]);
+
+    // Give this Admin all standard permissions AND explicitly assign the slug
+    DbPermission::updateOrCreate(['role_id' => $adminRole->id], [
+        'store_id'    => $env['storeA']->id,
+        'permissions' => [
+            'dashboard_view', 'dashboard_view_dashboard_data',
+            'items_view', 'sales_view', 'purchase_view', 'store_settings_view',
+            'multi_store_dashboard_view', // Even if this slug is maliciously/mistakenly present!
+        ],
+    ]);
+
+    $adminUser = User::factory()->create([
+        'store_id'  => $env['storeA']->id,
+        'role_id'   => $adminRole->id,
+        'role_name' => 'Admin',
+    ]);
+
+    expect($adminUser->isSuperAdmin())->toBeFalse();
+    expect($adminUser->hasPermission('multi_store_dashboard_view'))->toBeTrue();
+
+    // Must still receive 403 Forbidden because of isSuperAdmin() defense-in-depth gate
+    $response = $this->actingAs($adminUser)->get(route('multi-store-dashboard'));
+    $response->assertForbidden();
+});
+
+// ============================================================================
+// GAP 4: STORE PARITY (SAME FIGURES ON STORE DASHBOARD AND MULTI-STORE DASHBOARD)
+// ============================================================================
+
+test('Multi-Store Dashboard: store parity — single-store DashboardController stats exactly match the store card stats in MultiStoreDashboardController', function () {
+    $env = setupMultiStoreDashboardEnv();
+    $today = Carbon::today()->format('Y-m-d');
+
+    // Create realistic sales and purchases for Store A
+    DbSale::create([
+        'store_id'       => $env['storeA']->id,
+        'warehouse_id'   => $env['warehouseA']->id,
+        'sales_code'     => 'PARITY-SALE-001',
+        'sales_date'     => $today,
+        'subtotal'       => 1250.00,
+        'grand_total'    => 1250.00,
+        'paid_amount'    => 1000.00, // 250 due
+        'payment_status' => 'Partial',
+        'sales_status'   => 'Final',
+        'status'         => 1,
+    ]);
+
+    DbPurchase::create([
+        'store_id'       => $env['storeA']->id,
+        'warehouse_id'   => $env['warehouseA']->id,
+        'purchase_code'  => 'PARITY-PUR-001',
+        'purchase_date'  => $today,
+        'subtotal'       => 750.00,
+        'grand_total'    => 750.00,
+        'paid_amount'    => 750.00,
+        'payment_status' => 'Paid',
+        'status'         => 1,
+    ]);
+
+    // Also create some Store B activity so we prove they don't contaminate Store A
+    DbSale::create([
+        'store_id'       => $env['storeB']->id,
+        'warehouse_id'   => $env['warehouseB']->id,
+        'sales_code'     => 'PARITY-B-001',
+        'sales_date'     => $today,
+        'subtotal'       => 999.00,
+        'grand_total'    => 999.00,
+        'paid_amount'    => 999.00,
+        'payment_status' => 'Paid',
+        'sales_status'   => 'Final',
+        'status'         => 1,
+    ]);
+
+    // 1. Regular store user visits their own store dashboard (/dashboard)
+    $storeAUser = User::factory()->create([
+        'store_id'  => $env['storeA']->id,
+        'role_id'   => $env['regularUser']->role_id,
+        'role_name' => 'Store User',
+    ]);
+
+    $singleResponse = $this->actingAs($storeAUser)->get(route('dashboard'));
+    $singleResponse->assertOk();
+    $singleStats = $singleResponse->viewData('stats');
+
+    // 2. Super Admin visits Multi-Store dashboard (/multi-store-dashboard)
+    $multiResponse = $this->actingAs($env['superAdmin'])->get(route('multi-store-dashboard'));
+    $multiResponse->assertOk();
+    $multiStoreStats = $multiResponse->viewData('storeStats');
+    $storeAEntry = $multiStoreStats->first(fn($e) => $e['store']->id === $env['storeA']->id);
+
+    expect($storeAEntry)->not->toBeNull();
+    $multiStats = $storeAEntry['stats']['stats'];
+
+    // 3. Exact parity assertions across all key metric figures
+    expect((float) $multiStats['today_sales'])->toEqual((float) $singleStats['today_sales']);
+    expect((int) $multiStats['today_orders'])->toEqual((int) $singleStats['today_orders']);
+    expect((float) $multiStats['this_month_sales'])->toEqual((float) $singleStats['this_month_sales']);
+    expect((float) $multiStats['this_month_purchases'])->toEqual((float) $singleStats['this_month_purchases']);
+    expect((float) $multiStats['total_outstanding_due'])->toEqual((float) $singleStats['total_outstanding_due']);
+    expect($multiStats['month_change_percent'])->toEqual($singleStats['month_change_percent']);
+});
+
+// ============================================================================
+// TEST: NAV LINK VISIBILITY IS RESTRICTED TO SUPER ADMIN
+// ============================================================================
+
+test('Multi-Store Dashboard: sidebar nav link is visible ONLY to Super Admin', function () {
+    $env = setupMultiStoreDashboardEnv();
+
+    // 1. Super Admin sees the link
+    $response = $this->actingAs($env['superAdmin'])->get(route('dashboard'));
+    $response->assertSee(route('multi-store-dashboard'));
+    $response->assertSee('Multi-Store');
+
+    // 2. Regular user does NOT see the link
+    $responseRegular = $this->actingAs($env['regularUser'])->get(route('dashboard'));
+    $responseRegular->assertDontSee(route('multi-store-dashboard'));
+
+    // 3. Admin user (non-super-admin, even with permission) does NOT see the link
+    $adminRole = DbRole::firstOrCreate(['id' => 4], [
+        'store_id'  => $env['storeA']->id,
+        'role_name' => 'Store Admin',
+        'status'    => 1,
+    ]);
+    DbPermission::updateOrCreate(['role_id' => $adminRole->id], [
+        'store_id'    => $env['storeA']->id,
+        'permissions' => ['dashboard_view', 'dashboard_view_dashboard_data', 'multi_store_dashboard_view'],
+    ]);
+    $adminUser = User::factory()->create([
+        'store_id'  => $env['storeA']->id,
+        'role_id'   => $adminRole->id,
+        'role_name' => 'Store Admin',
+    ]);
+
+    $responseAdmin = $this->actingAs($adminUser)->get(route('dashboard'));
+    $responseAdmin->assertDontSee(route('multi-store-dashboard'));
+});

@@ -67,6 +67,11 @@ class RolePermissionSeeder extends Seeder
             'cash_reconciliation_view', 'cash_reconciliation_add', 'cash_reconciliation_adjust', 'cash_reconciliation_delete', 'cash_reconciliation_report'
         ];
 
+        // Multi-store dashboard is strictly exclusive to Super Admin
+        $adminPermissions = array_values(array_diff($allPermissions, [
+            'multi_store_dashboard_view',
+        ]));
+
         $roles = [
             [
                 'name' => 'Super Admin',
@@ -76,7 +81,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'name' => 'Admin',
                 'description' => 'Administrative access to most features',
-                'permissions' => $allPermissions
+                'permissions' => $adminPermissions
             ],
             [
                 'name' => 'Manager',
