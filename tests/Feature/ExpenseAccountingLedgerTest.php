@@ -48,6 +48,7 @@ test('1. Creating expense with cash account creates AcTransaction debit entry an
     ]);
 
     $category = DbExpenseCategory::create([
+        'store_id' => 1,
         'category_name' => 'Office Supplies',
         'status' => 1,
     ]);
@@ -88,6 +89,7 @@ test('2. Creating expense without account_id does not touch AcTransaction or acc
     $user = getExpenseAccountingTestUser();
 
     $category = DbExpenseCategory::create([
+        'store_id' => 1,
         'category_name' => 'Utilities',
         'status' => 1,
     ]);
@@ -124,6 +126,7 @@ test('3. Deleting expense removes AcTransaction and restores account balance', f
     ]);
 
     $category = DbExpenseCategory::create([
+        'store_id' => 1,
         'category_name' => 'Maintenance',
         'status' => 1,
     ]);
@@ -178,6 +181,7 @@ test('4. Cash transactions ledger displays EXPENSE entries with account name and
     ]);
 
     $category = DbExpenseCategory::create([
+        'store_id' => 1,
         'category_name' => 'Refreshments',
         'status' => 1,
     ]);

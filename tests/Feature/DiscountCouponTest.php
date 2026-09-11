@@ -44,12 +44,14 @@ function setupCouponTestEnvironment() {
     ]);
 
     $warehouse = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Main Test Warehouse',
         'status' => 1,
         'store_id' => 1,
     ]);
 
     $customer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'VIP Customer',
         'mobile' => '+8801811111111',
         'status' => 1,
@@ -57,6 +59,7 @@ function setupCouponTestEnvironment() {
     ]);
 
     $item = DbItem::create([
+        'store_id' => 1,
         'item_name' => 'Premium Headset',
         'item_code' => 'ITM-HD01',
         'sales_price' => 1000.00,
@@ -245,6 +248,7 @@ test('validates customer-restricted coupon only for assigned customer', function
     $env = setupCouponTestEnvironment();
 
     $otherCustomer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'Other Customer',
         'mobile' => '+8801999999999',
         'status' => 1,

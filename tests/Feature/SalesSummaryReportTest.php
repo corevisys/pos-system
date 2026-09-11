@@ -59,11 +59,13 @@ test('sales summary data endpoint returns accurate metrics, breakdowns, and char
 
     // Create warehouse, customer, category, item
     $warehouse = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Main Test Warehouse',
         'status' => 1,
     ]);
 
     $customer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'John Doe',
         'customer_code' => 'CUST-TEST-001',
         'mobile' => '01711000000',
@@ -71,11 +73,13 @@ test('sales summary data endpoint returns accurate metrics, breakdowns, and char
     ]);
 
     $category = DbCategory::create([
+        'store_id' => 1,
         'category_name' => 'Electronics',
         'status' => 1,
     ]);
 
     $item = DbItem::create([
+        'store_id' => 1,
         'item_name' => 'Wireless Mouse',
         'item_code' => 'ITM-MOUSE-01',
         'category_id' => $category->id,
@@ -103,6 +107,7 @@ test('sales summary data endpoint returns accurate metrics, breakdowns, and char
     ]);
 
     DbSaleItem::create([
+        'store_id' => 1,
         'sales_id' => $sale->id,
         'item_id' => $item->id,
         'sales_qty' => 2,
@@ -115,6 +120,7 @@ test('sales summary data endpoint returns accurate metrics, breakdowns, and char
     ]);
 
     DbSalePayment::create([
+        'store_id' => 1,
         'sales_id' => $sale->id,
         'customer_id' => $customer->id,
         'payment_date' => $today,

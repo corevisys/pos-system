@@ -96,6 +96,7 @@ test('super admin can access print labels page and pre-load items via query para
     $tax = DbTax::create(['tax_name' => 'GST 0%', 'tax' => 0, 'status' => 1, 'store_id' => 1]);
 
     $item1 = DbItem::create([
+        'store_id' => 1,
         'item_name' => 'Sony WH-1000XM5 Wireless Headphones',
         'item_code' => 'IT-00101',
         'custom_barcode' => 'SNY-WH1000-XM5',
@@ -129,6 +130,7 @@ test('ajax search-items endpoint returns items with real vector Code128 barcode 
     $tax = DbTax::create(['tax_name' => 'None', 'tax' => 0, 'status' => 1, 'store_id' => 1]);
 
     $item = DbItem::create([
+        'store_id' => 1,
         'item_name' => 'JBL Flip 6 Portable Bluetooth Speaker',
         'item_code' => 'IT-00202',
         'custom_barcode' => '890123456789',
@@ -169,6 +171,7 @@ test('batch-items endpoint loads category items with real barcode SVGs', functio
     $tax = DbTax::create(['tax_name' => 'None', 'tax' => 0, 'status' => 1, 'store_id' => 1]);
 
     DbItem::create([
+        'store_id' => 1,
         'item_name' => 'SanDisk Extreme Pro 128GB',
         'item_code' => 'IT-00301',
         'custom_barcode' => 'SNDK-128GB-PRO',

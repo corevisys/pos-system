@@ -83,8 +83,8 @@ test('UI Flow 2: Form submission opens drawer, displays live estimate show page,
         'status' => 1,
         'delete_bit' => 0,
     ]);
-    $warehouse = DbWarehouse::create(['warehouse_name' => 'Showroom WH', 'status' => 1]);
-    $customer = DbCustomer::create(['customer_name' => 'Walk-in', 'customer_code' => 'CUST-UI-1', 'status' => 1]);
+    $warehouse = DbWarehouse::create(['store_id' => 1, 'warehouse_name' => 'Showroom WH', 'status' => 1]);
+    $customer = DbCustomer::create(['store_id' => 1, 'customer_name' => 'Walk-in', 'customer_code' => 'CUST-UI-1', 'status' => 1]);
 
     // 1. Morning Open: Open drawer with $200 float
     $openResponse = $this->actingAs($user)->post(route('accounts.cash-reconciliation.open'), [
@@ -112,7 +112,7 @@ test('UI Flow 2: Form submission opens drawer, displays live estimate show page,
     $ret = DbSalesReturn::create(['store_id' => 1, 'sales_id' => $sale->id, 'warehouse_id' => $warehouse->id, 'customer_id' => $customer->id, 'return_code' => 'RTN-UI-01', 'return_date' => $today, 'grand_total' => 80, 'paid_amt' => 80]);
     DbSalesPaymentReturn::create(['store_id' => 1, 'sales_id' => $sale->id, 'return_id' => $ret->id, 'account_id' => $account->id, 'payment_type' => 'Cash', 'payment' => 80.00, 'payment_date' => $today, 'created_by' => $user->id]);
 
-    $cat = DbExpenseCategory::create(['category_name' => 'Supplies', 'status' => 1]);
+    $cat = DbExpenseCategory::create(['store_id' => 1, 'category_name' => 'Supplies', 'status' => 1]);
     DbExpense::create(['store_id' => 1, 'expense_code' => 'EXP-UI-01', 'category_id' => $cat->id, 'expense_date' => $today, 'expense_for' => 'Cleaning', 'expense_amt' => 45.00, 'payment_type' => 'Cash', 'account_id' => $account->id, 'created_by' => $user->id]);
 
     // 4. Access Evening Close Form

@@ -73,23 +73,27 @@ class StockTransferDeleteHardeningTest extends TestCase
         ]);
 
         $this->fromWh = DbWarehouse::create([
+            'store_id' => 1,
             'warehouse_name' => 'PhaseA Source',
             'store_id' => 1,
             'status' => 1,
         ]);
 
         $this->toWh = DbWarehouse::create([
+            'store_id' => 1,
             'warehouse_name' => 'PhaseA Destination',
             'store_id' => 1,
             'status' => 1,
         ]);
 
         $this->category = DbCategory::create([
+            'store_id' => 1,
             'category_name' => 'PhaseA Category',
             'status' => 1,
         ]);
 
         $this->item = DbItem::create([
+            'store_id' => 1,
             'item_name' => 'PhaseA Transfer Item',
             'item_code' => 'PA-TR-001',
             'category_id' => $this->category->id,
@@ -101,6 +105,7 @@ class StockTransferDeleteHardeningTest extends TestCase
         ]);
 
         $this->customer = DbCustomer::create([
+            'store_id' => 1,
             'customer_name' => 'PhaseA Customer',
             'mobile' => '01700000002',
             'status' => 1,
@@ -472,6 +477,7 @@ class StockTransferDeleteHardeningTest extends TestCase
         // verify the revert's serial clause: re-run the transfer's edit to a NEW
         // destination with the SAME serials — the sold serial must NOT be moved.
         $toWh2 = DbWarehouse::create([
+            'store_id' => 1,
             'warehouse_name' => 'PhaseA Dest2',
             'store_id' => 1,
             'status' => 1,

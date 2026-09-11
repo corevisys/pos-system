@@ -50,6 +50,7 @@ class CouponRedesignAndBugFixTest extends TestCase
         ]);
 
         $this->customer = DbCustomer::create([
+            'store_id' => 1,
             'customer_name' => 'Coupon VIP Customer',
             'customer_code' => 'CUST-001',
             'mobile' => '01811111111',
@@ -131,6 +132,7 @@ class CouponRedesignAndBugFixTest extends TestCase
     {
         // Create master coupon
         DbCoupon::create([
+            'store_id' => 1,
             'name' => 'Master Promo',
             'code' => 'COLLIDE50',
             'type' => 'Fixed',
@@ -153,6 +155,7 @@ class CouponRedesignAndBugFixTest extends TestCase
 
         // Create customer coupon
         DbCustomerCoupon::create([
+            'store_id' => 1,
             'customer_id' => $this->customer->id,
             'name' => 'Customer Unique Voucher',
             'code' => 'CUST-ONLY1',
@@ -179,6 +182,7 @@ class CouponRedesignAndBugFixTest extends TestCase
     {
         // 1. Create a customer coupon
         $customerCoupon = DbCustomerCoupon::create([
+            'store_id' => 1,
             'customer_id' => $this->customer->id,
             'name' => 'Existing Customer Voucher',
             'code' => 'TAKEN-BY-CUST',
@@ -191,6 +195,7 @@ class CouponRedesignAndBugFixTest extends TestCase
 
         // Create a master coupon
         $masterCoupon = DbCoupon::create([
+            'store_id' => 1,
             'name' => 'Master To Update',
             'code' => 'MASTER-ORIGINAL',
             'type' => 'Fixed',
@@ -218,6 +223,7 @@ class CouponRedesignAndBugFixTest extends TestCase
 
         // 2. Create another master coupon
         $otherMaster = DbCoupon::create([
+            'store_id' => 1,
             'name' => 'Existing Master Voucher',
             'code' => 'TAKEN-BY-MASTER',
             'type' => 'Percentage',
@@ -249,6 +255,7 @@ class CouponRedesignAndBugFixTest extends TestCase
     {
         // 1. Master Coupon: Update other attributes while leaving code unchanged
         $masterCoupon = DbCoupon::create([
+            'store_id' => 1,
             'name' => 'Original Master Campaign',
             'code' => 'KEEP-SAME-MASTER',
             'type' => 'Percentage',
@@ -279,6 +286,7 @@ class CouponRedesignAndBugFixTest extends TestCase
 
         // 2. Customer Coupon: Update other attributes while leaving code unchanged
         $customerCoupon = DbCustomerCoupon::create([
+            'store_id' => 1,
             'customer_id' => $this->customer->id,
             'name' => 'Original Customer Voucher',
             'code' => 'KEEP-SAME-CUST',
@@ -314,6 +322,7 @@ class CouponRedesignAndBugFixTest extends TestCase
     {
         // 1. Two master coupons
         $master1 = DbCoupon::create([
+            'store_id' => 1,
             'name' => 'First Master',
             'code' => 'MASTER-ONE',
             'type' => 'Fixed',
@@ -324,6 +333,7 @@ class CouponRedesignAndBugFixTest extends TestCase
         ]);
 
         $master2 = DbCoupon::create([
+            'store_id' => 1,
             'name' => 'Second Master',
             'code' => 'MASTER-TWO',
             'type' => 'Fixed',
@@ -346,6 +356,7 @@ class CouponRedesignAndBugFixTest extends TestCase
 
         // 2. Two customer coupons
         $cust1 = DbCustomerCoupon::create([
+            'store_id' => 1,
             'customer_id' => $this->customer->id,
             'name' => 'First Cust',
             'code' => 'CUST-ONE',
@@ -357,6 +368,7 @@ class CouponRedesignAndBugFixTest extends TestCase
         ]);
 
         $cust2 = DbCustomerCoupon::create([
+            'store_id' => 1,
             'customer_id' => $this->customer->id,
             'name' => 'Second Cust',
             'code' => 'CUST-TWO',
@@ -383,6 +395,7 @@ class CouponRedesignAndBugFixTest extends TestCase
     public function test_edit_and_update_lifecycle_for_master_coupon()
     {
         $coupon = DbCoupon::create([
+            'store_id' => 1,
             'name' => 'Original Name',
             'code' => 'ORIGINAL10',
             'type' => 'Percentage',
@@ -420,6 +433,7 @@ class CouponRedesignAndBugFixTest extends TestCase
     public function test_edit_and_update_lifecycle_for_customer_coupon()
     {
         $customerCoupon = DbCustomerCoupon::create([
+            'store_id' => 1,
             'customer_id' => $this->customer->id,
             'name' => 'Cust Original',
             'code' => 'CUST-ORIG',
@@ -458,6 +472,7 @@ class CouponRedesignAndBugFixTest extends TestCase
     public function test_db_coupon_has_many_customer_coupons_and_with_count_works()
     {
         $master = DbCoupon::create([
+            'store_id' => 1,
             'name' => 'Parent Campaign',
             'code' => 'PARENT100',
             'type' => 'Fixed',
@@ -468,6 +483,7 @@ class CouponRedesignAndBugFixTest extends TestCase
         ]);
 
         DbCustomerCoupon::create([
+            'store_id' => 1,
             'coupon_id' => $master->id,
             'customer_id' => $this->customer->id,
             'name' => 'Child Voucher 1',
@@ -479,6 +495,7 @@ class CouponRedesignAndBugFixTest extends TestCase
         ]);
 
         DbCustomerCoupon::create([
+            'store_id' => 1,
             'coupon_id' => $master->id,
             'customer_id' => $this->customer->id,
             'name' => 'Child Voucher 2',
@@ -502,6 +519,7 @@ class CouponRedesignAndBugFixTest extends TestCase
     public function test_sms_trigger_service_resolves_coupon_code_property()
     {
         $coupon = DbCoupon::create([
+            'store_id' => 1,
             'name' => 'SMS Test Coupon',
             'code' => 'SMSCODE99',
             'type' => 'Percentage',
@@ -527,6 +545,7 @@ class CouponRedesignAndBugFixTest extends TestCase
     {
         for ($i = 1; $i <= 15; $i++) {
             DbCoupon::create([
+                'store_id' => 1,
                 'name' => "Coupon {$i}",
                 'code' => "PERPAGE{$i}",
                 'type' => 'Fixed',
@@ -547,6 +566,7 @@ class CouponRedesignAndBugFixTest extends TestCase
     public function test_all_coupon_views_render_successfully()
     {
         $master = DbCoupon::create([
+            'store_id' => 1,
             'name' => 'Master View Test',
             'code' => 'VIEWMASTER',
             'type' => 'Fixed',
@@ -557,6 +577,7 @@ class CouponRedesignAndBugFixTest extends TestCase
         ]);
 
         $customerCoupon = DbCustomerCoupon::create([
+            'store_id' => 1,
             'customer_id' => $this->customer->id,
             'name' => 'Customer View Test',
             'code' => 'VIEWCUST',

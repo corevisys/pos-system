@@ -45,12 +45,14 @@ function createDummySale($itemCount = 1, $withEmi = false) {
     ]);
 
     $warehouse = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Main Test Warehouse',
         'status' => 1,
         'store_id' => 1,
     ]);
 
     $customer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'John Doe Corp',
         'mobile' => '+8801811111111',
         'address' => '456 Client Road, Dhaka',
@@ -59,6 +61,7 @@ function createDummySale($itemCount = 1, $withEmi = false) {
     ]);
 
     $sale = DbSale::create([
+        'store_id' => 1,
         'sales_code' => 'SA-TEST-' . rand(1000, 9999),
         'sales_date' => now()->toDateString(),
         'store_id' => 1,
@@ -75,6 +78,7 @@ function createDummySale($itemCount = 1, $withEmi = false) {
 
     for ($i = 1; $i <= $itemCount; $i++) {
         $item = DbItem::create([
+            'store_id' => 1,
             'item_name' => "Product Item #{$i}",
             'item_code' => "SKU-00{$i}",
             'sales_price' => 1000,
@@ -83,6 +87,7 @@ function createDummySale($itemCount = 1, $withEmi = false) {
         ]);
 
         DbSaleItem::create([
+            'store_id' => 1,
             'sales_id' => $sale->id,
             'item_id' => $item->id,
             'sales_qty' => 1,
@@ -93,6 +98,7 @@ function createDummySale($itemCount = 1, $withEmi = false) {
     }
 
     DbSalePayment::create([
+        'store_id' => 1,
         'sales_id' => $sale->id,
         'payment_type' => 'Cash',
         'payment' => $sale->grand_total,

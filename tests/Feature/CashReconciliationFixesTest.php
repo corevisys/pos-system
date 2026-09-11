@@ -110,6 +110,7 @@ class CashReconciliationFixesTest extends TestCase
 
         // 2. Reconciliations
         $recon1 = CashDrawerReconciliation::create([
+            'store_id' => 1,
             'reconciliation_code' => 'REC-00001',
             'store_id' => 1,
             'warehouse_id' => $wh1->id,
@@ -125,6 +126,7 @@ class CashReconciliationFixesTest extends TestCase
         ]);
 
         $recon2 = CashDrawerReconciliation::create([
+            'store_id' => 1,
             'reconciliation_code' => 'REC-00002',
             'store_id' => 2,
             'warehouse_id' => $wh2->id,
@@ -165,6 +167,7 @@ class CashReconciliationFixesTest extends TestCase
         // Surface 4: openDrawer() active-open-drawer check isolation
         // Open drawer in Store 2 on same date
         $openDrawerS2 = CashDrawerReconciliation::create([
+            'store_id' => 1,
             'reconciliation_code' => 'REC-00003',
             'store_id' => 2,
             'account_id' => $acc2->id,
@@ -267,6 +270,7 @@ class CashReconciliationFixesTest extends TestCase
     {
         $s2Acc = AcAccount::create(['store_id' => 2, 'account_name' => 'S2 Account', 'balance' => 500, 'status' => 1, 'delete_bit' => 0]);
         $s2Recon = CashDrawerReconciliation::create([
+            'store_id' => 1,
             'reconciliation_code' => 'REC-S2-99',
             'store_id' => 2,
             'account_id' => $s2Acc->id,
@@ -308,6 +312,7 @@ class CashReconciliationFixesTest extends TestCase
 
         $acc = AcAccount::create(['store_id' => 1, 'account_name' => 'Vault Cash', 'balance' => 500, 'status' => 1, 'delete_bit' => 0]);
         $recon = CashDrawerReconciliation::create([
+            'store_id' => 1,
             'reconciliation_code' => 'REC-TEST',
             'store_id' => 1,
             'account_id' => $acc->id,
@@ -357,6 +362,7 @@ class CashReconciliationFixesTest extends TestCase
         $acc->increment('balance', 100.00); // Balance now 1100.00
 
         $reconOverage = CashDrawerReconciliation::create([
+            'store_id' => 1,
             'reconciliation_code' => 'REC-OVERAGE',
             'store_id' => 1,
             'account_id' => $acc->id,
@@ -396,6 +402,7 @@ class CashReconciliationFixesTest extends TestCase
             'debit_amt' => 0,
         ]);
         $reconInsolvent = CashDrawerReconciliation::create([
+            'store_id' => 1,
             'reconciliation_code' => 'REC-INSOLVENT',
             'store_id' => 1,
             'account_id' => $acc->id,
@@ -427,6 +434,7 @@ class CashReconciliationFixesTest extends TestCase
         $acc->decrement('balance', 50.00); // Balance now 950.00
 
         $reconShortage = CashDrawerReconciliation::create([
+            'store_id' => 1,
             'reconciliation_code' => 'REC-SHORTAGE',
             'store_id' => 1,
             'account_id' => $acc->id,
@@ -668,6 +676,7 @@ class CashReconciliationFixesTest extends TestCase
 
         // Reconciled record (editable)
         $reconReconciled = CashDrawerReconciliation::create([
+            'store_id' => 1,
             'reconciliation_code' => 'REC-EDIT-1',
             'store_id' => 1,
             'account_id' => $acc->id,
@@ -693,6 +702,7 @@ class CashReconciliationFixesTest extends TestCase
 
         // 2. Edit on Adjusted record -> Rejected
         $reconAdjusted = CashDrawerReconciliation::create([
+            'store_id' => 1,
             'reconciliation_code' => 'REC-EDIT-2',
             'store_id' => 1,
             'account_id' => $acc->id,
@@ -714,6 +724,7 @@ class CashReconciliationFixesTest extends TestCase
 
         // 3. Edit on Open record -> Rejected
         $reconOpen = CashDrawerReconciliation::create([
+            'store_id' => 1,
             'reconciliation_code' => 'REC-EDIT-3',
             'store_id' => 1,
             'account_id' => $acc->id,
@@ -751,6 +762,7 @@ class CashReconciliationFixesTest extends TestCase
 
         // S1 Reconciled
         CashDrawerReconciliation::create([
+            'store_id' => 1,
             'reconciliation_code' => 'REC-S1-EXPORT-MATCH',
             'store_id' => 1,
             'account_id' => $acc1->id,
@@ -764,6 +776,7 @@ class CashReconciliationFixesTest extends TestCase
 
         // S1 Adjusted (different status)
         CashDrawerReconciliation::create([
+            'store_id' => 1,
             'reconciliation_code' => 'REC-S1-DIFF-STATUS',
             'store_id' => 1,
             'account_id' => $acc1->id,
@@ -777,6 +790,7 @@ class CashReconciliationFixesTest extends TestCase
 
         // S2 Reconciled (cross-store)
         CashDrawerReconciliation::create([
+            'store_id' => 1,
             'reconciliation_code' => 'REC-S2-CROSS-STORE',
             'store_id' => 2,
             'account_id' => $acc2->id,
@@ -824,6 +838,7 @@ class CashReconciliationFixesTest extends TestCase
 
         // Recon 1: Simple Reconciled record (solvent)
         $r1 = CashDrawerReconciliation::create([
+            'store_id' => 1,
             'reconciliation_code' => 'REC-B1',
             'store_id' => 1,
             'account_id' => $acc->id,
@@ -844,6 +859,7 @@ class CashReconciliationFixesTest extends TestCase
             'credit_amt' => 5000.00,
         ]);
         $r2Insolvent = CashDrawerReconciliation::create([
+            'store_id' => 1,
             'reconciliation_code' => 'REC-B2-INSOLVENT',
             'store_id' => 1,
             'account_id' => $acc->id,
@@ -865,6 +881,7 @@ class CashReconciliationFixesTest extends TestCase
             'debit_amt' => 30.00,
         ]);
         $r3 = CashDrawerReconciliation::create([
+            'store_id' => 1,
             'reconciliation_code' => 'REC-B3',
             'store_id' => 1,
             'account_id' => $acc->id,
@@ -905,6 +922,7 @@ class CashReconciliationFixesTest extends TestCase
 
         for ($i = 1; $i <= 20; $i++) {
             CashDrawerReconciliation::create([
+                'store_id' => 1,
                 'reconciliation_code' => "REC-PAG-{$i}",
                 'store_id' => 1,
                 'account_id' => $acc->id,

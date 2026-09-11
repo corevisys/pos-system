@@ -133,6 +133,7 @@ class ContactsImportTest extends TestCase
     public function test_customer_import_skips_duplicates_and_missing_required_fields()
     {
         DbCustomer::create([
+            'store_id' => 1,
             'customer_name' => 'Existing Customer',
             'customer_code' => 'CU-000001',
             'mobile' => '01711223344',
@@ -217,6 +218,7 @@ class ContactsImportTest extends TestCase
         // Seeded in the importing user's store (store 1) so the per-store duplicate
         // checks inside importStore() treat it as an existing same-store supplier.
         DbSupplier::create([
+            'store_id' => 1,
             'supplier_name' => 'Existing Supplier',
             'supplier_code' => 'SUP-000001',
             'mobile' => '01811998877',

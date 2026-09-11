@@ -38,23 +38,27 @@ test('stock transfer to a new destination warehouse with no prior stock record c
     $user = getStockTransferTestUser();
 
     $warehouseFrom = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Source Warehouse A',
         'status' => 1,
         'store_id' => 1,
     ]);
 
     $warehouseTo = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Destination Warehouse B',
         'status' => 1,
         'store_id' => 1,
     ]);
 
     $category = DbCategory::create([
+        'store_id' => 1,
         'category_name' => 'General',
         'status' => 1,
     ]);
 
     $item = DbItem::create([
+        'store_id' => 1,
         'item_name' => 'Transfer Item 1',
         'item_code' => 'ITM-TR-001',
         'category_id' => $category->id,
@@ -105,23 +109,27 @@ test('stock transfer to an existing destination warehouse increments stock prope
     $user = getStockTransferTestUser();
 
     $warehouseFrom = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Source Warehouse C',
         'status' => 1,
         'store_id' => 1,
     ]);
 
     $warehouseTo = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Destination Warehouse D',
         'status' => 1,
         'store_id' => 1,
     ]);
 
     $category = DbCategory::create([
+        'store_id' => 1,
         'category_name' => 'General',
         'status' => 1,
     ]);
 
     $item = DbItem::create([
+        'store_id' => 1,
         'item_name' => 'Transfer Item 2',
         'item_code' => 'ITM-TR-002',
         'category_id' => $category->id,
@@ -175,29 +183,34 @@ test('stock transfer update to a new destination warehouse initializes destinati
     $user = getStockTransferTestUser();
 
     $warehouseFrom = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Source Warehouse E',
         'status' => 1,
         'store_id' => 1,
     ]);
 
     $warehouseTo1 = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Destination Warehouse F1',
         'status' => 1,
         'store_id' => 1,
     ]);
 
     $warehouseTo2 = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Destination Warehouse F2 (New)',
         'status' => 1,
         'store_id' => 1,
     ]);
 
     $category = DbCategory::create([
+        'store_id' => 1,
         'category_name' => 'General',
         'status' => 1,
     ]);
 
     $item = DbItem::create([
+        'store_id' => 1,
         'item_name' => 'Transfer Item 3',
         'item_code' => 'ITM-TR-003',
         'category_id' => $category->id,

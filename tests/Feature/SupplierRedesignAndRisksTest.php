@@ -52,6 +52,7 @@ class SupplierRedesignAndRisksTest extends TestCase
     public function test_suppliers_list_page_renders_with_search_and_pagination()
     {
         DbSupplier::create([
+            'store_id' => 1,
             'supplier_name' => 'Acme Supplies',
             'supplier_code' => 'SUP-001',
             'mobile' => '01711111111',
@@ -62,6 +63,7 @@ class SupplierRedesignAndRisksTest extends TestCase
         ]);
 
         DbSupplier::create([
+            'store_id' => 1,
             'supplier_name' => 'Global Logistics',
             'supplier_code' => 'SUP-002',
             'mobile' => '01822222222',
@@ -80,6 +82,7 @@ class SupplierRedesignAndRisksTest extends TestCase
     public function test_suppliers_list_export_csv_and_print()
     {
         DbSupplier::create([
+            'store_id' => 1,
             'supplier_name' => 'Export Supplier',
             'supplier_code' => 'SUP-EXP',
             'mobile' => '01933333333',
@@ -168,6 +171,7 @@ class SupplierRedesignAndRisksTest extends TestCase
     public function test_supplier_delete_protection_when_purchase_history_exists()
     {
         $supplier = DbSupplier::create([
+            'store_id' => 1,
             'supplier_name' => 'Supplier With History',
             'supplier_code' => 'SUP-HIST',
             'mobile' => '01611111111',
@@ -178,6 +182,7 @@ class SupplierRedesignAndRisksTest extends TestCase
 
         // Attach a purchase
         DbPurchase::create([
+            'store_id' => 1,
             'purchase_code' => 'PUR-001',
             'supplier_id' => $supplier->id,
             'purchase_date' => date('Y-m-d'),
@@ -198,6 +203,7 @@ class SupplierRedesignAndRisksTest extends TestCase
     public function test_supplier_delete_block_message_names_record_type_and_count()
     {
         $supplier = DbSupplier::create([
+            'store_id' => 1,
             'supplier_name' => 'Supplier Two Purchases',
             'supplier_code' => 'SUP-TWO',
             'mobile' => '01633333333',
@@ -208,6 +214,7 @@ class SupplierRedesignAndRisksTest extends TestCase
 
         // Attach two purchases → guard must name type + count
         DbPurchase::create([
+            'store_id' => 1,
             'purchase_code' => 'PUR-101',
             'supplier_id' => $supplier->id,
             'purchase_date' => date('Y-m-d'),
@@ -217,6 +224,7 @@ class SupplierRedesignAndRisksTest extends TestCase
             'store_id' => 1,
         ]);
         DbPurchase::create([
+            'store_id' => 1,
             'purchase_code' => 'PUR-102',
             'supplier_id' => $supplier->id,
             'purchase_date' => date('Y-m-d'),
@@ -245,6 +253,7 @@ class SupplierRedesignAndRisksTest extends TestCase
         ]);
 
         $store2Supplier = DbSupplier::create([
+            'store_id' => 1,
             'supplier_name' => 'Store 2 Secret Supplier',
             'supplier_code' => 'SUP-S2',
             'mobile' => '01644444444',
@@ -338,6 +347,7 @@ class SupplierRedesignAndRisksTest extends TestCase
     public function test_supplier_clean_deletion_when_no_history()
     {
         $supplier = DbSupplier::create([
+            'store_id' => 1,
             'supplier_name' => 'Clean Supplier',
             'supplier_code' => 'SUP-CLEAN',
             'mobile' => '01622222222',
@@ -366,6 +376,7 @@ class SupplierRedesignAndRisksTest extends TestCase
         ]);
 
         $s1 = DbSupplier::create([
+            'store_id' => 1,
             'supplier_name' => 'Live Dues S1',
             'supplier_code' => 'SUP-LIVE1',
             'mobile' => '01655555555',
@@ -379,6 +390,7 @@ class SupplierRedesignAndRisksTest extends TestCase
         ]);
 
         $s2 = DbSupplier::create([
+            'store_id' => 1,
             'supplier_name' => 'Live Dues S2 (other store)',
             'supplier_code' => 'SUP-LIVE2',
             'mobile' => '01666666666',
@@ -410,6 +422,7 @@ class SupplierRedesignAndRisksTest extends TestCase
 
         // DbPurchaseReturn live return due: grand_total 500 - paid 150 = 350.
         DbPurchaseReturn::create([
+            'store_id' => 1,
             'purchase_id' => null, 'return_code' => 'RET-LIVE1', 'supplier_id' => $s1->id,
             'return_date' => date('Y-m-d'), 'return_status' => 'Received',
             'grand_total' => 500.00, 'paid_amount' => 150.00, 'store_id' => 1,
@@ -448,6 +461,7 @@ class SupplierRedesignAndRisksTest extends TestCase
         ]);
 
         DbSupplier::create([
+            'store_id' => 1,
             'supplier_name' => 'Visible S1 Supplier',
             'supplier_code' => 'SUP-VIS',
             'mobile' => '01677777777',
@@ -456,6 +470,7 @@ class SupplierRedesignAndRisksTest extends TestCase
             'delete_bit' => 0,
         ]);
         DbSupplier::create([
+            'store_id' => 1,
             'supplier_name' => 'Hidden S2 Supplier',
             'supplier_code' => 'SUP-HID',
             'mobile' => '01688888888',
@@ -473,6 +488,7 @@ class SupplierRedesignAndRisksTest extends TestCase
     public function test_account_payable_filter_returns_only_suppliers_with_live_purchase_due()
     {
         DbSupplier::create([
+            'store_id' => 1,
             'supplier_name' => 'AP Positive Supplier',
             'supplier_code' => 'SUP-AP1',
             'mobile' => '01699990001',
@@ -482,6 +498,7 @@ class SupplierRedesignAndRisksTest extends TestCase
             'delete_bit' => 0,
         ]);
         DbSupplier::create([
+            'store_id' => 1,
             'supplier_name' => 'AP Zero Supplier',
             'supplier_code' => 'SUP-AP2',
             'mobile' => '01699990002',
@@ -491,6 +508,7 @@ class SupplierRedesignAndRisksTest extends TestCase
             'delete_bit' => 0,
         ]);
         DbSupplier::create([
+            'store_id' => 1,
             'supplier_name' => 'AP Fully Paid Supplier',
             'supplier_code' => 'SUP-AP3',
             'mobile' => '01699990003',
@@ -579,6 +597,7 @@ class SupplierRedesignAndRisksTest extends TestCase
         $createResponse->assertSee('৳');
 
         $supplier = DbSupplier::create([
+            'store_id' => 1,
             'supplier_name' => 'Edit Form Supplier',
             'supplier_code' => 'SUP-EDIT',
             'mobile' => '01699993333',
@@ -630,6 +649,7 @@ class SupplierRedesignAndRisksTest extends TestCase
 
         // Store-2 supplier is not editable by the store-1 user.
         $store2Supplier = DbSupplier::create([
+            'store_id' => 1,
             'supplier_name' => 'S2 Not Editable',
             'supplier_code' => 'SUP-S2EDIT',
             'mobile' => '01699996666',
@@ -662,6 +682,7 @@ class SupplierRedesignAndRisksTest extends TestCase
 
         // Same store 1 phone — first insert is fine.
         DbSupplier::create([
+            'store_id' => 1,
             'supplier_name' => 'Constraint S1 A',
             'supplier_code' => 'SUP-C1A',
             'mobile' => '01700000001',
@@ -674,6 +695,7 @@ class SupplierRedesignAndRisksTest extends TestCase
         // Same store 1 phone → DB-level unique violation on (store_id, mobile).
         try {
             DbSupplier::create([
+                'store_id' => 1,
                 'supplier_name' => 'Constraint S1 B',
                 'supplier_code' => 'SUP-C1B',
                 'mobile' => '01700000001',
@@ -689,6 +711,7 @@ class SupplierRedesignAndRisksTest extends TestCase
 
         // Same phone in store 2 → allowed (per-store scope).
         DbSupplier::create([
+            'store_id' => 1,
             'supplier_name' => 'Constraint S2',
             'supplier_code' => 'SUP-C2',
             'mobile' => '01700000001',
@@ -703,6 +726,7 @@ class SupplierRedesignAndRisksTest extends TestCase
         // Same-store duplicate email → DB violation.
         try {
             DbSupplier::create([
+                'store_id' => 1,
                 'supplier_name' => 'Constraint S1 D',
                 'supplier_code' => 'SUP-C1D',
                 'mobile' => '01700000009',
@@ -718,6 +742,7 @@ class SupplierRedesignAndRisksTest extends TestCase
 
         // Blank email is exempt — multiple suppliers may share an empty email.
         DbSupplier::create([
+            'store_id' => 1,
             'supplier_name' => 'Blank Email One',
             'supplier_code' => 'SUP-BE1',
             'mobile' => '01700000010',
@@ -727,6 +752,7 @@ class SupplierRedesignAndRisksTest extends TestCase
             'delete_bit' => 0,
         ]);
         DbSupplier::create([
+            'store_id' => 1,
             'supplier_name' => 'Blank Email Two',
             'supplier_code' => 'SUP-BE2',
             'mobile' => '01700000011',
@@ -748,6 +774,7 @@ class SupplierRedesignAndRisksTest extends TestCase
 
         // Seed a store-1 supplier with this phone.
         DbSupplier::create([
+            'store_id' => 1,
             'supplier_name' => 'Existing Phone Owner',
             'supplier_code' => 'SUP-PH',
             'mobile' => '01711112222',
@@ -781,6 +808,7 @@ class SupplierRedesignAndRisksTest extends TestCase
     public function test_ajax_quick_add_duplicate_returns_clean_json_error()
     {
         DbSupplier::create([
+            'store_id' => 1,
             'supplier_name' => 'Ajax Dup Original',
             'supplier_code' => 'SUP-AJAXDUP',
             'mobile' => '01722223333',

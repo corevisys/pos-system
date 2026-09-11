@@ -51,11 +51,13 @@ test('pos checkout creates only one SMS log entry for invoice created', function
     $user = getPosSmsTestUser();
 
     $warehouse = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'POS Warehouse',
         'status' => 1,
     ]);
 
     $customer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'Bob POS',
         'customer_code' => 'CUST-POS-001',
         'mobile' => '01777000002',
@@ -63,11 +65,13 @@ test('pos checkout creates only one SMS log entry for invoice created', function
     ]);
 
     $category = DbCategory::create([
+        'store_id' => 1,
         'category_name' => 'Retail',
         'status' => 1,
     ]);
 
     $item = DbItem::create([
+        'store_id' => 1,
         'item_name' => 'POS Test Item',
         'item_code' => 'ITM-POS-001',
         'category_id' => $category->id,
@@ -85,6 +89,7 @@ test('pos checkout creates only one SMS log entry for invoice created', function
     ]);
 
     $template = DbSmsTemplate::create([
+        'store_id' => 1,
         'template_name' => 'Invoice Created',
         'category' => 'Transactional',
         'message_type' => 'transactional',

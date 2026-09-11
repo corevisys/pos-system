@@ -133,14 +133,16 @@ $role = \App\Models\DbRole::firstOrCreate(['id' => 1], ['store_id' => 1, 'role_n
 ]);
 $user = \App\Models\User::factory()->create(['store_id' => 1, 'role_id' => $role->id, 'role_name' => 'Super Admin']);
 
-$cat = \App\Models\DbCategory::create(['category_name' => 'Upsert Cat', 'status' => 1]);
+$cat = \App\Models\DbCategory::create(['store_id' => 1, 'category_name' => 'Upsert Cat', 'status' => 1]);
 $wh = \App\Models\DbWarehouse::create(['warehouse_name' => 'Upsert WH', 'store_id' => 1, 'status' => 1]);
 $item1 = \App\Models\DbItem::create([
+    'store_id' => 1,
     'item_name' => 'Upsert Item 1', 'item_code' => 'UP-1-' . uniqid(),
     'category_id' => $cat->id, 'purchase_price' => 5, 'sales_price' => 10,
     'stock' => 0, 'status' => 1, 'store_id' => 1,
 ]);
 $item2 = \App\Models\DbItem::create([
+    'store_id' => 1,
     'item_name' => 'Upsert Item 2', 'item_code' => 'UP-2-' . uniqid(),
     'category_id' => $cat->id, 'purchase_price' => 5, 'sales_price' => 10,
     'stock' => 0, 'status' => 1, 'store_id' => 1,

@@ -44,6 +44,7 @@ function posE2eEnv()
 
     // IT-00048, serialized, with TWO serials: the scanned unit + a sibling.
     $item = DbItem::create([
+        'store_id' => 1,
         'item_name' => 'IT-00048 Product', 'item_code' => 'IT-00048',
         'custom_barcode' => 'BC-00048', 'sales_price' => 100.00, 'purchase_price' => 60.00,
         'stock' => 10, 'is_serialized' => 1, 'status' => 1, 'store_id' => 1,

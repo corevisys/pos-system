@@ -40,7 +40,7 @@ test('purchase, return, and signed stock adjustment keep stock and payment recor
         'balance' => 10000,
         'status' => 1,
     ]);
-    $category = DbCategory::create(['category_name' => 'Flow Category', 'status' => 1]);
+    $category = DbCategory::create(['store_id' => 1, 'category_name' => 'Flow Category', 'status' => 1]);
     $item = DbItem::create([
         'store_id' => 1,
         'item_name' => 'Flow Item',

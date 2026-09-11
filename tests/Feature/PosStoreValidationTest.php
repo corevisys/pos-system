@@ -55,12 +55,14 @@ function posStoreTestEnv()
     ]);
 
     $warehouse = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Validation Warehouse',
         'status' => 1,
         'store_id' => 1,
     ]);
 
     $customer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'Validation Customer',
         'mobile' => '+8801811111111',
         'status' => 1,
@@ -68,6 +70,7 @@ function posStoreTestEnv()
     ]);
 
     $item = DbItem::create([
+        'store_id' => 1,
         'item_name' => 'Validation Item',
         'item_code' => 'VAL-001',
         'sales_price' => 100.00,
@@ -283,6 +286,7 @@ test('customer coupon IS consumed when the sale succeeds', function () {
 function posStoreEmiEnv($env, string $customerType = 'emi')
 {
     $emiCustomer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'EMI Eligible Customer',
         'mobile' => '+8801811223344',
         'customer_type' => $customerType,

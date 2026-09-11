@@ -52,9 +52,10 @@ class StockModulePermissionEnforcementTest extends TestCase
     protected function makeSeed(): array
     {
         $super = $this->makeSuperAdmin();
-        $category = DbCategory::create(['category_name' => 'Perm Category', 'status' => 1]);
+        $category = DbCategory::create(['store_id' => 1, 'category_name' => 'Perm Category', 'status' => 1]);
         $wh = DbWarehouse::create(['warehouse_name' => 'Perm WH', 'store_id' => 1, 'status' => 1]);
         $item = DbItem::create([
+            'store_id' => 1,
             'item_name' => 'Perm Item', 'item_code' => 'PERM-001',
             'category_id' => $category->id, 'purchase_price' => 5,
             'sales_price' => 10, 'stock' => 100, 'status' => 1, 'store_id' => 1,

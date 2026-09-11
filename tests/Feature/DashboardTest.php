@@ -126,11 +126,13 @@ test('dashboard KPI values reflect real sale data accurately', function () {
     $user = createDashboardSuperAdmin();
 
     $warehouse = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Dashboard Test Warehouse',
         'status'         => 1,
     ]);
 
     $customer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'Dashboard Test Customer',
         'customer_code' => 'CUST-DASH-001',
         'mobile'        => '01700000001',
@@ -139,10 +141,11 @@ test('dashboard KPI values reflect real sale data accurately', function () {
 
     $category = DbCategory::firstOrCreate(
         ['category_name' => 'Test Category'],
-        ['status' => 1]
+        ['status' => 1, 'store_id' => 1]
     );
 
     $item = DbItem::create([
+        'store_id' => 1,
         'item_name'      => 'Dashboard Test Item',
         'item_code'      => 'DASH-ITEM-01',
         'category_id'    => $category->id,
@@ -171,6 +174,7 @@ test('dashboard KPI values reflect real sale data accurately', function () {
     ]);
 
     DbSaleItem::create([
+        'store_id' => 1,
         'sales_id'       => $sale->id,
         'item_id'        => $item->id,
         'sales_qty'      => 2,
@@ -183,6 +187,7 @@ test('dashboard KPI values reflect real sale data accurately', function () {
     ]);
 
     DbSalePayment::create([
+        'store_id' => 1,
         'sales_id'     => $sale->id,
         'customer_id'  => $customer->id,
         'payment_date' => $today,
@@ -223,11 +228,13 @@ test('sale with return offsets due in outstanding due and customers with due', f
     $user = createDashboardSuperAdmin();
 
     $warehouse = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Return Test Warehouse',
         'status'         => 1,
     ]);
 
     $customer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'Return Test Customer',
         'customer_code' => 'CUST-RET-001',
         'mobile'        => '01700000002',
@@ -235,6 +242,7 @@ test('sale with return offsets due in outstanding due and customers with due', f
     ]);
 
     $item = DbItem::create([
+        'store_id' => 1,
         'item_name'      => 'Return Test Item',
         'item_code'      => 'RET-ITEM-01',
         'purchase_price' => 50.00,
@@ -261,6 +269,7 @@ test('sale with return offsets due in outstanding due and customers with due', f
     ]);
 
     DbSaleItem::create([
+        'store_id' => 1,
         'sales_id'       => $sale->id,
         'item_id'        => $item->id,
         'sales_qty'      => 5,
@@ -311,11 +320,13 @@ test('invoice level discount and coupon reduces today net profit', function () {
     $user = createDashboardSuperAdmin();
 
     $warehouse = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Discount Test Warehouse',
         'status'         => 1,
     ]);
 
     $customer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'Discount Test Customer',
         'customer_code' => 'CUST-DISC-001',
         'mobile'        => '01700000003',
@@ -323,6 +334,7 @@ test('invoice level discount and coupon reduces today net profit', function () {
     ]);
 
     $item = DbItem::create([
+        'store_id' => 1,
         'item_name'      => 'Discount Test Item',
         'item_code'      => 'DISC-ITEM-01',
         'purchase_price' => 60.00,
@@ -354,6 +366,7 @@ test('invoice level discount and coupon reduces today net profit', function () {
     ]);
 
     DbSaleItem::create([
+        'store_id' => 1,
         'sales_id'       => $sale->id,
         'item_id'        => $item->id,
         'sales_qty'      => 1,
@@ -382,11 +395,13 @@ test('inactive and quotation sales are excluded from dashboard KPIs', function (
     $user = createDashboardSuperAdmin();
 
     $warehouse = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Status Test Warehouse',
         'status'         => 1,
     ]);
 
     $customer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'Status Test Customer',
         'customer_code' => 'CUST-STAT-001',
         'mobile'        => '01700000004',
@@ -446,11 +461,13 @@ test('trend chart endpoint uses single grouped query and returns accurate period
     $user = createDashboardSuperAdmin();
 
     $warehouse = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Trend Warehouse',
         'status'         => 1,
     ]);
 
     $customer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'Trend Customer',
         'customer_code' => 'CUST-TRN-001',
         'mobile'        => '01700000005',
@@ -512,11 +529,13 @@ test('receiving payment invalidates dashboard outstanding due and customers due 
     $user = createDashboardSuperAdmin();
 
     $warehouse = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Cache Test Warehouse',
         'status'         => 1,
     ]);
 
     $customer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'Cache Test Customer',
         'customer_code' => 'CUST-CCH-001',
         'mobile'        => '01700000006',

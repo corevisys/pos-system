@@ -54,6 +54,7 @@ function getSalesListTestUser(int $storeId = 1): User
 function makeSalesListSale(User $user, int $storeId, string $code, float $total, ?int $warehouseId = null): DbSale
 {
     $customer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'Generic Walk-in',
         'customer_code' => 'CUST-GEN',
         'mobile' => '01790000000',
@@ -124,7 +125,7 @@ test('Sales List stat cards are scoped to the current store only', function () {
 test('Search submit preserves active warehouse filter in the query string', function () {
     $user = getSalesListTestUser(1);
 
-    $warehouse = DbWarehouse::create(['warehouse_name' => 'Filter WH', 'status' => 1]);
+    $warehouse = DbWarehouse::create(['store_id' => 1, 'warehouse_name' => 'Filter WH', 'status' => 1]);
     makeSalesListSale($user, 1, 'SALE-FILTER-1', 100.00, $warehouse->id);
     makeSalesListSale($user, 1, 'SALE-FILTER-2', 200.00);
 

@@ -27,6 +27,7 @@ class StateSeeder extends Seeder
             DB::table('db_states')->updateOrInsert(
                 ['state' => $division['state']],
                 [
+                    'store_id' => 1,
                     'state_code' => $division['state_code'],
                     'country_id' => 1,
                     'country' => 'Bangladesh',

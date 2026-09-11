@@ -44,6 +44,7 @@ test('SalesReturnConfirmation SMS trigger maps grand_total to amount variable co
     $user = getSmsTestUser();
 
     $customer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'Jane Smith',
         'customer_code' => 'CUST-SMS-001',
         'mobile' => '01888000001',
@@ -51,6 +52,7 @@ test('SalesReturnConfirmation SMS trigger maps grand_total to amount variable co
     ]);
 
     $warehouse = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Main Warehouse',
         'status' => 1,
     ]);
@@ -84,6 +86,7 @@ test('SalesReturnConfirmation SMS trigger maps grand_total to amount variable co
     ]);
 
     $template = DbSmsTemplate::create([
+        'store_id' => 1,
         'template_name' => 'Sales Return Confirmation Test',
         'category' => 'Transactional',
         'message_type' => 'transactional',

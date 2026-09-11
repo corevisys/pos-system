@@ -75,12 +75,14 @@ class PurchasePhaseATest extends TestCase
         ]);
 
         $this->warehouse = DbWarehouse::create([
+            'store_id' => 1,
             'warehouse_name' => 'Main Warehouse',
             'store_id' => $this->store->id,
             'status' => 1,
         ]);
 
         $this->supplier = DbSupplier::create([
+            'store_id' => 1,
             'supplier_name' => 'Supplier Alpha',
             'supplier_code' => 'SUP-001',
             'mobile' => '01711111111',
@@ -97,6 +99,7 @@ class PurchasePhaseATest extends TestCase
         ]);
 
         $this->tax10 = DbTax::create([
+            'store_id' => 1,
             'tax_name' => 'VAT 10%',
             'tax' => 10.00,
             'status' => 1,

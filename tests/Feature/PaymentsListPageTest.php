@@ -58,8 +58,9 @@ function makePaymentsListFixture(int $storeId = 1): array {
         'delete_bit' => 0,
     ]);
 
-    $warehouse = DbWarehouse::create(['warehouse_name' => 'PayList WH ' . $storeId, 'status' => 1]);
+    $warehouse = DbWarehouse::create(['store_id' => 1, 'warehouse_name' => 'PayList WH ' . $storeId, 'status' => 1]);
     $customer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'PayList Customer ' . $storeId,
         'customer_code' => 'CUST-PAYLIST-' . $storeId,
         'mobile' => '0179000000' . $storeId,
@@ -129,7 +130,7 @@ test('3. Stat cards reflect the applied payment_type filter', function () {
     $fx = makePaymentsListFixture(1);
 
     // Add a second payment of a different method
-    DbPaymentType::firstOrCreate(['payment_type' => 'Bank Transfer'], ['status' => 1]);
+    DbPaymentType::firstOrCreate(['store_id' => 1, 'payment_type' => 'Bank Transfer'], ['status' => 1]);
 
     $sale = $fx['sale'];
     $sale->update(['paid_amount' => 500.00, 'payment_status' => 'Partial']);
@@ -163,6 +164,7 @@ test('4. Stat cards reflect the applied search filter', function () {
 
     // Another sale+payment for the same store
     $customer2 = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'Other Customer',
         'customer_code' => 'CUST-OTHER',
         'mobile' => '01791111111',
@@ -206,7 +208,7 @@ test('5. Custom payment types appear as filter options', function () {
     $user = getPaymentsListTestUser(1);
     makePaymentsListFixture(1);
 
-    DbPaymentType::firstOrCreate(['payment_type' => 'Rocket'], ['status' => 1]);
+    DbPaymentType::firstOrCreate(['store_id' => 1, 'payment_type' => 'Rocket'], ['status' => 1]);
 
     $response = $this->actingAs($user)->get(route('sales.payments'));
 

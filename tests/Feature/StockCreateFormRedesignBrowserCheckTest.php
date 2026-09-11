@@ -46,8 +46,9 @@ class StockCreateFormRedesignBrowserCheckTest extends TestCase
         // A serialized item whose NAME contains a raw double-quote — the exact
         // Add Item incident class: if the Alpine component leaks it unescaped,
         // it breaks an attribute boundary or appears as visible JS text.
-        $cat = DbCategory::create(['category_name' => 'Quote Cat', 'status' => 1]);
+        $cat = DbCategory::create(['store_id' => 1, 'category_name' => 'Quote Cat', 'status' => 1]);
         DbItem::create([
+            'store_id' => 1,
             'item_name' => 'Head"phones 1"', 'item_code' => 'QT-001',
             'category_id' => $cat->id, 'purchase_price' => 5, 'sales_price' => 10,
             'stock' => 100, 'status' => 1, 'store_id' => 1, 'is_serialized' => 1,

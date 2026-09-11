@@ -57,19 +57,22 @@ function makeDeleteSaleFixture(User $user): array {
     ]);
 
     $warehouse = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Delete WH',
         'status' => 1,
     ]);
 
     $customer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'Delete Customer',
         'customer_code' => 'CUST-DEL-001',
         'mobile' => '01799000001',
         'status' => 1,
     ]);
 
-    $category = DbCategory::create(['category_name' => 'Goods', 'status' => 1]);
+    $category = DbCategory::create(['store_id' => 1, 'category_name' => 'Goods', 'status' => 1]);
     $item = DbItem::create([
+        'store_id' => 1,
         'item_name' => 'Delete Book',
         'item_code' => 'ITM-DEL-001',
         'category_id' => $category->id,

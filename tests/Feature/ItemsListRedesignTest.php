@@ -41,6 +41,7 @@ test('items list renders with design-system header, card filter bar and x-table'
     $tax = DbTax::create(['tax_name' => 'GST 0%', 'tax' => 0, 'status' => 1, 'store_id' => 1]);
 
     DbItem::create([
+        'store_id' => 1,
         'item_name' => 'Sony WH-1000XM5 Wireless Headphones',
         'item_code' => 'IT-00101',
         'category_id' => $category->id,
@@ -113,6 +114,7 @@ test('items list page inline Alpine script passes node --check (browser-level JS
     ]);
 
     DbItem::create([
+        'store_id' => 1,
         'item_name' => "Sony WH-1000XM5 Wireless Headphones",
         'item_code' => 'IT-00101',
         'sales_price' => 399.99,
@@ -163,6 +165,7 @@ test('items list CSV export is store-scoped and includes filtered rows', functio
     $brand = DbBrand::create(['brand_name' => 'Sony', 'status' => 1, 'store_id' => 1]);
 
     DbItem::create([
+        'store_id' => 1,
         'item_name' => 'Export Me Item',
         'item_code' => 'EXP-001',
         'category_id' => $cat->id,
@@ -174,6 +177,7 @@ test('items list CSV export is store-scoped and includes filtered rows', functio
     ]);
     // Store-2 item must NOT appear in store-1 export
     DbItem::create([
+        'store_id' => 1,
         'item_name' => 'Store 2 Secret Item',
         'item_code' => 'SEC-002',
         'sales_price' => 999.00,
@@ -203,6 +207,7 @@ test('items list print/PDF export renders filtered store-scoped rows', function 
     $cat = DbCategory::create(['category_name' => 'Audio', 'status' => 1, 'store_id' => 1]);
 
     DbItem::create([
+        'store_id' => 1,
         'item_name' => 'Print Me Headphones',
         'item_code' => 'PRT-001',
         'category_id' => $cat->id,
@@ -212,6 +217,7 @@ test('items list print/PDF export renders filtered store-scoped rows', function 
         'child_bit' => 0,
     ]);
     DbItem::create([
+        'store_id' => 1,
         'item_name' => 'Store 2 Audio Item',
         'item_code' => 'PRT-999',
         'category_id' => $cat->id,
@@ -241,6 +247,7 @@ test('items list per_page selector persists query string and keeps page param', 
 
     for ($i = 1; $i <= 25; $i++) {
         DbItem::create([
+            'store_id' => 1,
             'item_name' => "Test Item {$i}",
             'item_code' => "SKU-{$i}",
             'sales_price' => 10 + $i,

@@ -75,8 +75,8 @@ test('1. Expected closing balance calculation formula accurately aggregates all 
         'delete_bit' => 0,
     ]);
 
-    $warehouse = DbWarehouse::create(['warehouse_name' => 'Flagship Store', 'status' => 1]);
-    $customer = DbCustomer::create(['customer_name' => 'Customer A', 'customer_code' => 'CUST-001', 'status' => 1]);
+    $warehouse = DbWarehouse::create(['store_id' => 1, 'warehouse_name' => 'Flagship Store', 'status' => 1]);
+    $customer = DbCustomer::create(['store_id' => 1, 'customer_name' => 'Customer A', 'customer_code' => 'CUST-001', 'status' => 1]);
 
     // Data Source 1: Cash Sales Payments (+$500.00)
     $sale = DbSale::create([
@@ -122,7 +122,7 @@ test('1. Expected closing balance calculation formula accurately aggregates all 
     ]);
 
     // Data Source 3: Cash Expense (-$50.00)
-    $category = DbExpenseCategory::create(['category_name' => 'Cleaning', 'status' => 1]);
+    $category = DbExpenseCategory::create(['store_id' => 1, 'category_name' => 'Cleaning', 'status' => 1]);
     DbExpense::create([
         'store_id' => 1,
         'expense_code' => 'EXP-REC-001',
@@ -368,9 +368,9 @@ test('6. Multi-warehouse isolation scopes cash sales payments strictly to the se
     $today = Carbon::today()->format('Y-m-d');
 
     $account = AcAccount::create(['store_id' => 1, 'account_name' => 'Shared Cash Drawer', 'account_code' => 'ACC-REC-006', 'balance' => 0, 'status' => 1, 'delete_bit' => 0]);
-    $warehouseA = DbWarehouse::create(['warehouse_name' => 'Branch North', 'status' => 1]);
-    $warehouseB = DbWarehouse::create(['warehouse_name' => 'Branch South', 'status' => 1]);
-    $customer = DbCustomer::create(['customer_name' => 'Customer B', 'customer_code' => 'CUST-002', 'status' => 1]);
+    $warehouseA = DbWarehouse::create(['store_id' => 1, 'warehouse_name' => 'Branch North', 'status' => 1]);
+    $warehouseB = DbWarehouse::create(['store_id' => 1, 'warehouse_name' => 'Branch South', 'status' => 1]);
+    $customer = DbCustomer::create(['store_id' => 1, 'customer_name' => 'Customer B', 'customer_code' => 'CUST-002', 'status' => 1]);
 
     // Sale in Warehouse A = $300.00
     $saleA = DbSale::create(['store_id' => 1, 'warehouse_id' => $warehouseA->id, 'customer_id' => $customer->id, 'sales_code' => 'SA-WH-A', 'sales_date' => $today, 'grand_total' => 300, 'paid_amount' => 300]);
@@ -404,7 +404,7 @@ test('7. Duplicate reconciliation prevention prevents saving twice for same date
     $today = Carbon::today()->format('Y-m-d');
 
     $account = AcAccount::create(['store_id' => 1, 'account_name' => 'Drawer 7', 'account_code' => 'ACC-REC-007', 'balance' => 0, 'status' => 1, 'delete_bit' => 0]);
-    $warehouse = DbWarehouse::create(['warehouse_name' => 'WH 7', 'status' => 1]);
+    $warehouse = DbWarehouse::create(['store_id' => 1, 'warehouse_name' => 'WH 7', 'status' => 1]);
 
     // First reconciliation
     $firstResponse = $this->actingAs($user)->post(route('accounts.cash-reconciliation.store'), [
@@ -438,6 +438,7 @@ test('8. Subsequent day calculation picks up previous days counted closing cash 
 
     // Day 1: Reconcile with counted cash $1,200.00
     CashDrawerReconciliation::create([
+        'store_id' => 1,
         'reconciliation_code' => 'REC-DAY-1',
         'store_id' => 1,
         'account_id' => $account->id,
@@ -525,6 +526,7 @@ test('10. Reports endpoint returns aggregated cash reconciliation metrics, summa
     $account = AcAccount::create(['store_id' => 1, 'account_name' => 'Report Drawer', 'account_code' => 'ACC-REC-010', 'balance' => 0, 'status' => 1, 'delete_bit' => 0]);
 
     CashDrawerReconciliation::create([
+        'store_id' => 1,
         'reconciliation_code' => 'REC-REP-001',
         'store_id' => 1,
         'account_id' => $account->id,
@@ -616,6 +618,7 @@ test('12. Test Case A: Day 2 normal continuation accepting $1,000 suggested open
 
     // Day 1 Close: Counted Cash = $1,000.00
     CashDrawerReconciliation::create([
+        'store_id' => 1,
         'reconciliation_code' => 'REC-CASE-A-D1',
         'store_id' => 1,
         'account_id' => $account->id,
@@ -688,6 +691,7 @@ test('13. Test Case B: Day 2 overriding suggested opening balance from $1,000 to
 
     // Day 1 Close: Counted Cash = $1,000.00
     CashDrawerReconciliation::create([
+        'store_id' => 1,
         'reconciliation_code' => 'REC-CASE-B-D1',
         'store_id' => 1,
         'account_id' => $account->id,
@@ -757,6 +761,7 @@ test('14. Elevated ledger adjustment uses recalculated closing variance after op
 
     // Day 1 Close: $500.00
     CashDrawerReconciliation::create([
+        'store_id' => 1,
         'reconciliation_code' => 'REC-ADJ-D1',
         'store_id' => 1,
         'account_id' => $account->id,
@@ -862,6 +867,7 @@ test('16. Evening closeDrawer action finalizes Open drawer and sets status to Re
 
     // Morning Open
     $recon = CashDrawerReconciliation::create([
+        'store_id' => 1,
         'reconciliation_code' => 'REC-TWOSTEP-01',
         'store_id' => 1,
         'account_id' => $account->id,
@@ -918,6 +924,7 @@ test('17. Strict Q2 Restriction: A different user cannot close a drawer they did
 
     // Cashier A opens drawer in morning
     $recon = CashDrawerReconciliation::create([
+        'store_id' => 1,
         'reconciliation_code' => 'REC-RESTRICT-01',
         'store_id' => 1,
         'account_id' => $account->id,
@@ -964,6 +971,7 @@ test('18. Cannot close an already-closed cash drawer', function () {
     ]);
 
     $recon = CashDrawerReconciliation::create([
+        'store_id' => 1,
         'reconciliation_code' => 'REC-ALREADY-CLOSED',
         'store_id' => 1,
         'account_id' => $account->id,
@@ -1006,6 +1014,7 @@ test('19. Two-step flow end-to-end for Test Case B with overnight override and e
 
     // Day 1 Close: $1,000.00
     CashDrawerReconciliation::create([
+        'store_id' => 1,
         'reconciliation_code' => 'REC-2STEP-D1',
         'store_id' => 1,
         'account_id' => $account->id,

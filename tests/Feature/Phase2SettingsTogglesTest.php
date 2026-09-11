@@ -63,6 +63,7 @@ class Phase2SettingsTogglesTest extends TestCase
 
         \App\Models\DbPermission::create([
             'role_id' => 1,
+            'store_id' => 1,
             'permissions' => json_encode(['sales' => ['view', 'create', 'edit', 'delete'], 'settings' => ['view', 'edit']]),
         ]);
 
@@ -72,12 +73,14 @@ class Phase2SettingsTogglesTest extends TestCase
         ]);
 
         $this->warehouse = DbWarehouse::create([
+            'store_id' => 1,
             'warehouse_name' => 'Main Warehouse',
             'mobile' => '01711111111',
             'status' => 1,
         ]);
 
         $this->customer = DbCustomer::create([
+            'store_id' => 1,
             'customer_name' => 'Rahim Ahmed',
             'mobile' => '01811111111',
             'customer_type' => 'regular',
@@ -86,6 +89,7 @@ class Phase2SettingsTogglesTest extends TestCase
         ]);
 
         $this->item = DbItem::create([
+            'store_id' => 1,
             'item_code' => 'ITM-001',
             'item_name' => 'Wireless Mouse',
             'sales_price' => 100.40,

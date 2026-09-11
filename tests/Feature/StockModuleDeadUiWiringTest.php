@@ -46,8 +46,9 @@ class StockModuleDeadUiWiringTest extends TestCase
         $suffix = strtolower(str_replace('.', '', uniqid('', true)));
         $whFrom = DbWarehouse::create(['warehouse_name' => 'Src-WH-' . $suffix, 'store_id' => 1, 'status' => 1]);
         $whTo = DbWarehouse::create(['warehouse_name' => 'Dst-WH-' . $suffix, 'store_id' => 1, 'status' => 1]);
-        $category = DbCategory::create(['category_name' => 'Cat ' . $ref, 'status' => 1]);
+        $category = DbCategory::create(['store_id' => 1, 'category_name' => 'Cat ' . $ref, 'status' => 1]);
         $item = DbItem::create([
+            'store_id' => 1,
             'item_name' => 'Item ' . $ref, 'item_code' => 'CODE-' . $ref,
             'category_id' => $category->id, 'purchase_price' => 5,
             'sales_price' => 10, 'stock' => 100, 'status' => 1, 'store_id' => 1,
@@ -66,8 +67,9 @@ class StockModuleDeadUiWiringTest extends TestCase
     protected function seedAdjustment(string $ref, int $qty): void
     {
         $wh = DbWarehouse::create(['warehouse_name' => 'Adj WH ' . $ref, 'store_id' => 1, 'status' => 1]);
-        $category = DbCategory::create(['category_name' => 'Adj Cat ' . $ref, 'status' => 1]);
+        $category = DbCategory::create(['store_id' => 1, 'category_name' => 'Adj Cat ' . $ref, 'status' => 1]);
         $item = DbItem::create([
+            'store_id' => 1,
             'item_name' => 'Adj Item ' . $ref, 'item_code' => 'ADJCODE-' . $ref,
             'category_id' => $category->id, 'purchase_price' => 5,
             'sales_price' => 10, 'stock' => 0, 'status' => 1, 'store_id' => 1,

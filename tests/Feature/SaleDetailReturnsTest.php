@@ -66,6 +66,7 @@ test('1. Sale with zero returns renders without returns section and Balance Due 
     ]);
 
     $warehouse = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Dhaka Hub',
         'status' => 1,
     ]);
@@ -132,6 +133,7 @@ test('2. Scenario 1: Fully paid sale with cash refund displays correct return in
     ]);
 
     $warehouse = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Chittagong Hub',
         'status' => 1,
     ]);
@@ -243,6 +245,7 @@ test('3. Scenario 2: Partially paid sale with due offset and no cash refund disp
     ]);
 
     $warehouse = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Sylhet Hub',
         'status' => 1,
     ]);
@@ -325,6 +328,7 @@ test('4. Scenario 3: Partially paid sale with partial offset and partial refund 
     ]);
 
     $warehouse = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Rajshahi Hub',
         'status' => 1,
     ]);
@@ -428,6 +432,7 @@ test('5. Scenario 4: Return edge case where returned value exceeds net amount fl
     ]);
 
     $warehouse = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Barisal Hub',
         'status' => 1,
     ]);
@@ -508,6 +513,7 @@ test('6. Multiple returns for single sale all display on sales/show and cross-li
     ]);
 
     $warehouse = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Rangpur Hub',
         'status' => 1,
     ]);
@@ -646,6 +652,7 @@ test('7. Partial return flow: qty 10 item, return #1 qty 4 keeps Create Return e
     ]);
 
     $warehouse = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Khulna Hub',
         'status' => 1,
     ]);
@@ -771,6 +778,7 @@ test('8. Server-side over-return validation rejects quantities exceeding remaini
     ]);
 
     $warehouse = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Comilla Hub',
         'status' => 1,
     ]);
@@ -864,6 +872,7 @@ test('9. Multi-item sale with one item fully returned allows partial return for 
     ]);
 
     $warehouse = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Mymensingh Hub',
         'status' => 1,
     ]);

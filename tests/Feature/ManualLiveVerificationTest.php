@@ -38,12 +38,14 @@ class ManualLiveVerificationTest extends TestCase
     protected function createSale(): DbSale
     {
         $warehouse = \App\Models\DbWarehouse::create([
+            'store_id' => 1,
             'warehouse_name' => 'Main Test Warehouse',
             'status' => 1,
             'store_id' => 1,
         ]);
 
         $customer = \App\Models\DbCustomer::create([
+            'store_id' => 1,
             'customer_name' => 'John Doe Corp',
             'mobile' => '+8801811111111',
             'address' => '456 Client Road, Dhaka',
@@ -58,6 +60,7 @@ class ManualLiveVerificationTest extends TestCase
         ]);
 
         $sale = DbSale::create([
+            'store_id' => 1,
             'sales_code' => 'SA-TEST-0001',
             'sales_date' => now()->toDateString(),
             'store_id' => 1,
@@ -73,6 +76,7 @@ class ManualLiveVerificationTest extends TestCase
         ]);
 
         $item = DbItem::create([
+            'store_id' => 1,
             'item_name' => 'Test Item',
             'item_code' => 'SKU-001',
             'sales_price' => 1000,
@@ -81,6 +85,7 @@ class ManualLiveVerificationTest extends TestCase
         ]);
 
         \App\Models\DbSaleItem::create([
+            'store_id' => 1,
             'sales_id' => $sale->id,
             'item_id' => $item->id,
             'sales_qty' => 1,
@@ -139,6 +144,7 @@ class ManualLiveVerificationTest extends TestCase
 
         for ($i = 1; $i <= 25; $i++) {
             DbItem::create([
+                'store_id' => 1,
                 'item_name' => "Performance Test Item #{$i}",
                 'item_code' => "PERF-SKU-{$i}",
                 'sales_price' => 150.50 + $i,

@@ -76,12 +76,14 @@ class PurchasePhaseBTest extends TestCase
         ]);
 
         $this->warehouse = DbWarehouse::create([
+            'store_id' => 1,
             'warehouse_name' => 'Main Warehouse',
             'store_id' => $this->store->id,
             'status' => 1,
         ]);
 
         $this->supplier = DbSupplier::create([
+            'store_id' => 1,
             'supplier_name' => 'Supplier Beta',
             'supplier_code' => 'SUP-002',
             'mobile' => '01722222222',

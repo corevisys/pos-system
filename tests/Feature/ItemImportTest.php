@@ -88,6 +88,7 @@ class ItemImportTest extends TestCase
         ]);
 
         $this->warehouse = DbWarehouse::create([
+            'store_id' => 1,
             'warehouse_name' => 'Import Warehouse',
             'store_id' => $this->store->id,
             'status' => 1,
@@ -100,6 +101,7 @@ class ItemImportTest extends TestCase
             'status' => 1,
         ]);
         $this->warehouse2 = DbWarehouse::create([
+            'store_id' => 1,
             'warehouse_name' => 'Second Store Warehouse',
             'store_id' => $store2->id,
             'status' => 1,

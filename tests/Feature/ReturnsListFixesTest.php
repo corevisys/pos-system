@@ -42,12 +42,14 @@ function getReturnListFixesUser(): User {
 }
 
 function makeReturnListFixSale(User $user): array {
-    $warehouse = DbWarehouse::create(['warehouse_name' => 'RL Fix WH', 'status' => 1]);
+    $warehouse = DbWarehouse::create(['store_id' => 1, 'warehouse_name' => 'RL Fix WH', 'status' => 1]);
     $customer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'RL Fix Customer', 'customer_code' => 'CUST-RLF-01', 'mobile' => '01793000001', 'status' => 1,
     ]);
-    $category = DbCategory::create(['category_name' => 'Goods', 'status' => 1]);
+    $category = DbCategory::create(['store_id' => 1, 'category_name' => 'Goods', 'status' => 1]);
     $item = DbItem::create([
+        'store_id' => 1,
         'item_name' => 'RL Fix Item', 'item_code' => 'ITM-RLF-01', 'category_id' => $category->id,
         'purchase_price' => 100, 'sales_price' => 500, 'stock' => 10, 'status' => 1,
     ]);
@@ -147,8 +149,8 @@ test('5. Store A user only sees store-A returns and store-A stats', function () 
     ]);
 
     // Store-2 return (different store)
-    $wh2 = DbWarehouse::create(['warehouse_name' => 'RLF WH2', 'status' => 1]);
-    $cust2 = DbCustomer::create(['customer_name' => 'RLF C2', 'customer_code' => 'CUST-RLF-2', 'mobile' => '01794000001', 'status' => 1]);
+    $wh2 = DbWarehouse::create(['store_id' => 1, 'warehouse_name' => 'RLF WH2', 'status' => 1]);
+    $cust2 = DbCustomer::create(['store_id' => 1, 'customer_name' => 'RLF C2', 'customer_code' => 'CUST-RLF-2', 'mobile' => '01794000001', 'status' => 1]);
     $sale2 = DbSale::create([
         'store_id' => 2, 'warehouse_id' => $wh2->id, 'customer_id' => $cust2->id,
         'sales_code' => 'SA-RLF-2', 'sales_date' => Carbon::today()->format('Y-m-d'),
@@ -176,7 +178,7 @@ test('6. Stat cards reflect the applied warehouse filter', function () {
     $user = getReturnListFixesUser();
     $fx = makeReturnListFixSale($user);
 
-    $wh2 = DbWarehouse::create(['warehouse_name' => 'RLF WH3', 'status' => 1]);
+    $wh2 = DbWarehouse::create(['store_id' => 1, 'warehouse_name' => 'RLF WH3', 'status' => 1]);
     $sale2 = DbSale::create([
         'store_id' => 1, 'warehouse_id' => $wh2->id, 'customer_id' => $fx['customer']->id,
         'sales_code' => 'SA-RLF-3', 'sales_date' => Carbon::today()->format('Y-m-d'),

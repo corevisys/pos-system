@@ -175,7 +175,7 @@ class ExpensesConsumerDeleteBitTest extends TestCase
 
         $customer = DbCustomer::create(['store_id' => 1, 'customer_name' => 'C1', 'customer_code' => 'CUST-C1', 'status' => 1]);
         $warehouse = DbWarehouse::create(['store_id' => 1, 'warehouse_name' => 'W1', 'status' => 1]);
-        $cat = DbCategory::create(['category_name' => 'ItemCat', 'status' => 1]);
+        $cat = DbCategory::create(['store_id' => 1, 'category_name' => 'ItemCat', 'status' => 1]);
         $item = DbItem::create([
             'store_id' => 1, 'item_name' => 'ZeroCOGS', 'item_code' => 'ZC-1',
             'category_id' => $cat->id, 'purchase_price' => 0, 'sales_price' => 500,

@@ -47,6 +47,7 @@ class StockModuleStoreScopeTest extends TestCase
         }
 
         $this->category = DbCategory::create([
+            'store_id' => 1,
             'category_name' => 'Scope Category',
             'status' => 1,
         ]);
@@ -54,6 +55,7 @@ class StockModuleStoreScopeTest extends TestCase
         // Store 1 warehouse + item
         $this->s1Wh = DbWarehouse::create(['warehouse_name' => 'S1 Warehouse', 'store_id' => 1, 'status' => 1]);
         $this->s1Item = DbItem::create([
+            'store_id' => 1,
             'item_name' => 'S1 Item', 'item_code' => 'S1-001',
             'category_id' => $this->category->id, 'purchase_price' => 10,
             'sales_price' => 20, 'stock' => 100, 'status' => 1, 'store_id' => 1,
@@ -62,6 +64,7 @@ class StockModuleStoreScopeTest extends TestCase
         // Store 2 warehouse + item
         $this->s2Wh = DbWarehouse::create(['warehouse_name' => 'S2 Warehouse', 'store_id' => 2, 'status' => 1]);
         DbItem::create([
+            'store_id' => 1,
             'item_name' => 'S2 Item', 'item_code' => 'S2-001',
             'category_id' => $this->category->id, 'purchase_price' => 10,
             'sales_price' => 20, 'stock' => 100, 'status' => 1, 'store_id' => 2,

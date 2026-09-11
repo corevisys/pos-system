@@ -41,12 +41,14 @@ test('sales return report page loads with warehouses from DbWarehouse', function
     ]);
 
     $wh1 = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Central Hub Warehouse',
         'status' => 1,
         'store_id' => 1,
     ]);
 
     $wh2 = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'North Depot Warehouse',
         'status' => 1,
         'store_id' => 1,
@@ -70,18 +72,21 @@ test('sales return report data endpoint filters by warehouse_id correctly', func
     ]);
 
     $whA = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Warehouse Alpha',
         'status' => 1,
         'store_id' => 1,
     ]);
 
     $whB = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Warehouse Beta',
         'status' => 1,
         'store_id' => 1,
     ]);
 
     $customer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'Retail Customer A',
         'mobile' => '+8801800000000',
         'status' => 1,
@@ -89,6 +94,7 @@ test('sales return report data endpoint filters by warehouse_id correctly', func
     ]);
 
     $saleA = DbSale::create([
+        'store_id' => 1,
         'sales_code' => 'SA-001',
         'sales_date' => now()->toDateString(),
         'store_id' => 1,
@@ -102,6 +108,7 @@ test('sales return report data endpoint filters by warehouse_id correctly', func
     ]);
 
     $saleB = DbSale::create([
+        'store_id' => 1,
         'sales_code' => 'SA-002',
         'sales_date' => now()->toDateString(),
         'store_id' => 1,
@@ -115,6 +122,7 @@ test('sales return report data endpoint filters by warehouse_id correctly', func
     ]);
 
     $returnA = DbSalesReturn::create([
+        'store_id' => 1,
         'return_code' => 'SR-001',
         'return_date' => now()->toDateString(),
         'sales_id' => $saleA->id,
@@ -128,6 +136,7 @@ test('sales return report data endpoint filters by warehouse_id correctly', func
     ]);
 
     $returnB = DbSalesReturn::create([
+        'store_id' => 1,
         'return_code' => 'SR-002',
         'return_date' => now()->toDateString(),
         'sales_id' => $saleB->id,

@@ -43,11 +43,13 @@ function posSerialEnv()
     $customer = DbCustomer::create(['customer_name' => 'Serial Checkout Customer', 'mobile' => '+8801811111111', 'status' => 1, 'store_id' => 1]);
 
     $serialItem = DbItem::create([
+        'store_id' => 1,
         'item_name' => 'Serialized Item A', 'item_code' => 'SER-ITM-A',
         'sales_price' => 50.00, 'purchase_price' => 30.00,
         'stock' => 10, 'is_serialized' => 1, 'status' => 1, 'store_id' => 1,
     ]);
     $otherItem = DbItem::create([
+        'store_id' => 1,
         'item_name' => 'Plain Item B', 'item_code' => 'PLN-ITM-B',
         'sales_price' => 40.00, 'purchase_price' => 20.00,
         'stock' => 10, 'status' => 1, 'store_id' => 1,

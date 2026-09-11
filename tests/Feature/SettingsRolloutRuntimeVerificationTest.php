@@ -246,7 +246,7 @@ class SettingsRolloutRuntimeVerificationTest extends TestCase
         // --- Country: exactly 3 states ---
         $country = DbCountry::create(['country' => 'GuardLand', 'status' => 1, 'added_on' => now()]);
         for ($i = 1; $i <= 3; $i++) {
-            DbState::create(['state' => "GS{$i}", 'country_id' => $country->id, 'country' => 'GuardLand', 'status' => 1, 'added_on' => now()]);
+            DbState::create(['store_id' => 1, 'state' => "GS{$i}", 'country_id' => $country->id, 'country' => 'GuardLand', 'status' => 1, 'added_on' => now()]);
         }
         $r = $this->actingAs($admin)->delete(route('settings.countries.delete', $country->id));
         $err = session('error');
@@ -259,7 +259,7 @@ class SettingsRolloutRuntimeVerificationTest extends TestCase
         $this->assertDatabaseHas('db_country', ['id' => $country->id]);
 
         // --- State: exactly 2 customers ---
-        $state = DbState::create(['state' => 'GuardState', 'country_id' => $country->id, 'country' => 'GuardLand', 'status' => 1, 'added_on' => now()]);
+        $state = DbState::create(['store_id' => 1, 'state' => 'GuardState', 'country_id' => $country->id, 'country' => 'GuardLand', 'status' => 1, 'added_on' => now()]);
         for ($i = 1; $i <= 2; $i++) {
             DbCustomer::create(['customer_name' => "GC{$i}", 'store_id' => 1, 'state_id' => $state->id, 'status' => 1, 'customer_code' => 'GC' . $i]);
         }

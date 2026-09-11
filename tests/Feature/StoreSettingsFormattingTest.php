@@ -72,12 +72,14 @@ class StoreSettingsFormattingTest extends TestCase
     protected function createSale(array $attributes = []): DbSale
     {
         $warehouse = DbWarehouse::create([
+            'store_id' => 1,
             'warehouse_name' => 'Main Test Warehouse',
             'status' => 1,
             'store_id' => 1,
         ]);
 
         $customer = DbCustomer::create([
+            'store_id' => 1,
             'customer_name' => 'John Doe Corp',
             'mobile' => '+8801811111111',
             'address' => '456 Client Road, Dhaka',
@@ -86,6 +88,7 @@ class StoreSettingsFormattingTest extends TestCase
         ]);
 
         $sale = DbSale::create(array_merge([
+            'store_id' => 1,
             'sales_code' => 'SA-TEST-' . rand(1000, 9999),
             'sales_date' => now()->toDateString(),
             'store_id' => 1,
@@ -101,6 +104,7 @@ class StoreSettingsFormattingTest extends TestCase
         ], $attributes));
 
         $item = DbItem::create([
+            'store_id' => 1,
             'item_name' => 'Test Item',
             'item_code' => 'SKU-001',
             'sales_price' => 1000,
@@ -109,6 +113,7 @@ class StoreSettingsFormattingTest extends TestCase
         ]);
 
         DbSaleItem::create([
+            'store_id' => 1,
             'sales_id' => $sale->id,
             'item_id' => $item->id,
             'sales_qty' => 1,

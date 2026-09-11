@@ -64,12 +64,14 @@ function holdFixEnv(int $storeId = 1, bool $serialized = false)
     ]);
 
     $warehouse = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Hold Fix WH ' . $storeId,
         'status' => 1,
         'store_id' => $storeId,
     ]);
 
     $customer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'Hold Fix Customer ' . $storeId,
         'mobile' => '+880181111111' . $storeId,
         'status' => 1,
@@ -77,6 +79,7 @@ function holdFixEnv(int $storeId = 1, bool $serialized = false)
     ]);
 
     $item = DbItem::create([
+        'store_id' => 1,
         'item_name' => 'Hold Fix Item ' . $storeId,
         'item_code' => 'HLD-' . $storeId . ($serialized ? '-SER' : '-001'),
         'sales_price' => 100.00,
@@ -490,6 +493,7 @@ test('A4: hold list only shows the current store\'s holds', function () {
 test('A4: hold list warehouse filter narrows results', function () {
     $env = holdFixEnv(1);
     $otherWh = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Other WH',
         'status' => 1,
         'store_id' => 1,

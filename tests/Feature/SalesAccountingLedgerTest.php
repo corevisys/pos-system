@@ -55,19 +55,22 @@ test('1. POS sale with payment creates matching ac_transactions credit entry and
     ]);
 
     $warehouse = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Main WH',
         'status' => 1,
     ]);
 
     $customer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'Alice Accounting',
         'customer_code' => 'CUST-ACC-001',
         'mobile' => '01799000001',
         'status' => 1,
     ]);
 
-    $category = DbCategory::create(['category_name' => 'Goods', 'status' => 1]);
+    $category = DbCategory::create(['store_id' => 1, 'category_name' => 'Goods', 'status' => 1]);
     $item = DbItem::create([
+        'store_id' => 1,
         'item_name' => 'Book',
         'item_code' => 'ITM-BK-001',
         'category_id' => $category->id,
@@ -133,10 +136,10 @@ test('2. Sales return with refund creates matching ac_transactions debit entry a
         'delete_bit' => 0,
     ]);
 
-    $warehouse = DbWarehouse::create(['warehouse_name' => 'Main WH 2', 'status' => 1]);
-    $customer = DbCustomer::create(['customer_name' => 'Alice 2', 'customer_code' => 'CUST-ACC-002', 'mobile' => '01799000002', 'status' => 1]);
-    $category = DbCategory::create(['category_name' => 'Goods', 'status' => 1]);
-    $item = DbItem::create(['item_name' => 'Book 2', 'item_code' => 'ITM-BK-002', 'category_id' => $category->id, 'sales_price' => 200.00, 'stock' => 10, 'status' => 1]);
+    $warehouse = DbWarehouse::create(['store_id' => 1, 'warehouse_name' => 'Main WH 2', 'status' => 1]);
+    $customer = DbCustomer::create(['store_id' => 1, 'customer_name' => 'Alice 2', 'customer_code' => 'CUST-ACC-002', 'mobile' => '01799000002', 'status' => 1]);
+    $category = DbCategory::create(['store_id' => 1, 'category_name' => 'Goods', 'status' => 1]);
+    $item = DbItem::create(['store_id' => 1, 'item_name' => 'Book 2', 'item_code' => 'ITM-BK-002', 'category_id' => $category->id, 'sales_price' => 200.00, 'stock' => 10, 'status' => 1]);
     DbWarehouseItem::create(['store_id' => 1, 'warehouse_id' => $warehouse->id, 'item_id' => $item->id, 'available_qty' => 10]);
 
     $sale = DbSale::create([
@@ -197,8 +200,8 @@ test('3. Subsequent payment via SaleController creates matching transaction and 
         'delete_bit' => 0,
     ]);
 
-    $warehouse = DbWarehouse::create(['warehouse_name' => 'WH 3', 'status' => 1]);
-    $customer = DbCustomer::create(['customer_name' => 'Charlie', 'customer_code' => 'CUST-ACC-003', 'mobile' => '01799000003', 'status' => 1]);
+    $warehouse = DbWarehouse::create(['store_id' => 1, 'warehouse_name' => 'WH 3', 'status' => 1]);
+    $customer = DbCustomer::create(['store_id' => 1, 'customer_name' => 'Charlie', 'customer_code' => 'CUST-ACC-003', 'mobile' => '01799000003', 'status' => 1]);
 
     $sale = DbSale::create([
         'store_id' => 1,
@@ -248,10 +251,10 @@ test('4. POS sale edit cleanly reverts old transactions and updates account bala
         'delete_bit' => 0,
     ]);
 
-    $warehouse = DbWarehouse::create(['warehouse_name' => 'WH 4', 'status' => 1]);
-    $customer = DbCustomer::create(['customer_name' => 'Dave', 'customer_code' => 'CUST-ACC-004', 'mobile' => '01799000004', 'status' => 1]);
-    $category = DbCategory::create(['category_name' => 'Goods', 'status' => 1]);
-    $item = DbItem::create(['item_name' => 'Item 4', 'item_code' => 'ITM-4', 'category_id' => $category->id, 'sales_price' => 100.00, 'stock' => 10, 'status' => 1]);
+    $warehouse = DbWarehouse::create(['store_id' => 1, 'warehouse_name' => 'WH 4', 'status' => 1]);
+    $customer = DbCustomer::create(['store_id' => 1, 'customer_name' => 'Dave', 'customer_code' => 'CUST-ACC-004', 'mobile' => '01799000004', 'status' => 1]);
+    $category = DbCategory::create(['store_id' => 1, 'category_name' => 'Goods', 'status' => 1]);
+    $item = DbItem::create(['store_id' => 1, 'item_name' => 'Item 4', 'item_code' => 'ITM-4', 'category_id' => $category->id, 'sales_price' => 100.00, 'stock' => 10, 'status' => 1]);
     DbWarehouseItem::create(['store_id' => 1, 'warehouse_id' => $warehouse->id, 'item_id' => $item->id, 'available_qty' => 10]);
 
     // Initial sale of $100
@@ -316,10 +319,10 @@ test('5. Sales return deletion restores refunded money back to account balance',
         'delete_bit' => 0,
     ]);
 
-    $warehouse = DbWarehouse::create(['warehouse_name' => 'WH 5', 'status' => 1]);
-    $customer = DbCustomer::create(['customer_name' => 'Eve', 'customer_code' => 'CUST-ACC-005', 'mobile' => '01799000005', 'status' => 1]);
-    $category = DbCategory::create(['category_name' => 'Goods', 'status' => 1]);
-    $item = DbItem::create(['item_name' => 'Item 5', 'item_code' => 'ITM-5', 'category_id' => $category->id, 'sales_price' => 100.00, 'stock' => 10, 'status' => 1]);
+    $warehouse = DbWarehouse::create(['store_id' => 1, 'warehouse_name' => 'WH 5', 'status' => 1]);
+    $customer = DbCustomer::create(['store_id' => 1, 'customer_name' => 'Eve', 'customer_code' => 'CUST-ACC-005', 'mobile' => '01799000005', 'status' => 1]);
+    $category = DbCategory::create(['store_id' => 1, 'category_name' => 'Goods', 'status' => 1]);
+    $item = DbItem::create(['store_id' => 1, 'item_name' => 'Item 5', 'item_code' => 'ITM-5', 'category_id' => $category->id, 'sales_price' => 100.00, 'stock' => 10, 'status' => 1]);
     DbWarehouseItem::create(['store_id' => 1, 'warehouse_id' => $warehouse->id, 'item_id' => $item->id, 'available_qty' => 10]);
 
     $sale = DbSale::create([

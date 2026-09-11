@@ -42,6 +42,7 @@ function posScanEnv()
 
     // IT-00048 with a barcode, an item code, and a serial MS26A8dg (per the spec).
     $item = DbItem::create([
+        'store_id' => 1,
         'item_name' => 'IT-00048 Product', 'item_code' => 'IT-00048',
         'custom_barcode' => 'BC-00048', 'sales_price' => 100.00, 'purchase_price' => 60.00,
         'stock' => 10, 'is_serialized' => 1, 'status' => 1, 'store_id' => 1,
@@ -203,6 +204,7 @@ test('search is store-scoped to the current store (cross-store items are not ret
     // Another store's item — item_code is globally UNIQUE (db_items), so use a
     // distinct code but the SAME barcode (barcodes are not unique).
     DbItem::create([
+        'store_id' => 1,
         'item_name' => 'Store 2 Item', 'item_code' => 'IT-00048-S2',
         'custom_barcode' => 'BC-00048', 'sales_price' => 5.00, 'purchase_price' => 2.00,
         'stock' => 5, 'status' => 1, 'store_id' => 2,

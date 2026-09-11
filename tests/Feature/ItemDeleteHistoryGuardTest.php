@@ -69,6 +69,7 @@ class ItemDeleteHistoryGuardTest extends TestCase
     private function makeCustomer(): DbCustomer
     {
         return DbCustomer::create([
+            'store_id' => 1,
             'customer_name' => 'Test Customer',
             'customer_code' => 'CUST-TEST-01',
             'mobile' => '01792000099',

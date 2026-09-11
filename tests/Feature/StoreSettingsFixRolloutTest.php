@@ -222,6 +222,7 @@ class StoreSettingsFixRolloutTest extends TestCase
     public function test_store_b_user_prints_labels_with_store_b_name_not_store_1(): void
     {
         $itemB = DbItem::create([
+            'store_id' => 1,
             'item_name' => 'Beta Item',
             'item_code' => 'BETA-001',
             'status' => 1,
@@ -258,6 +259,7 @@ class StoreSettingsFixRolloutTest extends TestCase
     public function test_low_stock_alert_routes_to_relevant_stores_contact_not_store_1(): void
     {
         $itemB = DbItem::create([
+            'store_id' => 1,
             'item_name' => 'Beta Low Stock Item',
             'item_code' => 'LOW-BETA',
             'stock' => 1,

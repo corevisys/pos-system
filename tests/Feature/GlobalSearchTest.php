@@ -118,6 +118,7 @@ test('global search returns matching items for super admin', function () {
     $user = gsSuperAdmin();
 
     DbItem::create([
+        'store_id' => 1,
         'item_name' => 'Wireless Keyboard UniqueXYZ',
         'item_code' => 'ITM-WK-001',
         'status'    => 1,
@@ -138,6 +139,7 @@ test('global search item result includes formatted sales_price in meta field', f
     $user = gsSuperAdmin();
 
     DbItem::create([
+        'store_id' => 1,
         'item_name'      => 'PriceCheck Monitor QZ99',
         'item_code'      => 'ITM-PCM-099',
         'status'         => 1,
@@ -160,6 +162,7 @@ test('global search service result includes formatted sales_price in meta field'
     $user = gsSuperAdmin();
 
     DbItem::create([
+        'store_id' => 1,
         'item_name'      => 'ServicePriceTest Installation ZZ01',
         'item_code'      => 'SVC-ZZ-001',
         'status'         => 1,
@@ -181,6 +184,7 @@ test('global search hides items from user without items_view permission', functi
     $user = gsLimitedUser(['customers_view']);
 
     DbItem::create([
+        'store_id' => 1,
         'item_name' => 'HiddenItem NoPermission',
         'item_code' => 'ITM-NP-002',
         'status'    => 1,
@@ -201,6 +205,7 @@ test('global search returns matching customers', function () {
     $user = gsLimitedUser(['customers_view']);
 
     DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'AlphaTestCustomer',
         'customer_code' => 'CUST-ALPHA-001',
         'mobile'        => '01811000001',
@@ -217,6 +222,7 @@ test('global search hides customers from user without customers_view permission'
     $user = gsLimitedUser(['items_view']);
 
     DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'HiddenCustomerNoPerms',
         'customer_code' => 'CUST-HP-002',
         'status'        => 1,
@@ -233,6 +239,7 @@ test('global search returns matching suppliers', function () {
     $user = gsLimitedUser(['suppliers_view']);
 
     DbSupplier::create([
+        'store_id' => 1,
         'supplier_name' => 'BetaTestSupplier',
         'supplier_code' => 'SUP-BETA-001',
         'mobile'        => '01922000002',
@@ -248,6 +255,7 @@ test('global search hides suppliers without suppliers_view permission', function
     $user = gsLimitedUser(['items_view']);
 
     DbSupplier::create([
+        'store_id' => 1,
         'supplier_name' => 'HiddenSupplierNoPerms',
         'supplier_code' => 'SUP-HP-002',
         'status'        => 1,
@@ -435,6 +443,7 @@ test('global search returns matching purchase returns', function () {
     $user = gsLimitedUser(['purchase_return_view']);
 
     DbPurchaseReturn::create([
+        'store_id' => 1,
         'return_code'    => 'PR-GSTEST-001',
         'return_date'    => now()->format('Y-m-d'),
         'grand_total'    => 80,
@@ -453,6 +462,7 @@ test('global search hides purchase returns without purchase_return_view permissi
     $user = gsLimitedUser(['items_view']);
 
     DbPurchaseReturn::create([
+        'store_id' => 1,
         'return_code'    => 'PR-NOPERM-002',
         'return_date'    => now()->format('Y-m-d'),
         'grand_total'    => 30,
@@ -522,6 +532,7 @@ test('global search returns at most 5 results per category', function () {
 
     foreach (range(1, 8) as $i) {
         DbItem::create([
+            'store_id' => 1,
             'item_name'      => "LimitTestItem {$i}",
             'item_code'      => "LMT-{$i}",
             'status'         => 1,

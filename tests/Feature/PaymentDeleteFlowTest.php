@@ -61,18 +61,20 @@ function makePaymentDeleteFixture(User $user): array {
     ]);
 
     $warehouse = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Delete Payment WH',
         'status' => 1,
     ]);
 
     $customer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'Payment Delete Customer',
         'customer_code' => 'CUST-DELPAY-001',
         'mobile' => '01799000001',
         'status' => 1,
     ]);
 
-    DbPaymentType::firstOrCreate(['payment_type' => 'Cash'], ['status' => 1]);
+    DbPaymentType::firstOrCreate(['store_id' => 1, 'payment_type' => 'Cash'], ['status' => 1]);
 
     $sale = DbSale::create([
         'store_id' => 1,
@@ -261,8 +263,8 @@ test('4. Unauthenticated users cannot delete a payment', function () {
 test('5. Payment recording failure shows generic message and logs the real error', function () {
     $user = getPaymentDeleteTestUser();
 
-    $customer = DbCustomer::create(['customer_name' => 'Failure Customer', 'status' => 1]);
-    $warehouse = DbWarehouse::create(['warehouse_name' => 'Failure WH', 'status' => 1]);
+    $customer = DbCustomer::create(['store_id' => 1, 'customer_name' => 'Failure Customer', 'status' => 1]);
+    $warehouse = DbWarehouse::create(['store_id' => 1, 'warehouse_name' => 'Failure WH', 'status' => 1]);
     $account = AcAccount::create([
         'store_id' => 1,
         'account_name' => 'Failure Account',
@@ -270,7 +272,7 @@ test('5. Payment recording failure shows generic message and logs the real error
         'status' => 1,
     ]);
 
-    DbPaymentType::firstOrCreate(['payment_type' => 'Cash'], ['status' => 1]);
+    DbPaymentType::firstOrCreate(['store_id' => 1, 'payment_type' => 'Cash'], ['status' => 1]);
 
     $sale = DbSale::create([
         'store_id' => 1,

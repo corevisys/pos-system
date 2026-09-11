@@ -39,6 +39,7 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'store_id' => 1, // public self-registration: default to store 1
         ]);
 
         event(new Registered($user));

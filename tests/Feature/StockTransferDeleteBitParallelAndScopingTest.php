@@ -125,8 +125,9 @@ $role = \App\Models\DbRole::firstOrCreate(['id' => 1], ['store_id' => 1, 'role_n
 ]);
 $user = \App\Models\User::factory()->create(['store_id' => 1, 'role_id' => $role->id, 'role_name' => 'Super Admin']);
 
-$cat = \App\Models\DbCategory::create(['category_name' => 'DBW Cat', 'status' => 1]);
+$cat = \App\Models\DbCategory::create(['store_id' => 1, 'category_name' => 'DBW Cat', 'status' => 1]);
 $item = \App\Models\DbItem::create([
+    'store_id' => 1,
     'item_name' => 'DBW Item', 'item_code' => 'DBW-' . uniqid(),
     'category_id' => $cat->id, 'purchase_price' => 5, 'sales_price' => 10,
     'stock' => 100, 'status' => 1, 'store_id' => 1,
@@ -150,6 +151,7 @@ $transfer = \App\Models\DbStockTransfer::create([
     'delete_bit' => 0,
 ]);
 \App\Models\DbStockTransferItems::create([
+    'store_id' => 1,
     'stocktransfer_id' => $transfer->id,
     'store_id' => 1,
     'warehouse_from' => $whFrom->id,
@@ -367,8 +369,9 @@ PHP;
      */
     public function test_update_rejects_cross_store_warehouse_to_before_any_mutation()
     {
-        $cat = DbCategory::create(['category_name' => 'IDOR Cat', 'status' => 1]);
+        $cat = DbCategory::create(['store_id' => 1, 'category_name' => 'IDOR Cat', 'status' => 1]);
         $item = DbItem::create([
+            'store_id' => 1,
             'item_name' => 'IDOR Item', 'item_code' => 'IDOR-001',
             'category_id' => $cat->id, 'purchase_price' => 5, 'sales_price' => 10,
             'stock' => 100, 'status' => 1, 'store_id' => 1,
@@ -483,8 +486,9 @@ PHP;
      */
     public function test_transfer_list_query_count_is_flat_across_row_growth()
     {
-        $cat = DbCategory::create(['category_name' => 'N1 Cat', 'status' => 1]);
+        $cat = DbCategory::create(['store_id' => 1, 'category_name' => 'N1 Cat', 'status' => 1]);
         $item = DbItem::create([
+            'store_id' => 1,
             'item_name' => 'N1 Item', 'item_code' => 'N1-001',
             'category_id' => $cat->id, 'purchase_price' => 5, 'sales_price' => 10,
             'stock' => 100, 'status' => 1, 'store_id' => 1,
@@ -558,8 +562,9 @@ PHP;
      */
     public function test_adjustment_list_query_count_is_flat_across_row_growth()
     {
-        $cat = DbCategory::create(['category_name' => 'N1 Adj Cat', 'status' => 1]);
+        $cat = DbCategory::create(['store_id' => 1, 'category_name' => 'N1 Adj Cat', 'status' => 1]);
         $item = DbItem::create([
+            'store_id' => 1,
             'item_name' => 'N1 Adj Item', 'item_code' => 'N1-ADJ-001',
             'category_id' => $cat->id, 'purchase_price' => 5, 'sales_price' => 10,
             'stock' => 100, 'status' => 1, 'store_id' => 1,

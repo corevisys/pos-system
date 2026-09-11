@@ -73,16 +73,18 @@ function makeOverpaidReturnFixture(User $user): array {
         'delete_bit' => 0,
     ]);
 
-    $warehouse = DbWarehouse::create(['warehouse_name' => 'Credit WH', 'status' => 1]);
+    $warehouse = DbWarehouse::create(['store_id' => 1, 'warehouse_name' => 'Credit WH', 'status' => 1]);
     $customer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'Credit Customer',
         'customer_code' => 'CUST-CREDIT-01',
         'mobile' => '01791000001',
         'status' => 1,
     ]);
 
-    $category = DbCategory::create(['category_name' => 'Goods', 'status' => 1]);
+    $category = DbCategory::create(['store_id' => 1, 'category_name' => 'Goods', 'status' => 1]);
     $item = DbItem::create([
+        'store_id' => 1,
         'item_name' => 'Credit Item',
         'item_code' => 'ITM-CREDIT-01',
         'category_id' => $category->id,

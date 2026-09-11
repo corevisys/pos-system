@@ -41,6 +41,7 @@ function serialHistoryEnv()
     $warehouse = DbWarehouse::create(['warehouse_name' => 'History WH', 'status' => 1, 'store_id' => 1]);
 
     $item = DbItem::create([
+        'store_id' => 1,
         'item_name' => 'History Item', 'item_code' => 'HIST-001',
         'sales_price' => 100.00, 'purchase_price' => 60.00,
         'stock' => 10, 'is_serialized' => 1, 'status' => 1, 'store_id' => 1,

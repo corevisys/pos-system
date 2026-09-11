@@ -45,12 +45,14 @@ function getReturnStoreValidationUser(): User {
 }
 
 function makeSerializedReturnSale(User $user): array {
-    $warehouse = DbWarehouse::create(['warehouse_name' => 'Ser WH', 'status' => 1]);
+    $warehouse = DbWarehouse::create(['store_id' => 1, 'warehouse_name' => 'Ser WH', 'status' => 1]);
     $customer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'Ser Customer', 'customer_code' => 'CUST-SER-01', 'mobile' => '01795000001', 'status' => 1,
     ]);
-    $category = DbCategory::create(['category_name' => 'Goods', 'status' => 1]);
+    $category = DbCategory::create(['store_id' => 1, 'category_name' => 'Goods', 'status' => 1]);
     $item = DbItem::create([
+        'store_id' => 1,
         'item_name' => 'Serialized Item', 'item_code' => 'ITM-SER-01', 'category_id' => $category->id,
         'purchase_price' => 100, 'sales_price' => 500, 'stock' => 10, 'status' => 1, 'is_serialized' => 1,
     ]);

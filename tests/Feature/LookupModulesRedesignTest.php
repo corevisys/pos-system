@@ -450,7 +450,7 @@ class LookupModulesRedesignTest extends TestCase
     public function test_states_list_renders_design_system_and_preserves_contracts(): void
     {
         $country = DbCountry::create(['country' => 'Bangladesh', 'status' => 1, 'added_on' => now()]);
-        $state = DbState::create(['state' => 'Dhaka', 'country_id' => $country->id, 'country' => 'Bangladesh', 'status' => 1, 'added_on' => now()]);
+        $state = DbState::create(['store_id' => 1, 'state' => 'Dhaka', 'country_id' => $country->id, 'country' => 'Bangladesh', 'status' => 1, 'added_on' => now()]);
 
         $html = $this->actingAs($this->user)->get(route('settings.states'))->assertOk()->getContent();
 
@@ -469,7 +469,7 @@ class LookupModulesRedesignTest extends TestCase
     {
         $country = DbCountry::create(['country' => 'Bangladesh', 'status' => 1, 'added_on' => now()]);
         for ($i = 1; $i <= 12; $i++) {
-            DbState::create(['state' => sprintf('State%02d', $i), 'country_id' => $country->id, 'country' => 'Bangladesh', 'status' => 1, 'added_on' => now()]);
+            DbState::create(['store_id' => 1, 'state' => sprintf('State%02d', $i), 'country_id' => $country->id, 'country' => 'Bangladesh', 'status' => 1, 'added_on' => now()]);
         }
 
         $p1 = $this->actingAs($this->user)->get(route('settings.states', ['limit' => 10]))->getContent();
@@ -489,7 +489,7 @@ class LookupModulesRedesignTest extends TestCase
     public function test_states_add_and_edit_pages_use_design_system_and_preserve_select_contract(): void
     {
         $country = DbCountry::create(['country' => 'Bangladesh', 'status' => 1, 'added_on' => now()]);
-        $state = DbState::create(['state' => 'Dhaka', 'country_id' => $country->id, 'country' => 'Bangladesh', 'status' => 1, 'added_on' => now()]);
+        $state = DbState::create(['store_id' => 1, 'state' => 'Dhaka', 'country_id' => $country->id, 'country' => 'Bangladesh', 'status' => 1, 'added_on' => now()]);
 
         $add = $this->actingAs($this->user)->get(route('settings.states.add'))->assertOk()->getContent();
         $this->assertDesignSystem($add, 'States Add');
@@ -515,6 +515,7 @@ class LookupModulesRedesignTest extends TestCase
         $unit = DbUnit::create(['unit_name' => 'Piece', 'status' => 1, 'store_id' => 1]);
         $tax = DbTax::create(['tax_name' => 'GST', 'tax' => 5, 'group_bit' => 0, 'status' => 1, 'store_id' => 1]);
         $item = DbItem::create([
+            'store_id' => 1,
             'item_name' => 'Consumer Item', 'item_code' => 'CI-001',
             'unit_id' => $unit->id, 'tax_id' => $tax->id,
             'purchase_price' => 1, 'sales_price' => 2, 'stock' => 1, 'status' => 1, 'store_id' => 1,
@@ -524,8 +525,9 @@ class LookupModulesRedesignTest extends TestCase
 
         // Countries/States consumed by customers (country_id/state_id FK -> country/state).
         $country = DbCountry::create(['country' => 'Bangladesh', 'status' => 1, 'added_on' => now()]);
-        $state = DbState::create(['state' => 'Dhaka', 'country_id' => $country->id, 'country' => 'Bangladesh', 'status' => 1, 'added_on' => now()]);
+        $state = DbState::create(['store_id' => 1, 'state' => 'Dhaka', 'country_id' => $country->id, 'country' => 'Bangladesh', 'status' => 1, 'added_on' => now()]);
         $customer = DbCustomer::create([
+            'store_id' => 1,
             'customer_name' => 'C', 'customer_code' => 'C-001',
             'country_id' => $country->id, 'state_id' => $state->id,
             'status' => 1, 'store_id' => 1,

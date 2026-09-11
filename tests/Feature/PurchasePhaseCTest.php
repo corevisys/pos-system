@@ -95,12 +95,14 @@ class PurchasePhaseCTest extends TestCase
         ]);
 
         $this->warehouse = DbWarehouse::create([
+            'store_id' => 1,
             'warehouse_name' => 'Main Warehouse',
             'store_id' => $this->store->id,
             'status' => 1,
         ]);
 
         $this->supplier = DbSupplier::create([
+            'store_id' => 1,
             'supplier_name' => 'Supplier Gamma',
             'supplier_code' => 'SUP-003',
             'mobile' => '01733333333',
@@ -116,7 +118,7 @@ class PurchasePhaseCTest extends TestCase
             'status' => 1,
         ]);
 
-        $this->paymentType = DbPaymentType::firstOrCreate(['payment_type' => 'Cash'], [
+        $this->paymentType = DbPaymentType::firstOrCreate(['store_id' => 1, 'payment_type' => 'Cash'], [
             'status' => 1,
             'store_id' => $this->store->id,
         ]);

@@ -245,6 +245,7 @@ class CustomerController extends Controller
 
             // Create Customer
             $customer = DbCustomer::create([
+                'store_id' => auth()->user()->store_id ?? current_store_id(),
                 'customer_name' => $request->customer_name,
                 'customer_type' => $request->customer_type,
                 'mobile' => $request->mobile,
@@ -484,6 +485,7 @@ class CustomerController extends Controller
                 } else {
                     $customer_code = \App\Services\CodeGeneratorService::generate('customer');
                     $data = $request->all();
+                    $data['store_id'] = auth()->user()->store_id ?? current_store_id();
                     $data['customer_code'] = $customer_code;
                     $data['status'] = 1;
                     $data['created_date'] = date('Y-m-d');
@@ -965,6 +967,7 @@ class CustomerController extends Controller
                 $customerCode = \App\Services\CodeGeneratorService::generate('customer');
 
                 DbCustomer::create([
+                    'store_id' => auth()->user()->store_id ?? current_store_id(),
                     'customer_name' => $customerName,
                     'customer_type' => 'regular',
                     'customer_code' => $customerCode,

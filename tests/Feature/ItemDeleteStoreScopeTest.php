@@ -114,6 +114,7 @@ class ItemDeleteStoreScopeTest extends TestCase
     {
         $store1 = DbStore::find(1);
         $warehouse = DbWarehouse::create([
+            'store_id' => 1,
             'warehouse_name' => 'Main WH',
             'status' => 1,
             'store_id' => 1,

@@ -75,17 +75,20 @@ class StockAdjustmentDeleteAndRaceTest extends TestCase
         ]);
 
         $this->warehouse = DbWarehouse::create([
+            'store_id' => 1,
             'warehouse_name' => 'PhaseB Warehouse',
             'store_id' => 1,
             'status' => 1,
         ]);
 
         $this->category = DbCategory::create([
+            'store_id' => 1,
             'category_name' => 'PhaseB Category',
             'status' => 1,
         ]);
 
         $this->item = DbItem::create([
+            'store_id' => 1,
             'item_name' => 'PhaseB Item',
             'item_code' => 'PB-001',
             'category_id' => $this->category->id,
@@ -97,6 +100,7 @@ class StockAdjustmentDeleteAndRaceTest extends TestCase
         ]);
 
         $this->customer = DbCustomer::create([
+            'store_id' => 1,
             'customer_name' => 'PhaseB Customer',
             'mobile' => '01700000012',
             'status' => 1,

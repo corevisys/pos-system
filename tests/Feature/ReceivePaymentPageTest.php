@@ -61,6 +61,7 @@ test('2. Receive payment page renders with correct sale details, customer, and r
     $user = getReceivePaymentTestUser();
 
     $customer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'Rahim Uddin',
         'customer_code' => 'CU-000101',
         'mobile' => '01811223344',
@@ -68,6 +69,7 @@ test('2. Receive payment page renders with correct sale details, customer, and r
     ]);
 
     $warehouse = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Dhanmondi Branch',
         'status' => 1,
     ]);
@@ -81,7 +83,7 @@ test('2. Receive payment page renders with correct sale details, customer, and r
         'delete_bit' => 0,
     ]);
 
-    $paymentType = DbPaymentType::firstOrCreate(['payment_type' => 'Cash'], ['status' => 1]);
+    $paymentType = DbPaymentType::firstOrCreate(['store_id' => 1, 'payment_type' => 'Cash'], ['status' => 1]);
 
     $sale = DbSale::create([
         'store_id' => 1,
@@ -127,6 +129,7 @@ test('3. Submitting a partial payment creates DbSalePayment, AcTransaction, and 
     $user = getReceivePaymentTestUser();
 
     $customer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'Karim Khan',
         'customer_code' => 'CU-000102',
         'mobile' => '01899887766',
@@ -134,6 +137,7 @@ test('3. Submitting a partial payment creates DbSalePayment, AcTransaction, and 
     ]);
 
     $warehouse = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'Gulshan Branch',
         'status' => 1,
     ]);
@@ -147,7 +151,7 @@ test('3. Submitting a partial payment creates DbSalePayment, AcTransaction, and 
         'delete_bit' => 0,
     ]);
 
-    DbPaymentType::firstOrCreate(['payment_type' => 'Bank Transfer'], ['status' => 1]);
+    DbPaymentType::firstOrCreate(['store_id' => 1, 'payment_type' => 'Bank Transfer'], ['status' => 1]);
 
     $sale = DbSale::create([
         'store_id' => 1,
@@ -206,12 +210,13 @@ test('4. Full settlement payment transitions sale status from Partial to Paid', 
     $user = getReceivePaymentTestUser();
 
     $customer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'Sadia Islam',
         'customer_code' => 'CU-000103',
         'status' => 1,
     ]);
 
-    $warehouse = DbWarehouse::create(['warehouse_name' => 'Main WH', 'status' => 1]);
+    $warehouse = DbWarehouse::create(['store_id' => 1, 'warehouse_name' => 'Main WH', 'status' => 1]);
 
     $account = AcAccount::create([
         'store_id' => 1,
@@ -222,7 +227,7 @@ test('4. Full settlement payment transitions sale status from Partial to Paid', 
         'delete_bit' => 0,
     ]);
 
-    DbPaymentType::firstOrCreate(['payment_type' => 'Cash'], ['status' => 1]);
+    DbPaymentType::firstOrCreate(['store_id' => 1, 'payment_type' => 'Cash'], ['status' => 1]);
 
     $sale = DbSale::create([
         'store_id' => 1,
@@ -261,8 +266,8 @@ test('4. Full settlement payment transitions sale status from Partial to Paid', 
 test('5. Overpayment attempt exceeding balance due is rejected', function () {
     $user = getReceivePaymentTestUser();
 
-    $customer = DbCustomer::create(['customer_name' => 'Tariq Hasan', 'status' => 1]);
-    $warehouse = DbWarehouse::create(['warehouse_name' => 'Main WH', 'status' => 1]);
+    $customer = DbCustomer::create(['store_id' => 1, 'customer_name' => 'Tariq Hasan', 'status' => 1]);
+    $warehouse = DbWarehouse::create(['store_id' => 1, 'warehouse_name' => 'Main WH', 'status' => 1]);
     $account = AcAccount::create([
         'store_id' => 1,
         'account_name' => 'Cash Counter',
@@ -306,8 +311,8 @@ test('5. Overpayment attempt exceeding balance due is rejected', function () {
 test('6. Fully settled sale page renders fully paid guard notice', function () {
     $user = getReceivePaymentTestUser();
 
-    $customer = DbCustomer::create(['customer_name' => 'Farhana', 'status' => 1]);
-    $warehouse = DbWarehouse::create(['warehouse_name' => 'Main WH', 'status' => 1]);
+    $customer = DbCustomer::create(['store_id' => 1, 'customer_name' => 'Farhana', 'status' => 1]);
+    $warehouse = DbWarehouse::create(['store_id' => 1, 'warehouse_name' => 'Main WH', 'status' => 1]);
 
     $sale = DbSale::create([
         'store_id' => 1,

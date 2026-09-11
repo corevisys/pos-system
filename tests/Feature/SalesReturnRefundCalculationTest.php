@@ -76,12 +76,14 @@ class SalesReturnRefundCalculationTest extends TestCase
         ]);
 
         $this->warehouse = DbWarehouse::create([
+            'store_id' => 1,
             'warehouse_name' => 'Main Warehouse',
             'store_id' => $this->store->id,
             'status' => 1,
         ]);
 
         $this->customer = DbCustomer::create([
+            'store_id' => 1,
             'customer_name' => 'Customer A',
             'mobile' => '01711111111',
             'store_id' => $this->store->id,
@@ -97,6 +99,7 @@ class SalesReturnRefundCalculationTest extends TestCase
         ]);
 
         $category = \App\Models\DbCategory::create([
+            'store_id' => 1,
             'category_name' => 'General',
             'category_code' => 'CAT001',
             'store_id' => $this->store->id,
@@ -104,12 +107,14 @@ class SalesReturnRefundCalculationTest extends TestCase
         ]);
 
         $unit = \App\Models\DbUnit::create([
+            'store_id' => 1,
             'unit_name' => 'Piece',
             'store_id' => $this->store->id,
             'status' => 1,
         ]);
 
         $this->item1 = DbItem::create([
+            'store_id' => 1,
             'item_code' => 'ITM001',
             'item_name' => 'Product Alpha',
             'category_id' => $category->id,
@@ -123,6 +128,7 @@ class SalesReturnRefundCalculationTest extends TestCase
         ]);
 
         $this->item2 = DbItem::create([
+            'store_id' => 1,
             'item_code' => 'ITM002',
             'item_name' => 'Product Beta',
             'category_id' => $category->id,
@@ -161,6 +167,7 @@ class SalesReturnRefundCalculationTest extends TestCase
         ]);
 
         DbSaleItem::create([
+            'store_id' => 1,
             'sales_id' => $sale->id,
             'item_id' => $this->item1->id,
             'sales_qty' => 1,
@@ -169,6 +176,7 @@ class SalesReturnRefundCalculationTest extends TestCase
         ]);
 
         DbSaleItem::create([
+            'store_id' => 1,
             'sales_id' => $sale->id,
             'item_id' => $this->item2->id,
             'sales_qty' => 1,
@@ -495,6 +503,7 @@ class SalesReturnRefundCalculationTest extends TestCase
         $this->actingAs($this->user);
 
         $warehouse2 = DbWarehouse::create([
+            'store_id' => 1,
             'warehouse_name' => 'Secondary Warehouse',
             'store_id' => $this->store->id,
             'status' => 1,

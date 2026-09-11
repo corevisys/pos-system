@@ -92,6 +92,7 @@ class ItemAddValidationAndContractTest extends TestCase
         ]);
 
         $this->warehouse = DbWarehouse::create([
+            'store_id' => 1,
             'warehouse_name' => 'Validation Warehouse',
             'store_id' => $this->store->id,
             'status' => 1,

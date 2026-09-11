@@ -246,12 +246,14 @@ class StoreSettingsStoreScopingTest extends TestCase
     public function test_invoice_consumer_resolves_sale_store_not_acting_user_store(): void
     {
         $warehouse = DbWarehouse::create([
+            'store_id' => 1,
             'warehouse_name' => 'Beta Warehouse',
             'status' => 1,
             'store_id' => $this->storeB->id,
         ]);
 
         $customer = DbCustomer::create([
+            'store_id' => 1,
             'customer_name' => 'Beta Customer',
             'mobile' => '01811111111',
             'status' => 1,
@@ -290,12 +292,14 @@ class StoreSettingsStoreScopingTest extends TestCase
         // guarantee covers — timezone config + currency symbol + invoice header
         // all resolve the SAME store and must reuse one memoized row.
         $warehouse = DbWarehouse::create([
+            'store_id' => 1,
             'warehouse_name' => 'Query Alpha Warehouse',
             'status' => 1,
             'store_id' => $this->storeA->id,
         ]);
 
         $customer = DbCustomer::create([
+            'store_id' => 1,
             'customer_name' => 'Query Alpha Customer',
             'mobile' => '01822222222',
             'status' => 1,

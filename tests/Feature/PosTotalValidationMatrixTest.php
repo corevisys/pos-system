@@ -58,6 +58,7 @@ function matrixEnv()
 
     $warehouse = DbWarehouse::create(['warehouse_name' => 'Matrix WH', 'status' => 1, 'store_id' => 1]);
     $customer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'Matrix Customer', 'mobile' => '+8801811111111',
         'status' => 1, 'store_id' => 1,
         'tot_advance' => 500.00, // advance balance so advance-payment flows are legal
@@ -65,11 +66,13 @@ function matrixEnv()
 
     // Two items: one plain, one serialized.
     $item = DbItem::create([
+        'store_id' => 1,
         'item_name' => 'Matrix Item', 'item_code' => 'MTX-001',
         'sales_price' => 100.00, 'purchase_price' => 60.00,
         'stock' => 100, 'status' => 1, 'store_id' => 1,
     ]);
     $serialItem = DbItem::create([
+        'store_id' => 1,
         'item_name' => 'Serialized Item', 'item_code' => 'MTX-SER',
         'sales_price' => 50.00, 'purchase_price' => 30.00,
         'stock' => 10, 'is_serialized' => 1, 'status' => 1, 'store_id' => 1,

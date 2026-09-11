@@ -54,12 +54,14 @@ function emiFixEnv(int $storeId = 1)
     ]);
 
     $warehouse = DbWarehouse::create([
+        'store_id' => 1,
         'warehouse_name' => 'EMI Fix WH ' . $storeId,
         'status' => 1,
         'store_id' => $storeId,
     ]);
 
     $customer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'EMI Fix Customer ' . $storeId,
         'mobile' => '+88018112233' . $storeId,
         'customer_type' => 'emi',
@@ -68,6 +70,7 @@ function emiFixEnv(int $storeId = 1)
     ]);
 
     $item = DbItem::create([
+        'store_id' => 1,
         'item_name' => 'EMI Fix Item',
         'item_code' => 'EMI-FIX-' . $storeId,
         'sales_price' => 1000.00,

@@ -79,12 +79,14 @@ function makeMultiReturnFixture(User $user): array {
         'store_id' => 1, 'account_name' => 'MultiReturn Acct', 'account_code' => 'ACC-MR-01',
         'balance' => 5000.00, 'status' => 1, 'delete_bit' => 0,
     ]);
-    $warehouse = DbWarehouse::create(['warehouse_name' => 'MR WH', 'status' => 1]);
+    $warehouse = DbWarehouse::create(['store_id' => 1, 'warehouse_name' => 'MR WH', 'status' => 1]);
     $customer = DbCustomer::create([
+        'store_id' => 1,
         'customer_name' => 'MR Customer', 'customer_code' => 'CUST-MR-01', 'mobile' => '01792000001', 'status' => 1,
     ]);
-    $category = DbCategory::create(['category_name' => 'Goods', 'status' => 1]);
+    $category = DbCategory::create(['store_id' => 1, 'category_name' => 'Goods', 'status' => 1]);
     $item = DbItem::create([
+        'store_id' => 1,
         'item_name' => 'MR Item', 'item_code' => 'ITM-MR-01', 'category_id' => $category->id,
         'purchase_price' => 100, 'sales_price' => 500, 'stock' => 10, 'status' => 1,
     ]);

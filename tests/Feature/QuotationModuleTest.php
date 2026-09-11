@@ -65,12 +65,14 @@ class QuotationModuleTest extends TestCase
         ]);
 
         $this->warehouse = DbWarehouse::create([
+            'store_id' => 1,
             'warehouse_name' => 'Main Warehouse',
             'status' => 1,
             'store_id' => 1,
         ]);
 
         $this->customer = DbCustomer::create([
+            'store_id' => 1,
             'customer_name' => 'Regular Customer',
             'mobile' => '01711111111',
             'status' => 1,
@@ -78,6 +80,7 @@ class QuotationModuleTest extends TestCase
         ]);
 
         $this->tax10 = DbTax::create([
+            'store_id' => 1,
             'tax_name' => 'VAT 10%',
             'tax' => 10,
             'status' => 1,
@@ -91,6 +94,7 @@ class QuotationModuleTest extends TestCase
     public function test_a1_server_honors_user_entered_custom_price(): void
     {
         $item = DbItem::create([
+            'store_id' => 1,
             'item_name' => 'Custom Price Item',
             'item_code' => 'ITM-001',
             'sales_price' => 500.00,
@@ -138,6 +142,7 @@ class QuotationModuleTest extends TestCase
     public function test_a2_server_honors_item_level_discounts(): void
     {
         $item = DbItem::create([
+            'store_id' => 1,
             'item_name' => 'Line Discount Item',
             'item_code' => 'ITM-002',
             'sales_price' => 200.00,
@@ -184,6 +189,7 @@ class QuotationModuleTest extends TestCase
     public function test_a3_inclusive_and_exclusive_tax_calculation(): void
     {
         $incItem = DbItem::create([
+            'store_id' => 1,
             'item_name' => 'Inclusive Item',
             'item_code' => 'ITM-INC',
             'sales_price' => 110.00,
@@ -195,6 +201,7 @@ class QuotationModuleTest extends TestCase
         ]);
 
         $excItem = DbItem::create([
+            'store_id' => 1,
             'item_name' => 'Exclusive Item',
             'item_code' => 'ITM-EXC',
             'sales_price' => 100.00,
@@ -253,6 +260,7 @@ class QuotationModuleTest extends TestCase
     public function test_a4_percentage_global_discount(): void
     {
         $item = DbItem::create([
+            'store_id' => 1,
             'item_name' => 'Global Discount Item',
             'item_code' => 'ITM-004',
             'sales_price' => 100.00,
@@ -296,6 +304,7 @@ class QuotationModuleTest extends TestCase
     public function test_a_update_recalculates_honoring_price_and_discount(): void
     {
         $item = DbItem::create([
+            'store_id' => 1,
             'item_name' => 'Editable Item',
             'item_code' => 'ITM-EDIT',
             'sales_price' => 300.00,
@@ -367,6 +376,7 @@ class QuotationModuleTest extends TestCase
         ]);
 
         $item = DbItem::create([
+            'store_id' => 1,
             'item_name' => 'Delete Test Item',
             'item_code' => 'ITM-DEL',
             'sales_price' => 100,
@@ -499,6 +509,7 @@ class QuotationModuleTest extends TestCase
     public function test_c1_convert_to_sale_end_to_end(): void
     {
         $item = DbItem::create([
+            'store_id' => 1,
             'item_name' => 'Convertible Item',
             'item_code' => 'ITM-CONV',
             'sales_price' => 150.00,
@@ -511,6 +522,7 @@ class QuotationModuleTest extends TestCase
         ]);
 
         $whItem = DbWarehouseItem::create([
+            'store_id' => 1,
             'warehouse_id' => $this->warehouse->id,
             'item_id' => $item->id,
             'available_qty' => 20,
@@ -580,6 +592,7 @@ class QuotationModuleTest extends TestCase
     public function test_c1_ii_double_conversion_is_rejected(): void
     {
         $item = DbItem::create([
+            'store_id' => 1,
             'item_name' => 'Double Convert Item',
             'item_code' => 'ITM-DBL',
             'sales_price' => 100.00,
@@ -589,6 +602,7 @@ class QuotationModuleTest extends TestCase
         ]);
 
         $whItem = DbWarehouseItem::create([
+            'store_id' => 1,
             'warehouse_id' => $this->warehouse->id,
             'item_id' => $item->id,
             'available_qty' => 10,
@@ -641,6 +655,7 @@ class QuotationModuleTest extends TestCase
     public function test_c1_iii_insufficient_stock_rejects_conversion(): void
     {
         $item = DbItem::create([
+            'store_id' => 1,
             'item_name' => 'Low Stock Item',
             'item_code' => 'ITM-LOW',
             'sales_price' => 100.00,
@@ -650,6 +665,7 @@ class QuotationModuleTest extends TestCase
         ]);
 
         $whItem = DbWarehouseItem::create([
+            'store_id' => 1,
             'warehouse_id' => $this->warehouse->id,
             'item_id' => $item->id,
             'available_qty' => 1, // only 1 available
@@ -696,6 +712,7 @@ class QuotationModuleTest extends TestCase
     public function test_c1_iv_expired_quotation_cannot_be_converted(): void
     {
         $item = DbItem::create([
+            'store_id' => 1,
             'item_name' => 'Expired Item',
             'item_code' => 'ITM-EXP',
             'sales_price' => 100.00,
@@ -705,6 +722,7 @@ class QuotationModuleTest extends TestCase
         ]);
 
         DbWarehouseItem::create([
+            'store_id' => 1,
             'warehouse_id' => $this->warehouse->id,
             'item_id' => $item->id,
             'available_qty' => 10,

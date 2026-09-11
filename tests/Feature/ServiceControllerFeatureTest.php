@@ -248,6 +248,7 @@ class ServiceControllerFeatureTest extends TestCase
     public function test_pos_sale_allows_zero_stock_service_and_keeps_stock_unchanged()
     {
         $warehouse = \App\Models\DbWarehouse::create([
+            'store_id' => 1,
             'warehouse_name' => 'POS Svc WH',
             'status' => 1,
             'store_id' => 1,
@@ -320,11 +321,13 @@ class ServiceControllerFeatureTest extends TestCase
     public function test_quotation_conversion_skips_service_stock_decrement()
     {
         $warehouse = \App\Models\DbWarehouse::create([
+            'store_id' => 1,
             'warehouse_name' => 'Svc Test WH',
             'status' => 1,
             'store_id' => 1,
         ]);
         $customer = \App\Models\DbCustomer::create([
+            'store_id' => 1,
             'customer_name' => 'Svc Test Customer',
             'mobile' => '01710000000',
             'status' => 1,
@@ -568,6 +571,7 @@ class ServiceControllerFeatureTest extends TestCase
     public function test_new_service_is_immediately_searchable_in_pos()
     {
         $warehouse = \App\Models\DbWarehouse::create([
+            'store_id' => 1,
             'warehouse_name' => 'POS Search WH',
             'status' => 1,
             'store_id' => 1,
@@ -607,6 +611,7 @@ class ServiceControllerFeatureTest extends TestCase
     public function test_hold_resume_with_service_line_skips_service_stock_decrement()
     {
         $warehouse = \App\Models\DbWarehouse::create([
+            'store_id' => 1,
             'warehouse_name' => 'Hold Resume WH',
             'status' => 1,
             'store_id' => 1,

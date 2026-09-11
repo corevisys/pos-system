@@ -105,12 +105,14 @@ class SerialUniquenessAcrossEntryPointsTest extends TestCase
         ]);
 
         $this->warehouse = DbWarehouse::create([
+            'store_id' => 1,
             'warehouse_name' => 'Main Warehouse',
             'store_id' => $this->store->id,
             'status' => 1,
         ]);
 
         $this->supplier = DbSupplier::create([
+            'store_id' => 1,
             'supplier_name' => 'Serial Supplier',
             'supplier_code' => 'SUP-SER-01',
             'mobile' => '01798880000',
