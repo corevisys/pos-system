@@ -1,8 +1,9 @@
 # Phase 1.4 — `store_id` NOT NULL Migration — Analysis & Decision
 
-**Status:** ❌ NOT APPLIED — migration discarded as incompatible with the codebase.
+**Status:** ⚠️ SUPERSEDED — initially NOT APPLIED (discarded), then APPLIED after the
+live DB was confirmed EMPTY and the test suite was made compatible.
 **Date:** 2026-09-11
-**Related commits:** `d0068a2` (trait `orWhereNull` change), `d796e54`…`4018d24` (StoreScoped model batches 1–10)
+**Related commits:** `d0068a2` (trait `orWhereNull` change), `d796e54`…`4018d24` (StoreScoped model batches 1–10), `33885f9` (NOT NULL migration + fixtures/production fixes)
 
 ---
 
@@ -110,3 +111,36 @@ contradict the global-row convention:
   transfers, stock) and **exclude** shared-lookup tables (tax, units, payment
   types, roles, permissions) — and update the 76 fixture files accordingly.
   This is a larger, deliberate change requiring sign-off, not a drop-in migration.
+
+---
+
+## 7. UPDATE — Migration was ultimately applied (fresh DB)
+
+The decision above was later **superseded** by the project owner:
+
+- The live MySQL database was re-verified and found to be **completely empty**
+  (0 rows in all 58 store_id tables), so no data-corruption risk existed.
+- The owner instructed: *"apply koro database a kono data nei fresh migration
+  korte paro"* (apply it — the database has no data, you can do a fresh migration).
+- The migration [`2026_09_11_000001_add_not_null_store_id_to_store_scoped_tables.php`](../database/migrations/2026_09_11_000001_add_not_null_store_id_to_store_scoped_tables.php)
+  was recreated and **run successfully** — all 58 tables now have `NOT NULL store_id`.
+- The `:memory:` SQLite test suite (which rebuilds schema from migrations) was made
+  compatible by adding explicit `'store_id' => 1` to:
+  - `database/factories/UserFactory.php` (factory default),
+  - **387 fixture create() call sites across 66 test files** (programmatic transform),
+  - the `DashboardTest` `firstOrCreate`,
+  - the `Phase2SettingsTogglesTest` `DbPermission::create`.
+- The migration also exposed **latent production bugs** — writes that never set
+  `store_id` — now fixed:
+  - `CustomerController::saveStep()` (both basic-step and import paths) — was
+    creating customers without `store_id`;
+  - `RegisteredUserController::store()` — public registration created users
+    without `store_id`;
+  - `StateSeeder` — inserted states without `store_id`.
+
+### Final state
+
+- Live DB: **58/58 tables `NOT NULL store_id`, zero NULL rows** (verified post-migration).
+- Full test suite: **16 failed / 952 passed (5255 assertions)** — identical to the
+  known pre-existing flaky/baseline set; no new regressions.
+- Commit: `33885f9` (71 files: migration + factory + 66 test files + 4 production/seed fixes).
