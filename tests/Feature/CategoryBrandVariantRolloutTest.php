@@ -355,7 +355,7 @@ class CategoryBrandVariantRolloutTest extends TestCase
         $this->actingAs($this->store1User)->post(route('items.categories.store'), ['category_name' => 'Electronics'])->assertRedirect();
         $this->actingAs($this->store2User)->post(route('items.categories.store'), ['category_name' => 'Electronics'])->assertRedirect();
 
-        $this->assertEquals(2, DbCategory::where('category_name', 'Electronics')->count());
+        $this->assertEquals(2, DbCategory::allStores()->where('category_name', 'Electronics')->count());
     }
 
     public function test_same_name_allowed_across_stores_for_brand(): void
@@ -363,7 +363,7 @@ class CategoryBrandVariantRolloutTest extends TestCase
         $this->actingAs($this->store1User)->post(route('items.brands.store'), ['brand_name' => 'Nike'])->assertRedirect();
         $this->actingAs($this->store2User)->post(route('items.brands.store'), ['brand_name' => 'Nike'])->assertRedirect();
 
-        $this->assertEquals(2, DbBrand::where('brand_name', 'Nike')->count());
+        $this->assertEquals(2, DbBrand::allStores()->where('brand_name', 'Nike')->count());
     }
 
     public function test_same_name_allowed_across_stores_for_variant(): void
@@ -371,7 +371,7 @@ class CategoryBrandVariantRolloutTest extends TestCase
         $this->actingAs($this->store1User)->post(route('items.variants.store'), ['variant_name' => 'Size'])->assertRedirect();
         $this->actingAs($this->store2User)->post(route('items.variants.store'), ['variant_name' => 'Size'])->assertRedirect();
 
-        $this->assertEquals(2, DbVariant::where('variant_name', 'Size')->count());
+        $this->assertEquals(2, DbVariant::allStores()->where('variant_name', 'Size')->count());
     }
 
     public function test_duplicate_name_within_same_store_rejected_for_category(): void
