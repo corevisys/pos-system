@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class DbSupplier extends Model
 {
     use HasFactory, SoftDeletes;
+    use \App\Models\Traits\StoreScoped;
 
     protected $table = 'db_suppliers';
 

@@ -238,7 +238,7 @@ class WarehouseRolloutTest extends TestCase
 
         // Store A cannot create a second "Shared Name".
         $this->actingAs($userA)->post(route('warehouse.store'), ['warehouse_name' => 'Shared Name', 'mobile' => null, 'email' => null])->assertSessionHasErrors('warehouse_name');
-        $this->assertSame(2, DbWarehouse::where('warehouse_name', 'Shared Name')->count(), 'Exactly one per store.');
+        $this->assertSame(2, DbWarehouse::allStores()->where('warehouse_name', 'Shared Name')->count(), 'Exactly one per store.');
     }
 
     // ─────────────────────────────── PHASE 6 ───────────────────────────────

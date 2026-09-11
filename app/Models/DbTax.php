@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class DbTax extends Model
 {
     use HasFactory;
+    use \App\Models\Traits\StoreScoped;
 
     protected $table = 'db_tax';
 
