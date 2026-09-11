@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class AcMoneyDeposit extends Model
 {
     use HasFactory;
+    use \App\Models\Traits\StoreScoped;
 
     protected $table = 'ac_moneydeposits';
 

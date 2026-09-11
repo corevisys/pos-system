@@ -1380,7 +1380,11 @@ class PosController extends Controller
             }
 
             foreach ($selectedSerials as $serialId) {
+                // Fetch ANY serial by id (bypass the store global scope) so the
+                // explicit store/warehouse membership checks below can produce
+                // their accurate error messages instead of a generic "not exists".
                 $serial = DbItemSerial::where('id', (int) $serialId)
+                    ->allStores()
                     ->lockForUpdate()
                     ->first();
 

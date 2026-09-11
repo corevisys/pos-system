@@ -406,7 +406,7 @@ PHP;
         // No mutation: transfer still at original warehouse_to; store-2 row untouched.
         $transfer->refresh();
         $this->assertSame($whTo->id, (int) $transfer->warehouse_to);
-        $this->assertSame(999.0, (float) DbWarehouseItem::where('warehouse_id', $whToStore2->id)->where('item_id', $item->id)->value('available_qty'));
+        $this->assertSame(999.0, (float) DbWarehouseItem::allStores()->where('warehouse_id', $whToStore2->id)->where('item_id', $item->id)->value('available_qty'));
         // Source still 90 (only the original transfer decremented it).
         $this->assertSame(90.0, (float) DbWarehouseItem::where('warehouse_id', $whFrom->id)->where('item_id', $item->id)->value('available_qty'));
 

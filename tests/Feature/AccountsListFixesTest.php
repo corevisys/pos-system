@@ -584,7 +584,7 @@ class AccountsListFixesTest extends TestCase
         $this->assertEquals(1, AcAccount::find($store1Clean->id)->delete_bit);
 
         // Store 2 victim account MUST NOT be touched
-        $this->assertEquals(0, AcAccount::find($store2Victim->id)->delete_bit, 'Store 2 account must NOT be deleted via cross-store IDOR.');
+        $this->assertEquals(0, AcAccount::allStores()->find($store2Victim->id)->delete_bit, 'Store 2 account must NOT be deleted via cross-store IDOR.');
 
         // Assert message does NOT leak Store 2 victim account name or code
         $successMsg = session('success');
