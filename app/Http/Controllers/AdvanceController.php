@@ -52,7 +52,7 @@ class AdvanceController extends Controller
     {
         $request->validate([
             'payment_date' => 'required|date',
-            'customer_id' => 'required|exists:db_customers,id',
+            'customer_id' => ['required', \Illuminate\Validation\Rule::exists('db_customers', 'id')->where('store_id', current_store_id())],
             'amount' => 'required|numeric|min:0.01',
             'payment_type' => 'required|string',
             'account_id' => 'required|exists:ac_accounts,id',
@@ -86,11 +86,15 @@ class AdvanceController extends Controller
             $advance->save();
 
             // Update Customer Total Advance
-            $customer = DbCustomer::find($request->customer_id);
-            if ($customer) {
-                $customer->tot_advance += $request->amount;
-                $customer->save();
+            // Explicitly store-scoped so a cross-store customer_id can never be
+            // credited (defense-in-depth beyond the StoreScoped global scope).
+            $customer = DbCustomer::where('store_id', $storeId)->find($request->customer_id);
+            if (!$customer) {
+                DB::rollBack();
+                return back()->with('error', 'The selected customer does not belong to your store.')->withInput();
             }
+            $customer->tot_advance += $request->amount;
+            $customer->save();
 
             AcTransaction::create([
                 'store_id' => $advance->store_id,

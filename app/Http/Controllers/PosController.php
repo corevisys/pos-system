@@ -314,7 +314,7 @@ class PosController extends Controller
             }
 
             if ($advanceAmount > 0) {
-                $customer = DbCustomer::find($request->customer_id);
+                $customer = DbCustomer::where('store_id', current_store_id())->find($request->customer_id);
                 $availableAdvance = (float) ($customer->tot_advance ?? 0);
                 if (!$customer || $advanceAmount > $availableAdvance || $advanceAmount > $grandTotal) {
                     DB::rollBack();
@@ -650,8 +650,8 @@ class PosController extends Controller
         // legitimately change between hold and resume, so we do NOT enforce
         // stock availability or strict price checks here.
         $warehouseId = $request->input('warehouse_id');
-        if (empty($warehouseId) || !DbWarehouse::where('id', $warehouseId)->where('status', 1)->exists()) {
-            return response()->json(['success' => false, 'message' => 'A valid warehouse is required to hold an invoice.'], 422);
+        if (empty($warehouseId) || !DbWarehouse::where('id', $warehouseId)->where('store_id', current_store_id())->where('status', 1)->exists()) {
+            return response()->json(['success' => false, 'message' => 'The selected warehouse does not belong to your store.'], 422);
         }
 
         $cart = $request->input('cart', []);
@@ -813,7 +813,7 @@ class PosController extends Controller
             }
 
             if ($advanceAmount > 0) {
-                $customer = DbCustomer::find($request->customer_id);
+                $customer = DbCustomer::where('store_id', current_store_id())->find($request->customer_id);
                 $availableAdvance = (float) ($customer->tot_advance ?? 0);
                 if (!$customer || $advanceAmount > $availableAdvance || $advanceAmount > $totalAmount) {
                     DB::rollBack();
@@ -1231,8 +1231,8 @@ class PosController extends Controller
     private function validateSalePayload(Request $request)
     {
         $warehouseId = $request->input('warehouse_id');
-        if (empty($warehouseId) || !DbWarehouse::where('id', $warehouseId)->where('status', 1)->exists()) {
-            return 'A valid warehouse is required.';
+        if (empty($warehouseId) || !DbWarehouse::where('id', $warehouseId)->where('store_id', current_store_id())->where('status', 1)->exists()) {
+            return 'The selected warehouse does not belong to your store.';
         }
 
         $customerId = $request->input('customer_id');
@@ -1448,9 +1448,9 @@ class PosController extends Controller
             // 1. Check customer coupon first
             $custCoupon = null;
             if ($request->filled('customer_coupon_id')) {
-                $custCoupon = DbCustomerCoupon::find($request->customer_coupon_id);
+                $custCoupon = DbCustomerCoupon::where('store_id', current_store_id())->find($request->customer_coupon_id);
             } elseif ($couponCode) {
-                $custCoupon = DbCustomerCoupon::where('code', $couponCode)->first();
+                $custCoupon = DbCustomerCoupon::where('store_id', current_store_id())->where('code', $couponCode)->first();
             }
 
             if ($custCoupon && $custCoupon->status == 1 && (!$custCoupon->expire_date || $custCoupon->expire_date >= $today) && ($customerId && (int)$custCoupon->customer_id === (int)$customerId)) {

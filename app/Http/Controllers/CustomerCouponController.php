@@ -57,7 +57,7 @@ class CustomerCouponController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'customer_id' => 'required|exists:db_customers,id',
+            'customer_id' => ['required', \Illuminate\Validation\Rule::exists('db_customers', 'id')->where('store_id', current_store_id())],
             'name'        => 'required|string|max:255',
             'code'        => 'required|string|max:50|unique:db_customer_coupons,code',
             'type'        => 'required|in:Percentage,Fixed',

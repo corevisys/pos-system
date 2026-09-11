@@ -176,8 +176,8 @@ class ItemController extends Controller
 
         if ($request->item_group === 'Single') {
             $rules += [
-                'sku' => 'nullable|string|max:100|unique:db_items,sku|regex:/^[A-Za-z0-9\-_\.]+$/',
-                'custom_barcode' => 'nullable|string|max:100|unique:db_items,custom_barcode|regex:/^[A-Za-z0-9\-_\.]+$/',
+                'sku' => ['nullable', 'string', 'max:100', \Illuminate\Validation\Rule::unique('db_items', 'sku')->where('store_id', current_store_id()), 'regex:/^[A-Za-z0-9\-_\.]+$/'],
+                'custom_barcode' => ['nullable', 'string', 'max:100', \Illuminate\Validation\Rule::unique('db_items', 'custom_barcode')->where('store_id', current_store_id()), 'regex:/^[A-Za-z0-9\-_\.]+$/'],
                 'price' => 'required|numeric|min:0',
                 'purchase_price' => 'required|numeric|min:0',
                 'profit_margin' => 'nullable|numeric|min:0',
@@ -188,8 +188,8 @@ class ItemController extends Controller
             $rules += [
                 'variants' => 'required|array|min:1',
                 'variants.*.name' => 'required|string|max:255',
-                'variants.*.sku' => 'nullable|string|max:100|unique:db_items,sku|regex:/^[A-Za-z0-9\-_\.]+$/',
-                'variants.*.barcode' => 'nullable|string|max:100|unique:db_items,custom_barcode|regex:/^[A-Za-z0-9\-_\.]+$/',
+                'variants.*.sku' => ['nullable', 'string', 'max:100', \Illuminate\Validation\Rule::unique('db_items', 'sku')->where('store_id', current_store_id()), 'regex:/^[A-Za-z0-9\-_\.]+$/'],
+                'variants.*.barcode' => ['nullable', 'string', 'max:100', \Illuminate\Validation\Rule::unique('db_items', 'custom_barcode')->where('store_id', current_store_id()), 'regex:/^[A-Za-z0-9\-_\.]+$/'],
                 'variants.*.price' => 'required|numeric|min:0',
                 'variants.*.purchase_price' => 'required|numeric|min:0',
                 'variants.*.profit' => 'nullable|numeric|min:0',
@@ -558,10 +558,10 @@ class ItemController extends Controller
             'item_group' => 'required|in:Single,Box',
             'item_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'sku' => $single
-                ? ['nullable', 'string', 'max:100', \Illuminate\Validation\Rule::unique('db_items', 'sku')->ignore($id), $legacyAwareFormat($item->sku, 'SKU may only contain letters, numbers, dash, underscore or dot.')]
+                ? ['nullable', 'string', 'max:100', \Illuminate\Validation\Rule::unique('db_items', 'sku')->where('store_id', current_store_id())->ignore($id), $legacyAwareFormat($item->sku, 'SKU may only contain letters, numbers, dash, underscore or dot.')]
                 : ['nullable', 'string', 'max:100', $legacyAwareFormat($item->sku, 'SKU may only contain letters, numbers, dash, underscore or dot.')],
             'custom_barcode' => $single
-                ? ['nullable', 'string', 'max:100', \Illuminate\Validation\Rule::unique('db_items', 'custom_barcode')->ignore($id), $legacyAwareFormat($item->custom_barcode, 'Barcode may only contain letters, numbers, dash, underscore or dot.')]
+                ? ['nullable', 'string', 'max:100', \Illuminate\Validation\Rule::unique('db_items', 'custom_barcode')->where('store_id', current_store_id())->ignore($id), $legacyAwareFormat($item->custom_barcode, 'Barcode may only contain letters, numbers, dash, underscore or dot.')]
                 : ['nullable', 'string', 'max:100', $legacyAwareFormat($item->custom_barcode, 'Barcode may only contain letters, numbers, dash, underscore or dot.')],
             'price' => $single ? 'required|numeric|min:0' : 'nullable|numeric|min:0',
             'purchase_price' => $single ? 'required|numeric|min:0' : 'nullable|numeric|min:0',

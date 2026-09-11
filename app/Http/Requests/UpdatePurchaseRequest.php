@@ -28,8 +28,8 @@ class UpdatePurchaseRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'warehouse_id' => 'required|integer|exists:db_warehouse,id',
-            'supplier_id' => 'required|integer|exists:db_suppliers,id',
+            'warehouse_id' => ['required', 'integer', \Illuminate\Validation\Rule::exists('db_warehouse', 'id')->where('store_id', current_store_id())],
+            'supplier_id' => ['required', 'integer', \Illuminate\Validation\Rule::exists('db_suppliers', 'id')->where('store_id', current_store_id())],
             'purchase_date' => 'required|date',
             'reference_no' => 'nullable|string|max:100',
             'note' => 'nullable|string|max:1000',
