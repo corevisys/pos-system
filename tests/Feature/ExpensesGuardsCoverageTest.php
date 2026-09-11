@@ -311,7 +311,7 @@ class ExpensesGuardsCoverageTest extends TestCase
         $userB = $this->makeUser(2);
         // Store-scoped findOrFail inside try/catch → redirect back with error (category untouched).
         $this->actingAs($userB)->delete(route('expenses.categories.delete', $catA->id))->assertRedirect()->assertSessionHas('error');
-        $this->assertTrue(DbExpenseCategory::where('id', $catA->id)->exists(), 'Store-A category must be untouched by Store-B delete.');
+        $this->assertTrue(DbExpenseCategory::allStores()->where('id', $catA->id)->exists(), 'Store-A category must be untouched by Store-B delete.');
 
         $this->actingAs($this->makeUser(1, ['expense_category_delete']))->delete(route('expenses.categories.delete', $catA->id))->assertSessionHas('success');
         $this->assertFalse(DbExpenseCategory::where('id', $catA->id)->exists());

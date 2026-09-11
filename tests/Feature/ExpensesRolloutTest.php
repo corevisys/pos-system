@@ -184,7 +184,7 @@ class ExpensesRolloutTest extends TestCase
         $userB = $this->makeUser(2);
         $response = $this->actingAs($userB)->delete(route('expenses.delete', $expenseA->id));
         // back() redirect (not found) — assert expense still exists.
-        $this->assertTrue(DbExpense::where('id', $expenseA->id)->where('delete_bit', 0)->exists(), 'Cross-store delete must not affect the row.');
+        $this->assertTrue(DbExpense::allStores()->where('id', $expenseA->id)->where('delete_bit', 0)->exists(), 'Cross-store delete must not affect the row.');
 
         // Control: Store A user can delete it.
         $userA = $this->makeUser(1);
