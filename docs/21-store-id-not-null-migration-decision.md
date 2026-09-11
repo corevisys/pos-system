@@ -144,3 +144,64 @@ The decision above was later **superseded** by the project owner:
 - Full test suite: **16 failed / 952 passed (5255 assertions)** — identical to the
   known pre-existing flaky/baseline set; no new regressions.
 - Commit: `33885f9` (71 files: migration + factory + 66 test files + 4 production/seed fixes).
+
+---
+
+## 8. Post-push review reconciliation (GAP 1 + GAP 2)
+
+### GAP 1 — fixture transform did NOT neuter multi-store isolation tests
+
+Search method: `findstr /S "store_id => 1" tests\Feature\*.php` cross-referenced
+with `git diff ad7000f..HEAD` for transform-added lines, plus a definitive
+per-line audit of every inserted `'store_id' => 1` (checking for a later
+`store_id` key in the same array = PHP last-key-wins override).
+
+**Result:** the transform only inserted `'store_id' => 1` at the **start** of
+create/firstOrCreate arrays; every multiline array already carried a later
+`store_id` key (override wins) **except two parameterized builders**, which were
+genuinely neutered and are now fixed:
+
+| File | Line | Fix |
+|---|---|---|
+| `tests/Feature/SalesListPageTest.php` | `makeSalesListSale()` | customer `store_id` → `$storeId` |
+| `tests/Feature/PaymentsListPageTest.php` | `makePaymentsListFixture()` | warehouse + customer `store_id` → `$storeId`, and created the owning `db_store` row (the hardcoded `1` had masked a missing FK fixture) |
+
+**StoreSettingsStoreScopingTest.php** — verified the Store-A/Store-B fixtures
+kept distinct store ids: the transform's inserted `'store_id' => 1` is overridden
+by the later `'store_id' => $this->storeA->id / $this->storeB->id` keys
+(last-key-wins). All 10 tests pass (raw output in the Phase 1 report).
+
+Multi-store suites re-run after fixes: `SalesListPageTest`, `PaymentsListPageTest`,
+`StoreSettingsStoreScopingTest`, `CategoryBrandVariantRolloutTest`,
+`StockModuleStoreScopeTest`, `EmiFlowFixesTest`, `ServiceStoreScopeTest`,
+`ServiceDeleteStoreScopeTest`, `ItemDeleteStoreScopeTest`,
+`CashReconciliationFixesTest`, `AccountsListFixesTest`, `DepositFixesTest`,
+`DepositGapClosingTest`, `MoneyTransferFixesTest`, `WarehouseRolloutTest`,
+`SupplierRedesignAndRisksTest`, `AdvanceTest`, `ReturnsListFixesTest`,
+`ItemPosDropdownStoreScopeTest` → **all pass** (the two fixed suites now genuinely
+exercise distinct store contexts).
+
+### GAP 2 — +37 test count reconciled
+
+Evidence:
+- `php vendor/bin/pest --list-tests` → **968 tests listed** = 952 passed + 16 failed (matches the final run exactly).
+- `git diff --name-status ad7000f..HEAD -- tests/` → **zero added test files** (all `M`, no `A`).
+- `git grep -c "function test|test(" ad7000f -- tests` vs HEAD → **identical (116 files)**.
+- `git ls-tree -r --name-only ad7000f -- tests/Feature tests/Unit` vs HEAD → **identical (118 files)**.
+
+**Root cause of the "+37":** the 931 baseline (916 passed + 15 failed) was
+measured in docs/20 at a fixed point mid-Store-Settings-rollout. The current 968
+total includes all tests from **prior rollouts** (warehouse, stock, expenses,
+categories/brands/variants, store settings, manager variants, services, serials,
+etc.) that already existed at `ad7000f`. **Phase 1 itself added 0 test files and
+0 test methods** — the count difference is entirely a baseline-timing artifact,
+exactly like the Store Settings Gap-1 reconciliation, not a Phase 1 test addition.
+
+### TODO (future phase — tracking only, no code change here)
+
+**TODO:** Retire the `orWhereNull('store_id')` read paths in
+`ItemController`, `TaxController`, `PurchaseController`, `ExpenseController`
+(and the equivalent `(store_id = X OR store_id IS NULL)` fallback in
+`StoreScoped`). After the NOT NULL migration (Phase 1.4) NULL store_id rows can
+no longer be created, so the shared/global-row semantics are obsolete. Scheduled
+for its own phase; do not touch in this round.

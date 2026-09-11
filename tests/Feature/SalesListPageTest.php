@@ -54,7 +54,7 @@ function getSalesListTestUser(int $storeId = 1): User
 function makeSalesListSale(User $user, int $storeId, string $code, float $total, ?int $warehouseId = null): DbSale
 {
     $customer = DbCustomer::create([
-        'store_id' => 1,
+        'store_id' => $storeId,
         'customer_name' => 'Generic Walk-in',
         'customer_code' => 'CUST-GEN',
         'mobile' => '01790000000',

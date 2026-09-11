@@ -49,6 +49,13 @@ function getPaymentsListTestUser(int $storeId = 1): User {
 }
 
 function makePaymentsListFixture(int $storeId = 1): array {
+    // Ensure the owning db_store row exists (FK on db_warehouse.store_id).
+    DbStore::firstOrCreate(['id' => $storeId], [
+        'store_name' => 'PayList Store ' . $storeId,
+        'status' => 1,
+        'mobile' => '0170000000' . $storeId,
+    ]);
+
     $account = AcAccount::create([
         'store_id' => $storeId,
         'account_name' => 'Payments List Account',
@@ -58,9 +65,9 @@ function makePaymentsListFixture(int $storeId = 1): array {
         'delete_bit' => 0,
     ]);
 
-    $warehouse = DbWarehouse::create(['store_id' => 1, 'warehouse_name' => 'PayList WH ' . $storeId, 'status' => 1]);
+    $warehouse = DbWarehouse::create(['store_id' => $storeId, 'warehouse_name' => 'PayList WH ' . $storeId, 'status' => 1]);
     $customer = DbCustomer::create([
-        'store_id' => 1,
+        'store_id' => $storeId,
         'customer_name' => 'PayList Customer ' . $storeId,
         'customer_code' => 'CUST-PAYLIST-' . $storeId,
         'mobile' => '0179000000' . $storeId,
