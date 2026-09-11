@@ -9,6 +9,7 @@ class DbSmsTemplate extends Model
 {
     use HasFactory;
     use SoftDeletes;
+    use \App\Models\Traits\StoreScoped;
 
     protected $table = 'db_smstemplates';
 
