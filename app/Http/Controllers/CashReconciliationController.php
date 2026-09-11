@@ -217,7 +217,7 @@ class CashReconciliationController extends Controller
             }
 
             // Generate unique reconciliation code
-            $lastId = CashDrawerReconciliation::max('id') ?? 0;
+            $lastId = CashDrawerReconciliation::allStores()->max('id') ?? 0;
             $code = 'REC-' . str_pad($lastId + 1, 5, '0', STR_PAD_LEFT);
 
             $reconciliation = CashDrawerReconciliation::create([
@@ -352,7 +352,7 @@ class CashReconciliationController extends Controller
                 $countedAmount = (float) $request->counted_amount;
                 $variance = round($countedAmount - $expectedBalance, 2);
 
-                $lastId = CashDrawerReconciliation::max('id') ?? 0;
+                $lastId = CashDrawerReconciliation::allStores()->max('id') ?? 0;
                 $code = 'REC-' . str_pad($lastId + 1, 5, '0', STR_PAD_LEFT);
 
                 $status = 'Reconciled';

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class DbStockTransfer extends Model
 {
     use HasFactory;
+    use \App\Models\Traits\StoreScoped;
 
     protected $table = 'db_stocktransfer';
 

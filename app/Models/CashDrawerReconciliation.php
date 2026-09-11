@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class CashDrawerReconciliation extends Model
 {
     use HasFactory;
+    use \App\Models\Traits\StoreScoped;
 
     protected $table = 'cash_drawer_reconciliations';
 
