@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class DbPurchaseItem extends Model
 {
     use HasFactory;
+    use \App\Models\Traits\StoreScoped;
 
     protected $table = 'db_purchaseitems';
 
