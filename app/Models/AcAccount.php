@@ -69,29 +69,35 @@ class AcAccount extends Model
         }
 
         // 3. No row exists — create it under the transaction lock.
-        $code = \App\Services\CodeGeneratorService::generate('account');
-        $sortCode = (static::max('id') ?? 0) + 1;
-        $now = now();
+        $code     = \App\Services\CodeGeneratorService::generate('account');
+        // Use store-scoped id max so cross-store rows don't inflate sort_code.
+        $sortCode = (static::where('store_id', $storeId)->max('id') ?? 0) + 1;
+        $now      = now();
+        // Resolve DNS before saving — gethostbyaddr is a blocking network call that
+        // must not hold an open DB lock/transaction.
+        $ip          = request()->ip() ?? '127.0.0.1';
+        $resolvedName = $ip ? (@gethostbyaddr($ip) ?: 'unknown') : 'unknown';
 
         try {
             $account = new static();
-            $account->count_id = (static::max('count_id') ?? 0) + 1;
-            $account->store_id = $storeId;
-            $account->parent_id = null;
+            // Store-scoped count_id so cross-store rows don't create gaps here.
+            $account->count_id   = (static::where('store_id', $storeId)->max('count_id') ?? 0) + 1;
+            $account->store_id   = $storeId;
+            $account->parent_id  = null;
             $account->account_name = $accountName;
             $account->account_code = $code;
             $account->system_key = $systemKey;
-            $account->is_system = true;
-            $account->sort_code = (string) $sortCode;
-            $account->balance = 0;
-            $account->note = 'System generated ' . $accountName . ' contra account';
+            $account->is_system  = true;
+            $account->sort_code  = (string) $sortCode;
+            $account->balance    = 0;
+            $account->note       = 'System generated ' . $accountName . ' contra account';
             $account->created_by = auth()->id() ?? 1;
             $account->created_date = $now->format('Y-m-d');
             $account->created_time = $now->format('H:i:s');
-            $account->system_ip = request()->ip() ?? '127.0.0.1';
-            $account->system_name = gethostbyaddr(request()->ip() ?? '127.0.0.1') ?: 'unknown';
+            $account->system_ip  = $ip;
+            $account->system_name = $resolvedName;
             $account->delete_bit = 0;
-            $account->status = 1;
+            $account->status     = 1;
             $account->save();
 
             return $account;

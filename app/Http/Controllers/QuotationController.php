@@ -533,13 +533,21 @@ class QuotationController extends Controller
     public function convertToSale(Request $request, $id)
     {
         try {
-            $storeId = current_store_id();
-            DB::beginTransaction();
+            return \App\Services\CodeGeneratorService::executeWithRetry(function () use ($request, $id) {
+                try {
+                    $storeId = current_store_id();
+                    DB::beginTransaction();
 
-            $quotation = DbQuotation::where('id', $id)
-                ->where('store_id', $storeId)
-                ->lockForUpdate()
-                ->first();
+                    // Deadlock prevention: Lock DbStore row first to ensure consistent lock hierarchy
+                    // across all sales creation operations (POS checkout, Direct Sale, Quotation Convert).
+                    if ($storeId) {
+                        \App\Models\DbStore::where('id', $storeId)->lockForUpdate()->first();
+                    }
+
+                    $quotation = DbQuotation::where('id', $id)
+                        ->where('store_id', $storeId)
+                        ->lockForUpdate()
+                        ->first();
 
             if (!$quotation) {
                 DB::rollBack();
@@ -690,8 +698,15 @@ class QuotationController extends Controller
                 'redirect' => route('sales.invoice', ['id' => $sale->id], false),
             ]);
 
+                } catch (\Illuminate\Database\QueryException $qe) {
+                    DB::rollBack();
+                    throw $qe;
+                } catch (\Exception $e) {
+                    DB::rollBack();
+                    throw $e;
+                }
+            });
         } catch (\Exception $e) {
-            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Conversion failed: ' . $e->getMessage(),

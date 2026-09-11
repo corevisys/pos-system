@@ -44,18 +44,20 @@ class ItemCreationService
      */
     public function createSingleItem(array $validated, Request $request, ?string $itemImagePath = null, string $source = 'item_add'): DbItem
     {
-        try {
-            return $this->createSingleItemInner($validated, $request, $itemImagePath, $source);
-        } catch (QueryException $e) {
-            // Defense-in-depth: translate a DB unique-constraint violation into a
-            // clean per-serial message (protects against a concurrent-submission
-            // race for the same item+serial from two different entry points).
-            $message = $this->serialValidator->translateDuplicateSerialQueryException($e);
-            if ($message !== null) {
-                throw new DuplicateSerialNumberException($message);
+        return CodeGeneratorService::executeWithRetry(function () use ($validated, $request, $itemImagePath, $source) {
+            try {
+                return $this->createSingleItemInner($validated, $request, $itemImagePath, $source);
+            } catch (QueryException $e) {
+                // Defense-in-depth: translate a DB unique-constraint violation into a
+                // clean per-serial message (protects against a concurrent-submission
+                // race for the same item+serial from two different entry points).
+                $message = $this->serialValidator->translateDuplicateSerialQueryException($e);
+                if ($message !== null) {
+                    throw new DuplicateSerialNumberException($message);
+                }
+                throw $e;
             }
-            throw $e;
-        }
+        });
     }
 
     /**
@@ -64,33 +66,38 @@ class ItemCreationService
      */
     private function createSingleItemInner(array $validated, Request $request, ?string $itemImagePath, string $source): DbItem
     {
-        $tax = DbTax::findOrFail($validated['tax_id']);
+        $tax     = DbTax::findOrFail($validated['tax_id']);
         $taxRate = (float) $tax->tax;
 
+        // Resolve DNS outside the DB write to avoid holding a lock during a
+        // blocking network call. @gethostbyaddr returns the IP unchanged on failure.
+        $systemIp   = $request->ip() ?: '127.0.0.1';
+        $systemName = $systemIp ? (@gethostbyaddr($systemIp) ?: 'unknown') : 'unknown';
+
         $data = [
-            'store_id' => current_store_id(),
-            'item_name' => trim($validated['item_name'] ?? ''),
-            'category_id' => $validated['category_id'],
-            'brand_id' => $validated['brand_id'] ?? null,
-            'unit_id' => $validated['unit_id'],
-            'tax_id' => $validated['tax_id'],
-            'tax_type' => $validated['tax_type'],
-            'item_group' => 'Single',
-            'description' => $validated['description'] ?? null,
-            'hsn' => trim($request->hsn ?? $validated['hsn'] ?? ''),
-            'alert_qty' => (float) ($validated['alert_qty'] ?? 0),
-            'is_serialized' => ($request->is_serialized == 1 || ($validated['is_serialized'] ?? false)) ? 1 : 0,
-            'discount_type' => $validated['discount_type'] ?? 'Fixed',
-            'discount' => (float) ($validated['discount'] ?? 0),
-            'mrp' => (float) ($validated['mrp'] ?? 0),
-            'seller_points' => (float) ($validated['seller_points'] ?? 0),
-            'created_by' => auth()->id(),
+            'store_id'     => current_store_id(),
+            'item_name'    => trim($validated['item_name'] ?? ''),
+            'category_id'  => $validated['category_id'],
+            'brand_id'     => $validated['brand_id'] ?? null,
+            'unit_id'      => $validated['unit_id'],
+            'tax_id'       => $validated['tax_id'],
+            'tax_type'     => $validated['tax_type'],
+            'item_group'   => 'Single',
+            'description'  => $validated['description'] ?? null,
+            'hsn'          => trim($request->hsn ?? $validated['hsn'] ?? ''),
+            'alert_qty'    => (float) ($validated['alert_qty'] ?? 0),
+            'is_serialized'=> ($request->is_serialized == 1 || ($validated['is_serialized'] ?? false)) ? 1 : 0,
+            'discount_type'=> $validated['discount_type'] ?? 'Fixed',
+            'discount'     => (float) ($validated['discount'] ?? 0),
+            'mrp'          => (float) ($validated['mrp'] ?? 0),
+            'seller_points'=> (float) ($validated['seller_points'] ?? 0),
+            'created_by'   => auth()->id(),
             'created_date' => date('Y-m-d'),
             'created_time' => date('H:i:s'),
-            'system_ip' => $request->ip(),
-            'system_name' => gethostbyaddr($request->ip()),
-            'status' => 1,
-            'item_code' => CodeGeneratorService::generate('item'),
+            'system_ip'    => $systemIp,
+            'system_name'  => $systemName,
+            'status'       => 1,
+            'item_code'    => CodeGeneratorService::generate('item'),
         ];
 
         // Pricing — mirror the main flow exactly.

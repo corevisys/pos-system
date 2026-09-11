@@ -175,13 +175,16 @@ class DepositController extends Controller
             'debit_account_id.different' => 'The debit account and credit account must be different.',
         ]);
 
+        // Resolve DNS outside the transaction to avoid holding a lock during a
+        // potentially slow network call.
+        $systemIp   = $request->ip() ?? '127.0.0.1';
+        $systemName = $systemIp ? (@gethostbyaddr($systemIp) ?: 'unknown') : 'unknown';
+
         try {
             DB::beginTransaction();
 
             $currentDate = now()->format('Y-m-d');
             $currentTime = now()->format('H:i:s');
-            $systemIp = $request->ip() ?? '127.0.0.1';
-            $systemName = gethostbyaddr($systemIp) ?: 'unknown';
 
             // Item 1.2: Lock destination account
             $creditAcc = AcAccount::where('id', $request->credit_account_id)

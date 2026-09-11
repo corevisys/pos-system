@@ -289,7 +289,7 @@ class ExpenseController extends Controller
         try {
             DB::beginTransaction();
 
-            $count_id = (DbExpense::max('count_id') ?? 0) + 1;
+            $count_id = (DbExpense::where('store_id', $storeId)->max('count_id') ?? 0) + 1;
             $expense_code = \App\Services\CodeGeneratorService::generate('expense');
 
             $expense = new DbExpense();

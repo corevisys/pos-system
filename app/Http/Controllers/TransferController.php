@@ -172,6 +172,11 @@ class TransferController extends Controller
             'amount' => 'required|numeric|min:0.01',
         ]);
 
+        // Resolve DNS outside the transaction to avoid holding a lock during a
+        // potentially slow network call.
+        $systemIp   = $request->ip();
+        $systemName = $systemIp ? (@gethostbyaddr($systemIp) ?: 'unknown') : 'unknown';
+
         try {
             DB::beginTransaction();
 
@@ -196,8 +201,7 @@ class TransferController extends Controller
 
             $currentDate = now()->format('Y-m-d');
             $currentTime = now()->format('H:i:s');
-            $systemIp = $request->ip();
-            $systemName = gethostbyaddr($systemIp) ?: 'unknown';
+            // $systemIp / $systemName resolved before beginTransaction (see above).
 
             $transfer = AcMoneyTransfer::create([
                 'store_id' => $storeId,

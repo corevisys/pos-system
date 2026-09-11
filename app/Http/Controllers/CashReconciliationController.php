@@ -216,9 +216,8 @@ class CashReconciliationController extends Controller
                 return back()->with('error', 'Please provide an explanation note for the opening float difference before opening the drawer.')->withInput();
             }
 
-            // Generate unique reconciliation code
-            $lastId = CashDrawerReconciliation::allStores()->max('id') ?? 0;
-            $code = 'REC-' . str_pad($lastId + 1, 5, '0', STR_PAD_LEFT);
+            // Generate unique reconciliation code via CodeGeneratorService (store-scoped, row-locked)
+            $code = \App\Services\CodeGeneratorService::generate('reconciliation');
 
             $reconciliation = CashDrawerReconciliation::create([
                 'reconciliation_code' => $code,
@@ -352,8 +351,8 @@ class CashReconciliationController extends Controller
                 $countedAmount = (float) $request->counted_amount;
                 $variance = round($countedAmount - $expectedBalance, 2);
 
-                $lastId = CashDrawerReconciliation::allStores()->max('id') ?? 0;
-                $code = 'REC-' . str_pad($lastId + 1, 5, '0', STR_PAD_LEFT);
+                // Generate unique reconciliation code via CodeGeneratorService (store-scoped, row-locked)
+                $code = \App\Services\CodeGeneratorService::generate('reconciliation');
 
                 $status = 'Reconciled';
                 $adjustmentTransactionId = null;

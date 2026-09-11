@@ -255,19 +255,24 @@ class ItemController extends Controller
         }
         $validated = $validator->validated();
 
+        // Resolve DNS outside the transaction to avoid holding a DB lock during
+        // a potentially slow network call.
+        $systemIp   = $request->ip();
+        $systemName = $systemIp ? (@gethostbyaddr($systemIp) ?: 'unknown') : 'unknown';
+
         try {
             DB::beginTransaction();
 
-            $tax = DbTax::findOrFail($validated['tax_id']);
+            $tax     = DbTax::findOrFail($validated['tax_id']);
             $taxRate = (float)$tax->tax;
-            
+
             // Item Code Generation
             $generateItemCode = function($offset = 1) {
                 return \App\Services\CodeGeneratorService::generate('item', $offset);
             };
 
             // Helper function to prepare base item data
-            $prepareItemData = function($request, $validated, $override = []) use ($taxRate) {
+            $prepareItemData = function($request, $validated, $override = []) use ($taxRate, $systemIp, $systemName) {
                 $data = [
                     'store_id' => current_store_id(),
                     'item_name' => trim($override['item_name'] ?? $validated['item_name']),
@@ -288,8 +293,8 @@ class ItemController extends Controller
                     'created_by' => auth()->id(),
                     'created_date' => date('Y-m-d'),
                     'created_time' => date('H:i:s'),
-                    'system_ip' => $request->ip(),
-                    'system_name' => gethostbyaddr($request->ip()),
+                    'system_ip' => $systemIp,
+                    'system_name' => $systemName,
                     'status' => 1,
                     'item_code' => $override['item_code'] ?? null,
                 ];

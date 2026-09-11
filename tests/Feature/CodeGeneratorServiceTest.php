@@ -250,23 +250,35 @@ class CodeGeneratorServiceTest extends TestCase
         $this->assertStringStartsWith('ADV', $code);
     }
 
-    // ─── 11. Sales Return (timestamp-based) ──────────────────────────────────
+    // ─── 11. Sales Return (5-digit sequential) ──────────────────────────────
 
-    public function test_sales_return_default_prefix_and_timestamp_format(): void
+    public function test_sales_return_default_prefix_format(): void
     {
         $code = CodeGeneratorService::generate('sales_return');
-        // Format: RTN-YYYYMMDDHHmmss (RTN- + 14 digits)
-        $this->assertMatchesRegularExpression('/^RTN-\d{14}$/', $code, "Expected RTN-YYYYMMDDHHIISS, got: {$code}");
+        // Format: RTN-XXXXX (5-digit sequential per Phase 2)
+        $this->assertMatchesRegularExpression('/^RTN-\d{5}$/', $code, "Expected RTN-XXXXX, got: {$code}");
     }
 
-    public function test_sales_return_custom_prefix_preserves_timestamp_scheme(): void
+    public function test_sales_return_custom_prefix(): void
     {
         $this->store->update(['sales_return_init' => 'SR']);
         store_settings(true);
         $code = CodeGeneratorService::generate('sales_return');
         $this->assertStringStartsWith('SR-', $code);
-        // Still timestamp-based
-        $this->assertMatchesRegularExpression('/^SR-\d{14}$/', $code);
+        $this->assertMatchesRegularExpression('/^SR-\d{5}$/', $code);
+    }
+
+    public function test_sales_return_sequential_increments_with_row(): void
+    {
+        DbSalesReturn::create([
+            'store_id' => 1,
+            'return_code' => 'RTN-00001',
+            'grand_total' => 10,
+            'subtotal' => 10,
+            'status' => 1,
+        ]);
+        $code = CodeGeneratorService::generate('sales_return');
+        $this->assertEquals('RTN-00002', $code);
     }
 
     // ─── 12. Purchase Return (uniqid-based) ──────────────────────────────────
@@ -286,16 +298,6 @@ class CodeGeneratorServiceTest extends TestCase
         $code = CodeGeneratorService::generate('purchase_return');
         $this->assertStringStartsWith('RTV-', $code);
         $this->assertMatchesRegularExpression('/^RTV-[0-9A-F]+$/', $code);
-    }
-
-    // ─── Two consecutive calls produce different codes (for timestamp/uniqid) ─
-
-    public function test_sales_return_two_consecutive_calls_are_unique(): void
-    {
-        $code1 = CodeGeneratorService::generate('sales_return');
-        sleep(1); // ensure different timestamp second
-        $code2 = CodeGeneratorService::generate('sales_return');
-        $this->assertNotEquals($code1, $code2);
     }
 
     public function test_purchase_return_two_consecutive_calls_are_unique(): void

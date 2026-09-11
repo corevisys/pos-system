@@ -128,6 +128,11 @@ class AccountController extends Controller
             'opening_balance' => 'numeric|min:0',
         ]);
 
+        // Resolve DNS outside the transaction to avoid holding a DB lock during a
+        // potentially slow network call.
+        $systemIp   = $request->ip();
+        $systemName = $systemIp ? (@gethostbyaddr($systemIp) ?: 'unknown') : 'unknown';
+
         try {
             DB::beginTransaction();
 
@@ -136,21 +141,21 @@ class AccountController extends Controller
 
             if (empty($parentId)) {
                 $parentId = null; // Ensure null in DB
-                $maxId = AcAccount::max('id') ?? 0;
+                // Use store-scoped max(count_id) for a stable sort_code base so
+                // cross-store rows don't inflate the number.
+                $maxId    = AcAccount::where('store_id', $storeId)->max('id') ?? 0;
                 $sortCode = $maxId + 1;
             } else {
                 $parentAccount = AcAccount::where('store_id', $storeId)->findOrFail($parentId);
-                $siblingCount = AcAccount::where('parent_id', $parentId)->count();
-                $sortCode = $parentAccount->sort_code . '.' . ($siblingCount + 1);
+                $siblingCount  = AcAccount::where('parent_id', $parentId)->count();
+                $sortCode      = $parentAccount->sort_code . '.' . ($siblingCount + 1);
             }
 
             $currentDate = now()->format('Y-m-d');
             $currentTime = now()->format('H:i:s');
-            $systemIp = $request->ip();
-            $systemName = gethostbyaddr($systemIp) ?: 'unknown';
 
             $account = new AcAccount();
-            $account->count_id = (AcAccount::max('count_id') ?? 0) + 1;
+            $account->count_id = (AcAccount::where('store_id', $storeId)->max('count_id') ?? 0) + 1;
             $account->store_id = $storeId;
             $account->parent_id = $parentId;
             $account->account_name = $request->account_name;
@@ -263,7 +268,8 @@ class AccountController extends Controller
             // If Parent Account has changed, recompute hierarchy sort_code and cascade to descendants
             if ($oldParentId !== $newParentId) {
                 if (empty($newParentId)) {
-                    $maxId = AcAccount::max('id') ?? 0;
+                    // Store-scoped to avoid inflating sort_code with cross-store rows.
+                    $maxId       = AcAccount::where('store_id', $storeId)->max('id') ?? 0;
                     $newSortCode = (string)($maxId + 1);
                 } else {
                     $parentAccount = AcAccount::where('store_id', $storeId)->findOrFail($newParentId);

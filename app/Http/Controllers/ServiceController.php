@@ -162,6 +162,11 @@ class ServiceController extends Controller
             }
         }
 
+        // Resolve DNS outside the transaction to avoid holding a DB lock during
+        // a potentially slow network call.
+        $clientIp = $request->ip();
+        $systemName = $clientIp ? (@gethostbyaddr($clientIp) ?: 'unknown') : 'unknown';
+
         try {
             DB::beginTransaction();
 
@@ -172,8 +177,8 @@ class ServiceController extends Controller
             $data['created_by'] = auth()->id();
             $data['created_date'] = date('Y-m-d');
             $data['created_time'] = date('H:i:s');
-            $data['system_ip'] = $request->ip();
-            $data['system_name'] = gethostbyaddr($request->ip());
+            $data['system_ip'] = $clientIp;
+            $data['system_name'] = $systemName;
             
             // Generate Code if not provided
             if (!$request->filled('item_code')) {
