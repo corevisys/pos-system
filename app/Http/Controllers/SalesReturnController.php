@@ -479,13 +479,14 @@ class SalesReturnController extends Controller
             DB::commit();
 
             // Invalidate dashboard caches affected by sales return
-            Cache::forget('dashboard_outstanding_due');
-            Cache::forget('dashboard_customers_due');
-            Cache::forget('dashboard_month_sale_ids');
-            Cache::forget('dashboard_chart_last7');
-            Cache::forget('dashboard_chart_last30');
-            Cache::forget('dashboard_chart_weekly');
-            Cache::forget('dashboard_chart_monthly');
+            $sid = current_store_id();
+            Cache::forget('dashboard_outstanding_due_s' . $sid);
+            Cache::forget('dashboard_customers_due_s' . $sid);
+            Cache::forget('dashboard_month_sale_ids_s' . $sid);
+            Cache::forget('dashboard_chart_last7_s' . $sid);
+            Cache::forget('dashboard_chart_last30_s' . $sid);
+            Cache::forget('dashboard_chart_weekly_s' . $sid);
+            Cache::forget('dashboard_chart_monthly_s' . $sid);
 
             // Trigger SMS notification
             if ($salesReturn->customer_id) {

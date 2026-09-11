@@ -128,11 +128,13 @@ class ReportController extends Controller
             ];
 
             // --- 1. Opening Stock ---
-            // Based on Old POS logic: SUM(adjustment_qty * purchase_price) from db_items & db_stockadjustmentitems
-            // We'll calculate it from DbStockAdjustmentItems if adjustments are used for opening stock, or we might need an alternative if this represents current inventory value.
-            // Let's implement a basic version that matches old POS:
-             $openingStockQuery = DB::table('db_items')
-                ->join('db_stockadjustmentitems', 'db_items.id', '=', 'db_stockadjustmentitems.item_id')
+            // Based on Old POS logic: SUM(adjustment_qty * purchase_price) from db_items & db_stockadjustmentitems.
+            // Store-scoping: routed through the StoreScoped DbStockAdjustmentItems model
+            // (instead of raw DB::table) so the global store_id scope applies automatically
+            // and a Store-2 user's P&L never includes Store-1 adjustment stock.
+             $openingStockQuery = \App\Models\DbStockAdjustmentItems::query()
+                ->join('db_items', 'db_items.id', '=', 'db_stockadjustmentitems.item_id')
+                ->where('db_stockadjustmentitems.store_id', current_store_id())
                 ->select(DB::raw('SUM(db_stockadjustmentitems.adjustment_qty * db_items.purchase_price) as total'));
              
              // Optionally apply date range to opening stock if needed, or leave it absolute. Usually, opening stock is absolute up to the start date.
@@ -1806,11 +1808,11 @@ class ReportController extends Controller
             return DbWarehouse::where('store_id', $storeId)->where('status', 1)->where('delete_bit', 0)->select('id', 'warehouse_name')->get();
         });
 
-        $categories = Cache::remember('db_categories_list', 3600, function () {
+        $categories = store_scoped_cached_list('db_categories_list', 3600, function () {
             return DbCategory::where('status', 1)->select('id', 'category_name')->get();
         });
 
-        $customers = Cache::remember('db_customers_summary_list', 3600, function () {
+        $customers = store_scoped_cached_list('db_customers_summary_list', 3600, function () {
             return DbCustomer::where('status', 1)->select('id', 'customer_name', 'customer_code')->get();
         });
 
@@ -2120,7 +2122,7 @@ class ReportController extends Controller
         $warehouses = Cache::remember('db_warehouses_list_s' . $storeId, 3600, function () use ($storeId) {
             return DbWarehouse::where('store_id', $storeId)->where('status', 1)->where('delete_bit', 0)->select('id', 'warehouse_name')->get();
         });
-        $accounts = Cache::remember('db_accounts_list', 3600, function () {
+        $accounts = store_scoped_cached_list('db_accounts_list', 3600, function () {
             return AcAccount::where('status', 1)->where('delete_bit', 0)->select('id', 'account_name', 'account_code')->get();
         });
         $users = User::select('id', 'username', 'first_name', 'last_name')->get();
@@ -2222,7 +2224,7 @@ class ReportController extends Controller
 
     public function cashFlowReport()
     {
-        $accounts = Cache::remember('db_accounts_list', 3600, function () {
+        $accounts = store_scoped_cached_list('db_accounts_list', 3600, function () {
             return AcAccount::where('status', 1)->where('delete_bit', 0)->select('id', 'account_name', 'account_code')->get();
         });
 

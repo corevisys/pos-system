@@ -3,6 +3,7 @@
 use App\Models\DbStore;
 use App\Providers\AppServiceProvider;
 use App\Support\StoreSettingsCache;
+use Illuminate\Support\Facades\Cache;
 
 if (!function_exists('default_store_id')) {
     /**
@@ -155,6 +156,29 @@ if (!function_exists('current_store_id')) {
         }
 
         return default_store_id($fresh);
+    }
+}
+
+if (!function_exists('store_scoped_cached_list')) {
+    /**
+     * Shared store-scoped dropdown-list cache accessor.
+     *
+     * The cache key follows the established per-store convention
+     * ('db_<list>_s{storeId}', matching 'db_taxes_list_{store}' /
+     * 'db_warehouses_list_s{storeId}'). Because the underlying models are
+     * StoreScoped, both the key AND the query are store-isolated, so a Store-2
+     * user can never be served Store-1's cached dropdown list.
+     *
+     * @param string $keyPrefix e.g. 'db_categories_list' (no store suffix)
+     * @param int $ttl
+     * @param callable $resolver returns the collection to cache
+     * @return mixed
+     */
+    function store_scoped_cached_list(string $keyPrefix, int $ttl, callable $resolver, ?int $storeId = null)
+    {
+        $storeId = $storeId ?? current_store_id();
+        $key = $keyPrefix . '_s' . $storeId;
+        return Cache::remember($key, $ttl, $resolver);
     }
 }
 

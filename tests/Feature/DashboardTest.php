@@ -565,10 +565,10 @@ test('receiving payment invalidates dashboard outstanding due and customers due 
     ]);
 
     // Prime the cache
-    \Illuminate\Support\Facades\Cache::put('dashboard_outstanding_due', 300.0, 300);
-    \Illuminate\Support\Facades\Cache::put('dashboard_customers_due', ['dummy'], 300);
+    \Illuminate\Support\Facades\Cache::put('dashboard_outstanding_due_s' . $user->store_id, 300.0, 300);
+    \Illuminate\Support\Facades\Cache::put('dashboard_customers_due_s' . $user->store_id, ['dummy'], 300);
 
-    expect(\Illuminate\Support\Facades\Cache::has('dashboard_outstanding_due'))->toBeTrue();
+    expect(\Illuminate\Support\Facades\Cache::has('dashboard_outstanding_due_s' . $user->store_id))->toBeTrue();
 
     // Store payment
     $response = $this->actingAs($user)->post(route('sales.payments.store'), [
@@ -582,8 +582,8 @@ test('receiving payment invalidates dashboard outstanding due and customers due 
     $response->assertRedirect();
 
     // Assert cache keys were invalidated
-    expect(\Illuminate\Support\Facades\Cache::has('dashboard_outstanding_due'))->toBeFalse();
-    expect(\Illuminate\Support\Facades\Cache::has('dashboard_customers_due'))->toBeFalse();
+    expect(\Illuminate\Support\Facades\Cache::has('dashboard_outstanding_due_s' . $user->store_id))->toBeFalse();
+    expect(\Illuminate\Support\Facades\Cache::has('dashboard_customers_due_s' . $user->store_id))->toBeFalse();
 
     // On next dashboard load, fresh outstanding due reflects full settlement (0.00)
     $dashRes = $this->actingAs($user)->get(route('dashboard'));

@@ -18,16 +18,22 @@ use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public static function clearDashboardCache(): void
+    public static function clearDashboardCache(?int $storeId = null): void
     {
-        Cache::forget('dashboard_outstanding_due');
-        Cache::forget('dashboard_month_sale_ids');
-        Cache::forget('dashboard_customers_due');
-        Cache::forget('dashboard_month_purchases');
+        $storeId = $storeId ?? current_store_id();
+        Cache::forget('dashboard_outstanding_due_s' . $storeId);
+        Cache::forget('dashboard_month_sale_ids_s' . $storeId);
+        Cache::forget('dashboard_customers_due_s' . $storeId);
+        Cache::forget('dashboard_month_purchases_s' . $storeId);
+        Cache::forget('dashboard_chart_last7_s' . $storeId);
+        Cache::forget('dashboard_chart_last30_s' . $storeId);
+        Cache::forget('dashboard_chart_weekly_s' . $storeId);
+        Cache::forget('dashboard_chart_monthly_s' . $storeId);
     }
 
     public function index()
     {
+        $storeId       = current_store_id();
         $today         = Carbon::today()->format('Y-m-d');
         $startOfMonth  = Carbon::now()->startOfMonth()->format('Y-m-d');
         $endOfMonth    = Carbon::now()->endOfMonth()->format('Y-m-d');
@@ -102,6 +108,7 @@ class DashboardController extends Controller
         // Net Due = (grand_total - returns.grand_total) - (paid_amount - returns.paid_amount)
         // -----------------------------------------------------------------------
         $returnsSubquery = DB::table('db_salesreturn')
+            ->where('store_id', $storeId)
             ->select(
                 'sales_id',
                 DB::raw('COALESCE(SUM(grand_total), 0) as total_return'),
@@ -114,11 +121,12 @@ class DashboardController extends Controller
         // -----------------------------------------------------------------------
         // 2. TOTAL OUTSTANDING DUE (store-wide, all time)
         // -----------------------------------------------------------------------
-        $totalOutstandingDue = Cache::remember('dashboard_outstanding_due', 300, function () use ($returnsSubquery, $rawDueExpr) {
+        $totalOutstandingDue = Cache::remember('dashboard_outstanding_due_s' . $storeId, 300, function () use ($returnsSubquery, $rawDueExpr, $storeId) {
             $result = DB::table('db_sales')
                 ->leftJoinSub($returnsSubquery, 'ret', function ($join) {
                     $join->on('db_sales.id', '=', 'ret.sales_id');
                 })
+                ->where('db_sales.store_id', $storeId)
                 ->where('db_sales.status', 1)
                 ->where(function ($q) {
                     $q->where('db_sales.sales_status', 'Final')->orWhereNull('db_sales.sales_status');
@@ -187,7 +195,7 @@ class DashboardController extends Controller
         // -----------------------------------------------------------------------
         // 6. TOP 5 SELLING PRODUCTS — this month by qty
         // -----------------------------------------------------------------------
-        $monthSalesIds = Cache::remember('dashboard_month_sale_ids', 300, function () use ($startOfMonth, $endOfMonth) {
+        $monthSalesIds = Cache::remember('dashboard_month_sale_ids_s' . $storeId, 300, function () use ($startOfMonth, $endOfMonth) {
             return DbSale::whereBetween('sales_date', [$startOfMonth, $endOfMonth])
                 ->where(function ($q) {
                     $q->where('sales_status', 'Final')->orWhereNull('sales_status');
@@ -253,12 +261,13 @@ class DashboardController extends Controller
         // -----------------------------------------------------------------------
         // 9. CUSTOMERS WITH OUTSTANDING DUES — top 5 (accounting for returns)
         // -----------------------------------------------------------------------
-        $customersWithDue = Cache::remember('dashboard_customers_due', 300, function () use ($returnsSubquery, $rawDueExpr) {
+        $customersWithDue = Cache::remember('dashboard_customers_due_s' . $storeId, 300, function () use ($returnsSubquery, $rawDueExpr, $storeId) {
             return DB::table('db_sales')
                 ->leftJoin('db_customers', 'db_sales.customer_id', '=', 'db_customers.id')
                 ->leftJoinSub($returnsSubquery, 'ret', function ($join) {
                     $join->on('db_sales.id', '=', 'ret.sales_id');
                 })
+                ->where('db_sales.store_id', $storeId)
                 ->where('db_sales.status', 1)
                 ->where(function ($q) {
                     $q->where('db_sales.sales_status', 'Final')->orWhereNull('db_sales.sales_status');
@@ -280,7 +289,7 @@ class DashboardController extends Controller
         // -----------------------------------------------------------------------
         // 10. PURCHASES VS SALES — this month
         // -----------------------------------------------------------------------
-        $thisMonthPurchases = Cache::remember('dashboard_month_purchases', 300, function () use ($startOfMonth, $endOfMonth) {
+        $thisMonthPurchases = Cache::remember('dashboard_month_purchases_s' . $storeId, 300, function () use ($startOfMonth, $endOfMonth) {
             return (float) DbPurchase::whereBetween('purchase_date', [$startOfMonth, $endOfMonth])->sum('grand_total');
         });
 
@@ -321,7 +330,8 @@ class DashboardController extends Controller
     public function getDashboardData(Request $request)
     {
         $period = $request->get('period', 'last7');
-        $cacheKey = 'dashboard_chart_' . $period;
+        $storeId = current_store_id();
+        $cacheKey = 'dashboard_chart_' . $period . '_s' . $storeId;
 
         $chartData = Cache::remember($cacheKey, 300, function () use ($period) {
             $labels = [];

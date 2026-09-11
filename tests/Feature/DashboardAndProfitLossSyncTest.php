@@ -224,8 +224,8 @@ test('4. End-to-end POS checkout flow with discounts and immediate dashboard cac
     ]);
 
     // Pre-populate dashboard cache with old data
-    Cache::put('dashboard_outstanding_due', 9999.00, 300);
-    Cache::put('dashboard_month_sale_ids', collect([99999]), 300);
+    Cache::put('dashboard_outstanding_due_s' . $user->store_id, 9999.00, 300);
+    Cache::put('dashboard_month_sale_ids_s' . $user->store_id, collect([99999]), 300);
 
     // Perform POS Checkout via API:
     // Buy 2 mice @ 2000 = 4000 subtotal
@@ -271,8 +271,8 @@ test('4. End-to-end POS checkout flow with discounts and immediate dashboard cac
     expect((float)$account->balance)->toBe(8100.00); // 5000 + 3100
 
     // 3. Verify Dashboard Cache was immediately invalidated
-    expect(Cache::has('dashboard_outstanding_due'))->toBeFalse();
-    expect(Cache::has('dashboard_month_sale_ids'))->toBeFalse();
+    expect(Cache::has('dashboard_outstanding_due_s' . $user->store_id))->toBeFalse();
+    expect(Cache::has('dashboard_month_sale_ids_s' . $user->store_id))->toBeFalse();
 
     // 4. Verify Dashboard query produces new figures immediately without stale cache
     $dashCtrl = new DashboardController();

@@ -103,7 +103,7 @@ class StoreSettingsFixRolloutTest extends TestCase
             'permissions' => [
                 'store_settings_view', 'store_settings_edit',
                 'items_print_labels', 'items_view',
-                'profit_report',
+                'profit_report', 'smtp_settings_view',
             ],
         ]);
 

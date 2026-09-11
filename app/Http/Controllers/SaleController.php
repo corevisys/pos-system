@@ -38,11 +38,11 @@ class SaleController extends Controller
         $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->where('delete_bit', 0)->select('id', 'warehouse_name')->get();
         $accounts = AcAccount::where('status', 1)->select('id', 'account_name')->get();
         
-        $categories = Cache::remember('db_categories_list', 3600, function () {
+        $categories = store_scoped_cached_list('db_categories_list', 3600, function () {
             return DbCategory::where('status', 1)->select('id', 'category_name')->get();
         });
-        
-        $brands = Cache::remember('db_brands_list', 3600, function () {
+
+        $brands = store_scoped_cached_list('db_brands_list', 3600, function () {
             return DbBrand::where('status', 1)->select('id', 'brand_name')->get();
         });
         
@@ -286,6 +286,8 @@ class SaleController extends Controller
 
     public function destroy($id)
     {
+        $storeId = current_store_id();
+
         try {
             DB::beginTransaction();
             $sale = DbSale::with(['items', 'payments', 'emi', 'returnItems'])->findOrFail($id);
@@ -357,7 +359,7 @@ class SaleController extends Controller
 
             DB::commit();
 
-            \App\Http\Controllers\DashboardController::clearDashboardCache();
+            \App\Http\Controllers\DashboardController::clearDashboardCache($storeId);
 
             return back()->with('success', 'Sale deleted successfully and stock restored.');
         } catch (\Exception $e) {
@@ -779,8 +781,8 @@ class SaleController extends Controller
             DB::commit();
 
             // Invalidate dashboard caches affected by payment
-            Cache::forget('dashboard_outstanding_due');
-            Cache::forget('dashboard_customers_due');
+            Cache::forget('dashboard_outstanding_due_s' . current_store_id());
+            Cache::forget('dashboard_customers_due_s' . current_store_id());
 
             return redirect()->route('sales.list')->with('success', 'Payment of ' . format_currency((float)$request->amount) . ' received successfully.');
         } catch (\Exception $e) {
@@ -857,8 +859,8 @@ class SaleController extends Controller
             DB::commit();
 
             // Invalidate dashboard caches affected by payment
-            Cache::forget('dashboard_outstanding_due');
-            Cache::forget('dashboard_customers_due');
+            Cache::forget('dashboard_outstanding_due_s' . current_store_id());
+            Cache::forget('dashboard_customers_due_s' . current_store_id());
 
             return back()->with('success', 'Payment of ' . format_currency($amount) . ' deleted and sale balance updated.');
         } catch (\Exception $e) {

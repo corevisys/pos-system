@@ -468,7 +468,7 @@ class PurchaseController extends Controller
             DB::commit();
 
             // Invalidate dashboard purchase caches
-            Cache::forget('dashboard_month_purchases');
+            Cache::forget('dashboard_month_purchases_s' . current_store_id());
 
             // Trigger SMS notification
             if ($purchase->supplier_id) {
@@ -915,7 +915,7 @@ class PurchaseController extends Controller
             DB::commit();
 
             // Invalidate dashboard purchase caches
-            Cache::forget('dashboard_month_purchases');
+            Cache::forget('dashboard_month_purchases_s' . current_store_id());
             return response()->json([
                 'success' => true,
                 'message' => 'Purchase updated successfully',
@@ -1324,7 +1324,7 @@ class PurchaseController extends Controller
             $purchase->delete();
 
             DB::commit();
-            Cache::forget('dashboard_month_purchases');
+            Cache::forget('dashboard_month_purchases_s' . current_store_id());
 
             if (request()->wantsJson() || request()->ajax()) {
                 return response()->json([
