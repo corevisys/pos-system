@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class DbPurchasePaymentReturn extends Model
 {
+    use \App\Models\Traits\StoreScoped;
+
     protected $table = 'db_purchasepaymentsreturn';
 
     protected $fillable = [
