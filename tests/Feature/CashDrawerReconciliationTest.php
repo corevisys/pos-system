@@ -326,6 +326,7 @@ test('4. Elevated user posting overage adjustment creates CASH OVERAGE credit an
 });
 
 test('5. Cashier without cash_reconciliation_adjust cannot post ledger adjustment', function () {
+    DbStore::firstOrCreate(['id' => 1], ['store_name' => 'Reconciliation Test Store', 'status' => 1, 'mobile' => '01700000000']);
     DbRole::firstOrCreate(['id' => 1], ['store_id' => 1, 'role_name' => 'Super Admin', 'status' => 1]);
     $role = DbRole::create(['store_id' => 1, 'role_name' => 'Cashier Role ' . uniqid(), 'status' => 1]);
     DbPermission::create([

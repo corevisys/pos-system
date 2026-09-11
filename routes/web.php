@@ -21,9 +21,9 @@ Route::get('/', function () {
 // Technical SEO: Dynamic Sitemap
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
-Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
-Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->middleware(['auth', 'verified'])->name('dashboard.chart-data');
-Route::get('/dashboard/data', [DashboardController::class, 'getDashboardData'])->middleware(['auth', 'verified'])->name('dashboard.data');
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified', 'ensure.store'])->name('dashboard');
+Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->middleware(['auth', 'verified', 'ensure.store'])->name('dashboard.chart-data');
+Route::get('/dashboard/data', [DashboardController::class, 'getDashboardData'])->middleware(['auth', 'verified', 'ensure.store'])->name('dashboard.data');
 
 // Super-Admin only: Multi-Store Network Dashboard
 Route::get('/multi-store-dashboard', [App\Http\Controllers\MultiStoreDashboardController::class, 'index'])
@@ -46,7 +46,7 @@ Route::get('/terms', [App\Http\Controllers\LegalController::class, 'terms'])->na
 
 require __DIR__.'/auth.php';
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'ensure.store'])->group(function () {
     // Global Search
     Route::get('/global-search', [App\Http\Controllers\GlobalSearchController::class, 'search'])->name('global.search');
 

@@ -27,4 +27,19 @@ class DbStore extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
+    protected static function booted(): void
+    {
+        static::saved(function () {
+            if (function_exists('flush_store_settings_cache')) {
+                flush_store_settings_cache();
+            }
+        });
+
+        static::deleted(function () {
+            if (function_exists('flush_store_settings_cache')) {
+                flush_store_settings_cache();
+            }
+        });
+    }
 }
