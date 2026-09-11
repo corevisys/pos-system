@@ -25,6 +25,11 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['au
 Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->middleware(['auth', 'verified'])->name('dashboard.chart-data');
 Route::get('/dashboard/data', [DashboardController::class, 'getDashboardData'])->middleware(['auth', 'verified'])->name('dashboard.data');
 
+// Super-Admin only: Multi-Store Network Dashboard
+Route::get('/multi-store-dashboard', [App\Http\Controllers\MultiStoreDashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('multi-store-dashboard');
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

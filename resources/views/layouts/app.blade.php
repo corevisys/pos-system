@@ -135,7 +135,6 @@
                 <!-- Navigation -->
                 <nav class="flex-1 px-4 space-y-1 overflow-y-auto scrollbar-hide pb-20">
 
-                    <!-- Dashboard -->
                     @if(auth()->user()->hasPermission('dashboard_view_dashboard_data'))
                         <a href="{{ route('dashboard') }}"
                             class="relative flex items-center w-full gap-2 px-3 py-2 rounded-lg transition-all duration-200 group text-sm font-medium {{ request()->routeIs('dashboard') ? 'bg-primary text-white' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/5' }}">
@@ -150,7 +149,23 @@
                         </a>
                     @endif
 
+                    {{-- Multi-Store Dashboard (Super Admin only) --}}
+                    @if(auth()->user()->hasPermission('multi_store_dashboard_view'))
+                        <a href="{{ route('multi-store-dashboard') }}"
+                            class="relative flex items-center w-full gap-2 px-3 py-2 rounded-lg transition-all duration-200 group text-sm font-medium {{ request()->routeIs('multi-store-dashboard') ? 'bg-primary text-white' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/5' }}">
+                            <svg class="w-4 h-4 transition-transform group-hover:scale-110" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                                </path>
+                            </svg>
+                            <span>Multi-Store</span>
+                            <x-sidebar-tooltip text="Multi-Store Dashboard" />
+                        </a>
+                    @endif
+
                     <!-- User Management -->
+
                     @if(auth()->user()->hasPermission('users_view') || auth()->user()->hasPermission('roles_view'))
                         @php
                             $usersDefaultUrl = auth()->user()->hasPermission('users_view') ? route('users.list') : route('users.roles');

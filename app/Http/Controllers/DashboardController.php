@@ -33,7 +33,14 @@ class DashboardController extends Controller
 
     public function index()
     {
-        $storeId       = current_store_id();
+        $storeId = current_store_id();
+        $data = self::computeStoreStats($storeId);
+
+        return view('dashboard', $data);
+    }
+
+    public static function computeStoreStats(int $storeId): array
+    {
         $today         = Carbon::today()->format('Y-m-d');
         $startOfMonth  = Carbon::now()->startOfMonth()->format('Y-m-d');
         $endOfMonth    = Carbon::now()->endOfMonth()->format('Y-m-d');
@@ -43,7 +50,8 @@ class DashboardController extends Controller
         // -----------------------------------------------------------------------
         // 1. TODAY's KPIs
         // -----------------------------------------------------------------------
-        $todaySales = DbSale::whereDate('sales_date', $today)
+        $todaySales = DbSale::withoutGlobalScope('store_id')->where('store_id', $storeId)
+            ->whereDate('sales_date', $today)
             ->where('status', 1)
             ->where(function ($q) {
                 $q->where('sales_status', 'Final')->orWhereNull('sales_status');
@@ -80,12 +88,14 @@ class DashboardController extends Controller
         }
 
         // Exclude soft-deleted (delete_bit=1) expenses so deleted rows are not re-counted.
-        $todayExpenses = (float) DbExpense::where('delete_bit', 0)->whereDate('expense_date', $today)->sum('expense_amt');
+        $todayExpenses = (float) DbExpense::withoutGlobalScope('store_id')->where('store_id', $storeId)
+            ->where('delete_bit', 0)->whereDate('expense_date', $today)->sum('expense_amt');
 
         // Sales returns today
         $todayReturnData = DB::table('db_salesitemsreturn')
             ->join('db_items', 'db_salesitemsreturn.item_id', '=', 'db_items.id')
             ->join('db_salesreturn', 'db_salesitemsreturn.return_id', '=', 'db_salesreturn.id')
+            ->where('db_salesreturn.store_id', $storeId)
             ->whereDate('db_salesreturn.return_date', $today)
             ->select(
                 DB::raw('COALESCE(SUM(db_salesitemsreturn.total_cost), 0) as revenue'),
@@ -140,14 +150,16 @@ class DashboardController extends Controller
         // -----------------------------------------------------------------------
         // 3. THIS MONTH'S SALES + % change vs last month
         // -----------------------------------------------------------------------
-        $thisMonthSales = (float) DbSale::whereBetween('sales_date', [$startOfMonth, $endOfMonth])
+        $thisMonthSales = (float) DbSale::withoutGlobalScope('store_id')->where('store_id', $storeId)
+            ->whereBetween('sales_date', [$startOfMonth, $endOfMonth])
             ->where('status', 1)
             ->where(function ($q) {
                 $q->where('sales_status', 'Final')->orWhereNull('sales_status');
             })
             ->sum('grand_total');
 
-        $lastMonthSales = (float) DbSale::whereBetween('sales_date', [$startOfLastMonth, $endOfLastMonth])
+        $lastMonthSales = (float) DbSale::withoutGlobalScope('store_id')->where('store_id', $storeId)
+            ->whereBetween('sales_date', [$startOfLastMonth, $endOfLastMonth])
             ->where('status', 1)
             ->where(function ($q) {
                 $q->where('sales_status', 'Final')->orWhereNull('sales_status');
@@ -163,7 +175,8 @@ class DashboardController extends Controller
         // 4. SALES TREND CHART — last 7 days (default on page load)
         // -----------------------------------------------------------------------
         $sevenDaysAgo = Carbon::today()->subDays(6)->format('Y-m-d');
-        $salesGrouped7 = DbSale::where('sales_date', '>=', $sevenDaysAgo)
+        $salesGrouped7 = DbSale::withoutGlobalScope('store_id')->where('store_id', $storeId)
+            ->where('sales_date', '>=', $sevenDaysAgo)
             ->where('status', 1)
             ->where(function ($q) {
                 $q->where('sales_status', 'Final')->orWhereNull('sales_status');
@@ -184,7 +197,8 @@ class DashboardController extends Controller
         // -----------------------------------------------------------------------
         // 5. LOW STOCK ALERT — items where stock <= alert_qty (alert_qty exists on db_items)
         // -----------------------------------------------------------------------
-        $lowStockItems = DbItem::whereRaw('stock <= alert_qty')
+        $lowStockItems = DbItem::withoutGlobalScope('store_id')->where('store_id', $storeId)
+            ->whereRaw('stock <= alert_qty')
             ->where('status', 1)
             ->where('service_bit', '!=', 1)
             ->select('id', 'item_name', 'sku', 'item_code', 'stock', 'alert_qty')
@@ -195,8 +209,9 @@ class DashboardController extends Controller
         // -----------------------------------------------------------------------
         // 6. TOP 5 SELLING PRODUCTS — this month by qty
         // -----------------------------------------------------------------------
-        $monthSalesIds = Cache::remember('dashboard_month_sale_ids_s' . $storeId, 300, function () use ($startOfMonth, $endOfMonth) {
-            return DbSale::whereBetween('sales_date', [$startOfMonth, $endOfMonth])
+        $monthSalesIds = Cache::remember('dashboard_month_sale_ids_s' . $storeId, 300, function () use ($storeId, $startOfMonth, $endOfMonth) {
+            return DbSale::withoutGlobalScope('store_id')->where('store_id', $storeId)
+                ->whereBetween('sales_date', [$startOfMonth, $endOfMonth])
                 ->where(function ($q) {
                     $q->where('sales_status', 'Final')->orWhereNull('sales_status');
                 })
@@ -225,7 +240,8 @@ class DashboardController extends Controller
         // -----------------------------------------------------------------------
         // 7. RECENT TRANSACTIONS — last 8 sales
         // -----------------------------------------------------------------------
-        $recentTransactions = DbSale::with('customer')
+        $recentTransactions = DbSale::withoutGlobalScope('store_id')->where('store_id', $storeId)
+            ->with('customer')
             ->where('status', 1)
             ->where(function ($q) {
                 $q->where('sales_status', 'Final')->orWhereNull('sales_status');
@@ -289,8 +305,9 @@ class DashboardController extends Controller
         // -----------------------------------------------------------------------
         // 10. PURCHASES VS SALES — this month
         // -----------------------------------------------------------------------
-        $thisMonthPurchases = Cache::remember('dashboard_month_purchases_s' . $storeId, 300, function () use ($startOfMonth, $endOfMonth) {
-            return (float) DbPurchase::whereBetween('purchase_date', [$startOfMonth, $endOfMonth])->sum('grand_total');
+        $thisMonthPurchases = Cache::remember('dashboard_month_purchases_s' . $storeId, 300, function () use ($storeId, $startOfMonth, $endOfMonth) {
+            return (float) DbPurchase::withoutGlobalScope('store_id')->where('store_id', $storeId)
+                ->whereBetween('purchase_date', [$startOfMonth, $endOfMonth])->sum('grand_total');
         });
 
         // -----------------------------------------------------------------------
@@ -312,15 +329,15 @@ class DashboardController extends Controller
             'values' => $trendValues,
         ];
 
-        return view('dashboard', compact(
-            'stats',
-            'chartData',
-            'lowStockItems',
-            'topProducts',
-            'recentTransactions',
-            'paymentMethods',
-            'customersWithDue'
-        ));
+        return [
+            'stats'              => $stats,
+            'chartData'          => $chartData,
+            'lowStockItems'      => $lowStockItems,
+            'topProducts'        => $topProducts,
+            'recentTransactions' => $recentTransactions,
+            'paymentMethods'     => $paymentMethods,
+            'customersWithDue'   => $customersWithDue,
+        ];
     }
 
     /**

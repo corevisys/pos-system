@@ -57,7 +57,7 @@ class PermissionSeeder extends Seeder
             'purchase_payment_view', 'purchase_payment_add', 'purchase_payment_delete',
             'import_suppliers', 'warehouse_add', 'warehouse_edit', 'warehouse_delete', 'warehouse_view',
             'purchase_tax_report', 'users_add', 'users_edit', 'users_delete', 'users_view',
-            'store_edit', 'store_settings_view', 'store_settings_edit', 'roles_add', 'roles_edit', 'roles_delete', 'roles_view',
+            'store_edit', 'store_settings_view', 'store_settings_edit', 'multi_store_dashboard_view', 'roles_add', 'roles_edit', 'roles_delete', 'roles_view',
             'expense_add', 'expense_edit', 'expense_delete', 'expense_view',
             'expense_report', 'profit_report', 'stock_report', 'item_sales_report',
             'expense_category_add', 'expense_category_edit', 'expense_category_delete', 'expense_category_view',
