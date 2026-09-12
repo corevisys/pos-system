@@ -19,6 +19,9 @@ Schedule::call(function () {
         ->where('scheduled_at', '<=', now())
         ->get();
 
+    // Deliberately spans ALL stores — that is correct for a scheduler. Each
+    // DispatchCampaignJob resolves the campaign's OWN store_id for provider
+    // selection, so per-store routing is preserved inside the job.
     foreach ($campaigns as $campaign) {
         \App\Jobs\DispatchCampaignJob::dispatch($campaign->id)->onQueue('sms');
     }

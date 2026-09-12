@@ -22,7 +22,15 @@ class SmsTriggerService
     public function trigger(string $eventType, $model)
     {
         try {
-            $rules = RuleResolverService::resolve($eventType);
+            // Resolve the rule set for the TRIGGERING MODEL's store, not the acting
+            // request's — a store-2 sale must evaluate store-2's rules (and thereby
+            // send through store-2's provider/template). Falling back to
+            // current_store_id() keeps CLI/queue callers working.
+            $storeId = is_object($model) && !empty($model->store_id)
+                ? (int) $model->store_id
+                : null;
+
+            $rules = RuleResolverService::resolve($eventType, $storeId);
 
             if ($rules->isEmpty()) {
                 return;
@@ -78,10 +86,30 @@ class SmsTriggerService
             return;
         }
 
+        // A rule without its own store is a data-integrity error, not something to
+        // silently route to Store 1. Every rule is created per store (the migration
+        // duplicates them per active store), so a null here means a bad row.
+        if (empty($rule->store_id)) {
+            Log::error('SMS rule has no store_id — refusing to send.', [
+                'rule_id' => $rule->id ?? null,
+                'event_type' => $rule->event_type ?? null,
+            ]);
+            return;
+        }
+
+        if (!$rule->template) {
+            Log::error('SMS rule has no resolvable template for its store — refusing to send.', [
+                'rule_id' => $rule->id,
+                'store_id' => $rule->store_id,
+                'template_id' => $rule->template_id,
+            ]);
+            return;
+        }
+
         $content = $this->smsService->replaceVariables($rule->template->content, $data);
 
         $this->smsService->sendSingle($phone, $content, [
-            'store_id' => $rule->store_id ?? 1,
+            'store_id' => (int) $rule->store_id,
             'rule_id' => $rule->id,
             'customer_id' => $this->resolveCustomerId($rule->event_type, $model),
         ]);

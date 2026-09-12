@@ -19,7 +19,7 @@ class UnitController extends Controller
         // Phase 1 (store scoping): acting store's units PLUS shared (store_id NULL)
         // rows — mirrors PurchaseController/QuotationController read pattern.
         $storeId = current_store_id();
-        $query = DbUnit::where(fn($w) => $w->where('store_id', $storeId)->orWhereNull('store_id'));
+        $query = DbUnit::where('store_id', $storeId);
 
         // Server-side search (mirrors the Customers/Suppliers list pattern).
         if ($request->filled('search')) {
@@ -88,7 +88,7 @@ class UnitController extends Controller
             'status' => 'required|integer|in:0,1',
         ]);
 
-        $unit = DbUnit::where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+        $unit = DbUnit::where('store_id', current_store_id())
             ->findOrFail($id);
         $unit->update([
             'unit_name' => $request->unit_name,
@@ -114,7 +114,7 @@ class UnitController extends Controller
             abort(403, 'Unauthorized access to delete units.');
         }
 
-        $unit = DbUnit::where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+        $unit = DbUnit::where('store_id', current_store_id())
             ->findOrFail($id);
 
         $itemCount = \App\Models\DbItem::where('unit_id', $unit->id)->count();

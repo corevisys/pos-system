@@ -43,6 +43,10 @@ class PurchaseController extends Controller
 
     public function index(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('purchase_view')) {
+            abort(403, 'Unauthorized access to purchases.');
+        }
+
         $query = DbPurchase::with(['supplier', 'warehouse'])
             ->where('store_id', current_store_id())
             ->latest();
@@ -92,7 +96,7 @@ class PurchaseController extends Controller
         $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->where('delete_bit', 0)->get();
         $accounts = AcAccount::where('store_id', current_store_id())->where('status', 1)->get();
         $paymentTypes = DbPaymentType::where('status', 1)
-            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->where('store_id', current_store_id())
             ->get();
 
         return view('module.purchase.purchase_list', compact('purchases', 'warehouses', 'stats', 'accounts', 'paymentTypes'));
@@ -100,19 +104,23 @@ class PurchaseController extends Controller
 
     public function create()
     {
+        if (auth()->check() && !auth()->user()->hasPermission('purchase_add')) {
+            abort(403, 'Unauthorized access to create purchases.');
+        }
+
         $suppliers = DbSupplier::where('status', 1)->get();
         // Phase 4: store-scoped + active-only warehouse dropdown.
         $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->where('delete_bit', 0)->get();
         $taxes = DbTax::where('status', 1)
-            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->where('store_id', current_store_id())
             ->get();
         $paymentTypes = DbPaymentType::where('status', 1)
-            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->where('store_id', current_store_id())
             ->get();
         $accounts = AcAccount::where('status', 1)->get();
         $categories = DbCategory::where('status', 1)->get();
         $units = DbUnit::where('status', 1)
-            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->where('store_id', current_store_id())
             ->get();
         $brands = DbBrand::where('status', 1)->get();
 
@@ -121,6 +129,10 @@ class PurchaseController extends Controller
 
     public function searchItems(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('purchase_add')) {
+            return response()->json([], 403);
+        }
+
         $search = trim($request->get('q'));
         if (empty($search)) {
             return response()->json([]);
@@ -164,6 +176,10 @@ class PurchaseController extends Controller
 
     public function store(StorePurchaseRequest $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('purchase_add')) {
+            abort(403, 'Unauthorized access to create purchases.');
+        }
+
         try {
             DB::beginTransaction();
 
@@ -504,6 +520,12 @@ class PurchaseController extends Controller
 
     public function quickStoreItem(Request $request)
     {
+        // Quick-create writes a real db_items row, so it is gated on items_add
+        // (not a purchase slug) — mirroring ItemController::store.
+        if (auth()->check() && !auth()->user()->hasPermission('items_add')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized access to create items.'], 403);
+        }
+
         // Validation mirrors the main Add Item Single flow (ItemController::store):
         // SKU/barcode uniqueness, and warehouse required whenever opening stock is added
         // (prevents an orphaned db_warehouseitems row with warehouse_id = NULL).
@@ -580,6 +602,10 @@ class PurchaseController extends Controller
 
     public function edit($id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('purchase_edit')) {
+            abort(403, 'Unauthorized access to edit purchases.');
+        }
+
         $purchase = DbPurchase::with(['items.item', 'supplier', 'warehouse'])
             ->where('store_id', current_store_id())
             ->findOrFail($id);
@@ -595,28 +621,28 @@ class PurchaseController extends Controller
         }
 
         $suppliers = DbSupplier::where('status', 1)
-            ->where(fn($q) => $q->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->where('store_id', current_store_id())
             ->get();
         $warehouses = DbWarehouse::where('status', 1)
-            ->where(fn($q) => $q->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->where('store_id', current_store_id())
             ->get();
         $taxes = DbTax::where('status', 1)
-            ->where(fn($q) => $q->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->where('store_id', current_store_id())
             ->get();
         $paymentTypes = DbPaymentType::where('status', 1)
-            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->where('store_id', current_store_id())
             ->get();
         $accounts = AcAccount::where('status', 1)
-            ->where(fn($q) => $q->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->where('store_id', current_store_id())
             ->get();
         $categories = DbCategory::where('status', 1)
-            ->where(fn($q) => $q->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->where('store_id', current_store_id())
             ->get();
         $units = DbUnit::where('status', 1)
-            ->where(fn($q) => $q->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->where('store_id', current_store_id())
             ->get();
         $brands = DbBrand::where('status', 1)
-            ->where(fn($q) => $q->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->where('store_id', current_store_id())
             ->get();
 
         return view('module.purchase.edit_purchase', compact(
@@ -627,6 +653,10 @@ class PurchaseController extends Controller
 
     public function update(UpdatePurchaseRequest $request, $id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('purchase_edit')) {
+            abort(403, 'Unauthorized access to edit purchases.');
+        }
+
         try {
             DB::beginTransaction();
 
@@ -984,6 +1014,10 @@ class PurchaseController extends Controller
 
     public function returnList(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('purchase_return_view')) {
+            abort(403, 'Unauthorized access to purchase returns.');
+        }
+
         $query = DbPurchaseReturn::with(['purchase', 'supplier', 'warehouse'])
             ->where('store_id', current_store_id())
             ->latest();
@@ -1029,6 +1063,10 @@ class PurchaseController extends Controller
 
     public function createReturn($id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('purchase_return_add')) {
+            abort(403, 'Unauthorized access to create purchase returns.');
+        }
+
         $purchase = DbPurchase::with(['items.item', 'supplier', 'warehouse'])
             ->where('store_id', current_store_id())
             ->findOrFail($id);
@@ -1044,6 +1082,10 @@ class PurchaseController extends Controller
 
     public function storeReturn(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('purchase_return_add')) {
+            abort(403, 'Unauthorized access to create purchase returns.');
+        }
+
         try {
             $request->validate([
                 'purchase_id' => 'required|integer|exists:db_purchase,id',
@@ -1221,6 +1263,10 @@ class PurchaseController extends Controller
 
     public function invoice($id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('purchase_view')) {
+            abort(403, 'Unauthorized access to purchase invoices.');
+        }
+
         $purchase = DbPurchase::with(['supplier.country', 'supplier.state', 'warehouse', 'items.item.tax', 'items.item.unit', 'items.serials'])
             ->where('store_id', current_store_id())
             ->findOrFail($id);
@@ -1230,6 +1276,10 @@ class PurchaseController extends Controller
 
     public function barcode($id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('purchase_view')) {
+            abort(403, 'Unauthorized access to purchase barcodes.');
+        }
+
         $purchase = DbPurchase::with(['items.item', 'items.serials', 'supplier'])
             ->where('store_id', current_store_id())
             ->findOrFail($id);
@@ -1239,6 +1289,10 @@ class PurchaseController extends Controller
 
     public function destroy($id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('purchase_delete')) {
+            abort(403, 'Unauthorized access to delete purchases.');
+        }
+
         try {
             DB::beginTransaction();
 
@@ -1345,6 +1399,10 @@ class PurchaseController extends Controller
 
     public function returnInvoice($id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('purchase_return_view')) {
+            abort(403, 'Unauthorized access to purchase return invoices.');
+        }
+
         $return = DbPurchaseReturn::with(['purchase', 'items.item', 'supplier.country', 'supplier.state', 'warehouse'])
             ->where('store_id', current_store_id())
             ->findOrFail($id);
@@ -1356,6 +1414,10 @@ class PurchaseController extends Controller
 
     public function destroyReturn($id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('purchase_return_delete')) {
+            abort(403, 'Unauthorized access to delete purchase returns.');
+        }
+
         try {
             DB::beginTransaction();
 
@@ -1446,6 +1508,10 @@ class PurchaseController extends Controller
 
     public function storePayment(Request $request, $id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('purchase_payment_add')) {
+            abort(403, 'Unauthorized access to purchase payments.');
+        }
+
         $request->validate([
             'payment_date' => 'required|date',
             'payment_amount' => 'required|numeric|min:0.01',

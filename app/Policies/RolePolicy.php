@@ -44,6 +44,8 @@ class RolePolicy
      */
     public function delete(User $user, DbRole $role): bool
     {
-        return $user->isSuperAdmin() && $role->id > 1; // Prevent deleting Super Admin role
+        // A role is undeletable because it IS a super-admin role — not because of
+        // its auto-increment id (roles created via the Roles UI get arbitrary ids).
+        return $user->isSuperAdmin() && !$role->is_super_admin;
     }
 }

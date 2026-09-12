@@ -11,9 +11,17 @@ class SmsCampaignController extends Controller
         return view('module.sms.campaigns');
     }
 
+    /**
+     * Store-scoped campaign lookup (IDOR guard) — a cross-store campaign id 404s.
+     */
+    private function findActingStoreCampaign($id): \App\Models\SmsCampaign
+    {
+        return \App\Models\SmsCampaign::where('store_id', current_store_id())->findOrFail($id);
+    }
+
     public function edit($id)
     {
-        $campaign = \App\Models\SmsCampaign::findOrFail($id);
+        $campaign = $this->findActingStoreCampaign($id);
         
         if ($campaign->status === 'Completed') {
             return back()->with('error', 'Completed campaigns cannot be edited.');
@@ -24,7 +32,7 @@ class SmsCampaignController extends Controller
 
     public function update(Request $request, $id)
     {
-        $campaign = \App\Models\SmsCampaign::findOrFail($id);
+        $campaign = $this->findActingStoreCampaign($id);
         
         if ($campaign->status === 'Completed') {
             return back()->with('error', 'Completed campaigns cannot be updated.');
@@ -53,7 +61,7 @@ class SmsCampaignController extends Controller
 
     public function destroy($id)
     {
-        $campaign = \App\Models\SmsCampaign::findOrFail($id);
+        $campaign = $this->findActingStoreCampaign($id);
         $campaign->delete();
 
         return back()->with('success', 'Campaign deleted successfully.');
@@ -61,7 +69,7 @@ class SmsCampaignController extends Controller
 
     public function cancel($id)
     {
-        $campaign = \App\Models\SmsCampaign::findOrFail($id);
+        $campaign = $this->findActingStoreCampaign($id);
         if ($campaign->status === 'Processing' || $campaign->status === 'Scheduled') {
             $campaign->update(['status' => 'Cancelled']);
             // logic to kill/cancel jobs if needed

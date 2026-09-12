@@ -65,16 +65,31 @@ class SmsService
             return SMSResponseDTO::failed('NO_PROVIDER', 'No SMS provider configured or enabled.');
         }
 
-        // Logic for blacklist, duplicate check, segment calculation before send...
+        // Blacklist is PER STORE: a number opted out by store 1 may still legally
+        // receive store 2's messages. (Previously this step was a comment only, so
+        // nothing was ever enforced.)
+        if (\App\Models\SmsBlacklist::where('store_id', $storeId)->where('phone', $phone)->exists()) {
+            \Illuminate\Support\Facades\Log::info('SMS skipped: recipient is blacklisted for this store.', [
+                'store_id' => $storeId,
+                'phone' => $phone,
+            ]);
+            return SMSResponseDTO::failed('BLACKLISTED', 'Recipient is blacklisted for this store.');
+        }
+
         $stats = SmsSegmentCalculator::calculate($message);
         $hash = DuplicatePreventionService::generateHash($phone, $message);
 
-        if (DuplicatePreventionService::isDuplicate($hash)) {
+        // Duplicate suppression is also per store: the same phone+message from two
+        // different stores within the window must NOT suppress each other.
+        if (DuplicatePreventionService::isDuplicate($hash, $storeId)) {
             return SMSResponseDTO::failed('DUPLICATE', 'Duplicate message detected within time window.');
         }
 
-        // Create log entry as Pending
+        // Create log entry as Pending — attributed to the SENDING store so each
+        // store's history/reporting can be scoped (SmsLog previously had no
+        // store column, making every log row unattributable).
         $log = SmsLog::create([
+            'store_id' => $storeId,
             'customer_id' => $options['customer_id'] ?? null,
             'campaign_id' => $options['campaign_id'] ?? null,
             'rule_id' => $options['rule_id'] ?? null,
@@ -102,17 +117,26 @@ class SmsService
             'failed_at' => !$response->success ? now() : null,
         ]);
 
-        // Update Daily Stats for high-performance dashboarding
-        $this->incrementDailyStats($response->success);
+        // Update Daily Stats for high-performance dashboarding — PER STORE, so a
+        // store's SMS volume/cost is no longer merged into one global daily row.
+        $this->incrementDailyStats($response->success, $storeId);
 
         return $response;
     }
 
-    private function incrementDailyStats(bool $success)
+    private function incrementDailyStats(bool $success, int $storeId)
     {
-        $today = now()->toDateString();
-        $stats = \App\Models\SmsDailyStat::firstOrCreate(['date' => $today]);
-        
+        // Use a normalized datetime, NOT toDateString(): SmsDailyStat casts `date`
+        // to a date, so the stored value is "Y-m-d 00:00:00". A bare "Y-m-d" lookup
+        // would never match it and would re-INSERT, tripping the
+        // (store_id, date) unique on the second send of the day.
+        $today = now()->startOfDay();
+
+        $stats = \App\Models\SmsDailyStat::firstOrCreate([
+            'date' => $today,
+            'store_id' => $storeId,
+        ]);
+
         if ($success) {
             $stats->increment('total_sent');
             $stats->increment('total_delivered'); // Assuming sent = delivered for now, can be updated via callback

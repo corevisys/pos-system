@@ -63,6 +63,9 @@ class AdminUserSeeder extends Seeder
                     'description' => 'Super Admin Role for Store ' . $adminData['store_id'],
                     'status'      => 1,
                     'store_id'    => $adminData['store_id'],
+                    // Explicit global-privilege flag (the role NAME no longer grants
+                    // super-admin bypass on its own).
+                    'is_super_admin' => true,
                 ]
             );
 

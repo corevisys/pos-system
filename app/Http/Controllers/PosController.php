@@ -50,18 +50,37 @@ class PosController extends Controller
         $this->smsTriggerService = $smsTriggerService;
     }
 
+    /**
+     * Permission gate for JSON/AJAX endpoints: returns a 403 JSON response
+     * instead of redirecting, matching StockTransferController::635.
+     *
+     * @return \Illuminate\Http\JsonResponse|null null when authorised
+     */
+    private function guardJson(string $permission)
+    {
+        if (auth()->check() && !auth()->user()->hasPermission($permission)) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized access.'], 403);
+        }
+
+        return null;
+    }
+
     public function index(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('sales_add')) {
+            abort(403, 'Unauthorized access to the POS terminal.');
+        }
+
         $customers = DbCustomer::where('status', 1)->get();
         // Phase 4: store-scoped + active-only warehouse dropdown.
         $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->where('delete_bit', 0)->get();
         $categories = DbCategory::where('status', 1)->where('store_id', current_store_id())->get();
         $brands = DbBrand::where('status', 1)->where('store_id', current_store_id())->get();
         $taxes = DbTax::where('status', 1)
-            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->where('store_id', current_store_id())
             ->get();
         $paymentTypes = DbPaymentType::where('status', 1)
-            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->where('store_id', current_store_id())
             ->get();
         $accounts = AcAccount::where('status', 1)->get();
 
@@ -116,6 +135,10 @@ class PosController extends Controller
 
     public function searchItems(Request $request)
     {
+        if ($resp = $this->guardJson('sales_add')) {
+            return $resp;
+        }
+
         $search = trim($request->get('q'));
         $category_id = $request->get('category_id');
         $brand_id = $request->get('brand_id');
@@ -207,6 +230,10 @@ class PosController extends Controller
 
     public function getAvailableSerials(Request $request)
     {
+        if ($resp = $this->guardJson('sales_add')) {
+            return $resp;
+        }
+
         $itemId = $request->get('item_id');
         $warehouseId = $request->get('warehouse_id');
 
@@ -221,6 +248,10 @@ class PosController extends Controller
 
     public function store(Request $request)
     {
+        if ($resp = $this->guardJson('sales_add')) {
+            return $resp;
+        }
+
         try {
             // --- SERVER-SIDE VALIDATION (shared by POS and Add Sale flows) ---
             $validationError = $this->validateSalePayload($request);
@@ -641,6 +672,10 @@ class PosController extends Controller
 
     public function hold(Request $request)
     {
+        if ($resp = $this->guardJson('sales_add')) {
+            return $resp;
+        }
+
         \Log::info('Hold request received', $request->all());
 
         // --- A6: LIGHTWEIGHT VALIDATION AT HOLD TIME ---
@@ -750,6 +785,10 @@ class PosController extends Controller
 
     public function storeEmi(Request $request)
     {
+        if ($resp = $this->guardJson('sales_add')) {
+            return $resp;
+        }
+
         try {
             // --- SERVER-SIDE VALIDATION (shared by POS and Add Sale flows) ---
             $validationError = $this->validateSalePayload($request);
@@ -1049,6 +1088,10 @@ class PosController extends Controller
 
     public function holdList(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('sales_view')) {
+            abort(403, 'Unauthorized access to held sales.');
+        }
+
         $storeId = current_store_id();
 
         // A4: scope to the current store (DbHold.store_id was written but never
@@ -1091,6 +1134,10 @@ class PosController extends Controller
 
     public function deleteHold($id)
     {
+        if ($resp = $this->guardJson('sales_delete')) {
+            return $resp;
+        }
+
         try {
             DB::beginTransaction();
             // Only 'open' holds can be discarded — a hold that has been claimed by a
@@ -1118,6 +1165,10 @@ class PosController extends Controller
 
     public function getCustomerDue($id)
     {
+        if ($resp = $this->guardJson('sales_view')) {
+            return $resp;
+        }
+
         try {
             $totalSales = \App\Models\DbSale::where('customer_id', $id)->sum('grand_total');
             $totalReturn = \App\Models\DbSalesReturn::where('customer_id', $id)->sum('grand_total');

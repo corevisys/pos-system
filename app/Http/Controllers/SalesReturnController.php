@@ -32,6 +32,10 @@ class SalesReturnController extends Controller
 
     public function index(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('sales_return_view')) {
+            abort(403, 'Unauthorized access to sales returns.');
+        }
+
         $storeId = current_store_id();
 
         $query = DbSalesReturn::with(['sale.returns', 'customer', 'warehouse', 'items', 'user'])
@@ -143,12 +147,20 @@ class SalesReturnController extends Controller
 
     public function show($id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('sales_return_view')) {
+            abort(403, 'Unauthorized access to sales return details.');
+        }
+
         $return = DbSalesReturn::with(['sale', 'customer', 'warehouse', 'items.item', 'payments.account', 'user'])->findOrFail($id);
         return view('module.sales.return_show', compact('return'));
     }
 
     public function create($sale_id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('sales_return_add')) {
+            abort(403, 'Unauthorized access to create sales returns.');
+        }
+
         $sale = DbSale::with(['customer', 'warehouse', 'items.item.tax', 'items.item.serials' => function($q) use ($sale_id) {
             $q->where('sale_id', $sale_id);
         }])->findOrFail($sale_id);
@@ -229,6 +241,10 @@ class SalesReturnController extends Controller
 
     public function store(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('sales_return_add')) {
+            abort(403, 'Unauthorized access to create sales returns.');
+        }
+
         $request->validate([
             'sales_id' => 'required|exists:db_sales,id',
             'return_date' => 'required|date',
@@ -514,6 +530,10 @@ class SalesReturnController extends Controller
 
     public function destroy($id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('sales_return_delete')) {
+            abort(403, 'Unauthorized access to delete sales returns.');
+        }
+
         try {
             DB::beginTransaction();
             $return = DbSalesReturn::with(['items', 'payments'])->findOrFail($id);

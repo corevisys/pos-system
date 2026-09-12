@@ -30,13 +30,15 @@ class SupplierRedesignAndRisksTest extends TestCase
             'mobile' => '+8801700000000',
         ]);
 
-        $role = DbRole::firstOrCreate(['id' => 1], [
+        // Store scope bypassed: DbRole/DbPermission are StoreScoped now, and this
+        // helper may run while acting as another store's user.
+        $role = DbRole::allStores()->firstOrCreate(['id' => 1], [
             'role_name' => 'Super Admin',
             'status' => 1,
             'store_id' => 1,
         ]);
 
-        DbPermission::firstOrCreate(['role_id' => 1], [
+        DbPermission::allStores()->firstOrCreate(['role_id' => 1], [
             'store_id' => 1,
             'permissions' => ['suppliers_view', 'suppliers_add', 'suppliers_edit', 'suppliers_delete'],
         ]);

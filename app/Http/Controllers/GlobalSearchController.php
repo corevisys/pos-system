@@ -37,13 +37,13 @@ class GlobalSearchController extends Controller
         ['label' => 'Create Role', 'module' => 'Users', 'route' => 'users.roles.create', 'permission' => 'roles_add', 'keywords' => ['add role', 'new role', 'permission group']],
 
         // ── Sales & POS ─────────────────────────────────────────────────────
-        ['label' => 'POS (Point of Sale)', 'module' => 'Sales', 'route' => 'sales.pos', 'permission' => 'sales_include_pos_add', 'keywords' => ['pos terminal', 'checkout', 'billing', 'cashier']],
-        ['label' => 'Add Sale', 'module' => 'Sales', 'route' => 'sales.add', 'permission' => 'sales_include_pos_add', 'keywords' => ['new sale', 'create invoice', 'sell']],
-        ['label' => 'Sales List', 'module' => 'Sales', 'route' => 'sales.list', 'permission' => 'sales_include_pos_view', 'keywords' => ['invoices', 'all sales', 'orders']],
-        ['label' => 'Sales Payments', 'module' => 'Sales', 'route' => 'sales.payments', 'permission' => 'sales_include_pos_sales_payments_view', 'keywords' => ['received payments', 'customer payments']],
+        ['label' => 'POS (Point of Sale)', 'module' => 'Sales', 'route' => 'sales.pos', 'permission' => 'sales_add', 'keywords' => ['pos terminal', 'checkout', 'billing', 'cashier']],
+        ['label' => 'Add Sale', 'module' => 'Sales', 'route' => 'sales.add', 'permission' => 'sales_add', 'keywords' => ['new sale', 'create invoice', 'sell']],
+        ['label' => 'Sales List', 'module' => 'Sales', 'route' => 'sales.list', 'permission' => 'sales_view', 'keywords' => ['invoices', 'all sales', 'orders']],
+        ['label' => 'Sales Payments', 'module' => 'Sales', 'route' => 'sales.payments', 'permission' => 'sales_payment_view', 'keywords' => ['received payments', 'customer payments']],
         ['label' => 'Sales Returns List', 'module' => 'Sales', 'route' => 'sales.returns', 'permission' => 'sales_return_view', 'keywords' => ['refunds', 'credit notes', 'customer returns']],
-        ['label' => 'EMI Sale List', 'module' => 'Sales', 'route' => 'sales.emi.list', 'permission' => 'sales_include_pos_view', 'keywords' => ['installments', 'emi payments', 'loan sales']],
-        ['label' => 'Hold Sales List', 'module' => 'Sales', 'route' => 'sales.hold.list', 'permission' => 'sales_include_pos_view', 'keywords' => ['suspended sales', 'draft orders', 'saved cart']],
+        ['label' => 'EMI Sale List', 'module' => 'Sales', 'route' => 'sales.emi.list', 'permission' => 'sales_view', 'keywords' => ['installments', 'emi payments', 'loan sales']],
+        ['label' => 'Hold Sales List', 'module' => 'Sales', 'route' => 'sales.hold.list', 'permission' => 'sales_view', 'keywords' => ['suspended sales', 'draft orders', 'saved cart']],
 
         // ── Contacts ────────────────────────────────────────────────────────
         ['label' => 'Add Customer', 'module' => 'Contacts', 'route' => 'contacts.customers.add', 'permission' => 'customers_add', 'keywords' => ['new customer', 'create client']],
@@ -351,6 +351,8 @@ class GlobalSearchController extends Controller
         }
 
         // ── 5. Sales / Invoices ────────────────────────────────────────────
+        // Legacy sales_include_pos_view accepted during the slug-reconciliation
+        // window; the data migration maps any such grant to sales_view.
         if ($user->isSuperAdmin() || $user->hasPermission('sales_view') || $user->hasPermission('sales_include_pos_view')) {
             $results = DbSale::where(function ($q2) use ($like) {
                     $q2->where('sales_code', 'like', $like)

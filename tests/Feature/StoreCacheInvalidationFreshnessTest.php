@@ -678,6 +678,7 @@ test('GAP 2.7: RuleResolverService::clearCache purges store-scoped rule cache an
     ]);
 
     $rule1 = SmsAutoRule::create([
+        'store_id'     => $sid,
         'rule_name'    => 'Rule Initial',
         'event_type'   => 'InvoiceCreated',
         'event_source' => 'invoice',
@@ -694,6 +695,7 @@ test('GAP 2.7: RuleResolverService::clearCache purges store-scoped rule cache an
 
     // Create a new rule directly in DB
     $rule2 = SmsAutoRule::create([
+        'store_id'     => $sid,
         'rule_name'    => 'Rule Added Later',
         'event_type'   => 'InvoiceCreated',
         'event_source' => 'invoice',

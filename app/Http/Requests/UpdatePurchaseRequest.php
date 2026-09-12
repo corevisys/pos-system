@@ -8,10 +8,15 @@ class UpdatePurchaseRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
+     *
+     * Enforced here (in addition to the route-level `permission:purchase_edit`
+     * middleware) because authorize() runs BEFORE rules(): an unconditional
+     * `true` would run full validation — and therefore leak store-scoped
+     * existence information — for an authenticated user without the permission.
      */
     public function authorize(): bool
     {
-        return true;
+        return auth()->check() && auth()->user()->hasPermission('purchase_edit');
     }
 
     /**

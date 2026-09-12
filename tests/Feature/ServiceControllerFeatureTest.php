@@ -31,7 +31,7 @@ class ServiceControllerFeatureTest extends TestCase
         DbPermission::create([
             'role_id' => $role1->id,
             'store_id' => 1,
-            'permissions' => ['services_view', 'services_add', 'services_edit', 'services_delete'],
+            'permissions' => ['services_view', 'services_add', 'services_edit', 'services_delete', 'sales_add', 'sales_view', 'quotation_add', 'quotation_view', 'quotation_edit'],
         ]);
         $this->store1User = User::factory()->create(['store_id' => 1, 'role_id' => $role1->id]);
 
@@ -39,7 +39,7 @@ class ServiceControllerFeatureTest extends TestCase
         DbPermission::create([
             'role_id' => $role2->id,
             'store_id' => 2,
-            'permissions' => ['services_view', 'services_add', 'services_edit', 'services_delete'],
+            'permissions' => ['services_view', 'services_add', 'services_edit', 'services_delete', 'sales_add', 'sales_view', 'quotation_add', 'quotation_view', 'quotation_edit'],
         ]);
         $this->store2User = User::factory()->create(['store_id' => 2, 'role_id' => $role2->id]);
 

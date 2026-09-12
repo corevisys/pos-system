@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\DbSmsTemplate;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class SmsTemplateSeeder extends Seeder
 {
@@ -155,19 +156,30 @@ class SmsTemplateSeeder extends Seeder
             ],
         ];
 
-        foreach ($templates as $template) {
-            DbSmsTemplate::updateOrCreate(
-                ['template_name' => $template['template_name']],
-                [
-                    'category' => $template['category'],
-                    'message_type' => $template['message_type'],
-                    'content' => $template['content'],
-                    'variables_used' => $template['variables_used'],
-                    'status' => 1,
-                    'store_id' => 1, // Default store or null if per-store not needed yet
-                    'language' => 'en',
-                ]
-            );
+        // Templates are per-store (DbSmsTemplate uses StoreScoped) and SMS auto-rules
+        // reference them by id, so EVERY active store needs its own copy. Seeding
+        // only store 1 previously left stores 2/3 with no templates, which would make
+        // their per-store rules resolve a null template at send time.
+        $storeIds = DB::table('db_store')->where('status', 1)->orderBy('id')->pluck('id')->all();
+        if (empty($storeIds)) {
+            $storeIds = [1];
+        }
+
+        foreach ($storeIds as $storeId) {
+            foreach ($templates as $template) {
+                DbSmsTemplate::updateOrCreate(
+                    ['template_name' => $template['template_name'], 'store_id' => $storeId],
+                    [
+                        'category' => $template['category'],
+                        'message_type' => $template['message_type'],
+                        'content' => $template['content'],
+                        'variables_used' => $template['variables_used'],
+                        'status' => 1,
+                        'store_id' => $storeId,
+                        'language' => 'en',
+                    ]
+                );
+            }
         }
     }
 }

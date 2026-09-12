@@ -8,7 +8,11 @@ class SmsLogController extends Controller
 {
     public function index(Request $request)
     {
-        $query = \App\Models\SmsLog::with('customer')->latest();
+        // Store-scoped: SMS logs are now attributable to a store, so one store's
+        // audit page must never list another store's messages.
+        $query = \App\Models\SmsLog::with('customer')
+            ->where('store_id', current_store_id())
+            ->latest();
 
         if ($request->filled('status') && $request->status !== 'all') {
             $query->where('status', $request->status);

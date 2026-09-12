@@ -16,12 +16,24 @@ class DuplicatePreventionService
 
     /**
      * Check if a similar message was sent recently using the hash.
-     * Implementation would check SmsLog table for the hash.
+     *
+     * Suppression is PER STORE: the same phone+message sent by store 1 and store 2
+     * within the window are NOT duplicates of each other. Scoping the lookup by
+     * store_id is sufficient — the hash itself does not need to change, because
+     * store_id is stored on every SmsLog row and is part of the query.
+     *
+     * @param string   $hash
+     * @param int|null $storeId  Null = global lookup (legacy/CLI callers).
      */
-    public static function isDuplicate(string $hash): bool
+    public static function isDuplicate(string $hash, ?int $storeId = null): bool
     {
-        return \App\Models\SmsLog::where('message_hash', $hash)
-            ->where('created_at', '>', now()->subMinutes(10))
-            ->exists();
+        $query = \App\Models\SmsLog::where('message_hash', $hash)
+            ->where('created_at', '>', now()->subMinutes(10));
+
+        if (!empty($storeId)) {
+            $query->where('store_id', $storeId);
+        }
+
+        return $query->exists();
     }
 }

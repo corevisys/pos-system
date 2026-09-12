@@ -104,6 +104,8 @@ class StoreSettingsFixRolloutTest extends TestCase
                 'store_settings_view', 'store_settings_edit',
                 'items_print_labels', 'items_view',
                 'profit_report', 'smtp_settings_view',
+                // Reports now have a single route-level gate.
+                'reports_view',
             ],
         ]);
 
@@ -316,5 +318,46 @@ class StoreSettingsFixRolloutTest extends TestCase
 
         $res->assertOk();
         $res->assertSee('Beta Store', false);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Step 4 — the last two session('store_id') store-bleed bugs
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * MessageTemplateController::store() previously wrote templates under
+     * session('store_id') ?? 1 — a key that is never set, so every store's
+     * template landed under store #1. It must now use the acting store.
+     */
+    public function test_message_template_store_uses_acting_store_not_session(): void
+    {
+        $this->actingAs($this->userB)->post(route('messaging.templates.store'), [
+            'template_name' => 'Acting Store Template',
+            'content' => 'Hello from the acting store',
+            'status' => 1,
+        ]);
+
+        $this->assertDatabaseHas('db_smstemplates', [
+            'template_name' => 'Acting Store Template',
+            'store_id' => 2,
+        ]);
+
+        $this->assertDatabaseMissing('db_smstemplates', [
+            'template_name' => 'Acting Store Template',
+            'store_id' => 1,
+        ]);
+    }
+
+    /**
+     * SmsHistoryController::index() previously resolved the SMS provider with
+     * session('store_id') ?? 1, so store B saw store 1's provider credentials.
+     * The source must now resolve the acting store via current_store_id().
+     */
+    public function test_sms_history_controller_resolves_acting_store(): void
+    {
+        $source = file_get_contents(base_path('app/Http/Controllers/SmsHistoryController.php'));
+
+        $this->assertStringContainsString('current_store_id()', $source);
+        $this->assertStringNotContainsString("session('store_id') ?? 1", $source);
     }
 }

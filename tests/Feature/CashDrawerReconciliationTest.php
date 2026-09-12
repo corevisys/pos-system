@@ -47,6 +47,8 @@ function getReconciliationTestUser(array $customPermissions = []): User {
         'cash_reconciliation_adjust',
         'cash_reconciliation_delete',
         'cash_reconciliation_report',
+        // Reports now have a single route-level gate.
+        'reports_view',
     ], $customPermissions);
 
     DbPermission::create([
@@ -332,7 +334,7 @@ test('5. Cashier without cash_reconciliation_adjust cannot post ledger adjustmen
     DbPermission::create([
         'role_id' => $role->id,
         'store_id' => 1,
-        'permissions' => ['cash_reconciliation_add', 'cash_reconciliation_view'],
+        'permissions' => ['cash_reconciliation_add', 'cash_reconciliation_view', 'reports_view'],
     ]);
     $cashier = User::factory()->create(['store_id' => 1, 'role_id' => $role->id, 'role_name' => $role->role_name]);
 

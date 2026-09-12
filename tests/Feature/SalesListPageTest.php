@@ -41,7 +41,7 @@ function getSalesListTestUser(int $storeId = 1): User
 
     DbPermission::firstOrCreate(['role_id' => $role->id], [
         'store_id' => $store->id,
-        'permissions' => ['sales_add', 'sales_view', 'pos', 'accounts_view'],
+        'permissions' => ['sales_add', 'sales_view', 'pos', 'accounts_view', 'reports_view', 'customers_add'],
     ]);
 
     return User::factory()->create([
@@ -53,10 +53,13 @@ function getSalesListTestUser(int $storeId = 1): User
 
 function makeSalesListSale(User $user, int $storeId, string $code, float $total, ?int $warehouseId = null): DbSale
 {
+    // customer_code is per-store unique (added during the multi-store work).
+    // Use a code derived from the sale code so multiple calls in one test do not
+    // collide on the composite (store_id, customer_code) index.
     $customer = DbCustomer::create([
         'store_id' => $storeId,
         'customer_name' => 'Generic Walk-in',
-        'customer_code' => 'CUST-GEN',
+        'customer_code' => 'CUST-' . $code,
         'mobile' => '01790000000',
         'status' => 1,
     ]);

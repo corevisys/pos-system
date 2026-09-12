@@ -60,7 +60,7 @@ class ServiceStockGuardPathsTest extends TestCase
         ]);
         DbPermission::firstOrCreate(['role_id' => $role->id], [
             'store_id' => $this->store->id,
-            'permissions' => ['sales_add', 'sales_view', 'sales_return_add', 'sales_return_view', 'pos', 'accounts_view'],
+            'permissions' => ['sales_add', 'sales_view', 'sales_return_add', 'sales_return_view', 'pos', 'accounts_view', 'quotation_add', 'quotation_view'],
         ]);
 
         $this->user = User::factory()->create([

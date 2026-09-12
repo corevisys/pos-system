@@ -36,11 +36,13 @@ function setupMultiStoreDashboardEnv(): array
         'mobile'     => '01700000002',
     ]);
 
-    // Super Admin role (id=1) — has all permissions including multi_store_dashboard_view
+    // Super Admin role (id=1) — has all permissions including multi_store_dashboard_view.
+    // is_super_admin is the authoritative flag now (name/id no longer imply it).
     $superAdminRole = DbRole::firstOrCreate(['id' => 1], [
-        'store_id'  => $storeA->id,
-        'role_name' => 'Super Admin',
-        'status'    => 1,
+        'store_id'       => $storeA->id,
+        'role_name'      => 'Super Admin',
+        'status'         => 1,
+        'is_super_admin' => true,
     ]);
 
     DbPermission::firstOrCreate(['role_id' => $superAdminRole->id], [

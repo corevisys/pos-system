@@ -52,6 +52,7 @@ class RolePermissionSeeder extends Seeder
             'expense_report', 'profit_report', 'stock_report', 'item_sales_report',
             'expense_category_add', 'expense_category_edit', 'expense_category_delete', 'expense_category_view',
             'send_sms', 'sms_template_edit', 'sms_template_view', 'sms_api_view', 'sms_api_edit',
+            'sms_blacklist_view', 'sms_blacklist_add', 'sms_blacklist_delete',
             'supplier_items_report', 'quotation_add', 'quotation_edit', 'quotation_delete', 'quotation_view',
             'cash_transactions', 'show_all_users_sales_invoices', 'show_all_users_sales_return_invoices',
             'show_all_users_purchase_invoices', 'show_all_users_purchase_return_invoices',
@@ -64,7 +65,24 @@ class RolePermissionSeeder extends Seeder
             'sales_gst_report', 'purchase_gst_report',
             'customerCouponAdd', 'customerCouponEdit', 'customerCouponDelete', 'customerCouponView',
             'return_items_report', 'help_link', 'recent_sales_invoice_list',
-            'cash_reconciliation_view', 'cash_reconciliation_add', 'cash_reconciliation_adjust', 'cash_reconciliation_delete', 'cash_reconciliation_report'
+            'cash_reconciliation_view', 'cash_reconciliation_add', 'cash_reconciliation_adjust', 'cash_reconciliation_delete', 'cash_reconciliation_report',
+            // Single coarse gate for the whole reports/* route group (matches the
+            // sidebar, which wraps the entire Reports menu in reports_view).
+            'reports_view'
+        ];
+
+        // Slugs that indicate a role can already see at least one report. Any role
+        // holding one of these must ALSO receive reports_view when it is introduced,
+        // otherwise the new single gate would REGRESS their existing access.
+        $reportRelatedSlugs = [
+            'sales_report', 'profit_report', 'purchase_report', 'stock_report',
+            'item_sales_report', 'sales_tax_report', 'purchase_tax_report',
+            'expense_report', 'gstr_1_report', 'gstr_2_report', 'sales_gst_report',
+            'purchase_gst_report', 'customer_orders_report', 'seller_points_report',
+            'supplier_items_report', 'sales_return_report', 'purchase_return_report',
+            'return_items_report', 'sales_payments_report', 'purchase_payments_report',
+            'cash_reconciliation_report', 'delivery_sheet_report', 'load_sheet_report',
+            'reports_cash_flow_view',
         ];
 
         // Multi-store dashboard is strictly exclusive to Super Admin
@@ -135,14 +153,24 @@ class RolePermissionSeeder extends Seeder
                     'description' => $roleData['description'],
                     'status' => 1,
                     'store_id' => 1,
+                    // Only the Super Admin role carries the global privilege flag.
+                    'is_super_admin' => $roleData['name'] === 'Super Admin',
                 ]
             );
+
+            $rolePermissions = $roleData['permissions'];
+
+            // Grant the new single reports_view gate to any role that already holds
+            // a report-related slug (preserves current effective access).
+            if (array_intersect($reportRelatedSlugs, $rolePermissions)) {
+                $rolePermissions[] = 'reports_view';
+            }
 
             DbPermission::updateOrCreate(
                 ['role_id' => $role->id],
                 [
                     'store_id' => $role->store_id,
-                    'permissions' => $roleData['permissions'],
+                    'permissions' => array_values(array_unique($rolePermissions)),
                 ]
             );
         }

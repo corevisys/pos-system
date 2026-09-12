@@ -24,6 +24,10 @@ class QuotationController extends Controller
 {
     public function index(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('quotation_view')) {
+            abort(403, 'Unauthorized access to quotations.');
+        }
+
         $storeId = current_store_id();
         $query = DbQuotation::where('store_id', $storeId)->with(['customer', 'warehouse', 'sale'])->latest();
 
@@ -60,6 +64,10 @@ class QuotationController extends Controller
 
     public function create()
     {
+        if (auth()->check() && !auth()->user()->hasPermission('quotation_add')) {
+            abort(403, 'Unauthorized access to create quotations.');
+        }
+
         $storeId = current_store_id();
         $customers = DbCustomer::where('store_id', $storeId)->where('status', 1)->get();
         $warehouses = DbWarehouse::where('store_id', $storeId)->where('status', 1)->get();
@@ -73,6 +81,10 @@ class QuotationController extends Controller
 
     public function searchItems(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('quotation_add')) {
+            return response()->json([], 403);
+        }
+
         $search = trim($request->get('q'));
         if (empty($search)) {
             return response()->json([]);
@@ -114,6 +126,10 @@ class QuotationController extends Controller
 
     public function store(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('quotation_add')) {
+            abort(403, 'Unauthorized access to create quotations.');
+        }
+
         // Simple validation, can be expanded to a FormRequest later
         $request->validate([
             'customer_id' => 'required',
@@ -270,6 +286,10 @@ class QuotationController extends Controller
 
     public function edit($id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('quotation_edit')) {
+            abort(403, 'Unauthorized access to edit quotations.');
+        }
+
         $storeId = current_store_id();
         $quotation = DbQuotation::with(['items.item.tax', 'customer', 'warehouse'])
             ->where('id', $id)
@@ -295,6 +315,10 @@ class QuotationController extends Controller
 
     public function invoice($id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('quotation_view')) {
+            abort(403, 'Unauthorized access to quotation invoices.');
+        }
+
         $storeId = current_store_id();
         $quotation = DbQuotation::with(['customer.country', 'customer.state', 'warehouse', 'items.item.tax', 'items.item.unit', 'sale'])
             ->where('id', $id)
@@ -306,6 +330,10 @@ class QuotationController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('quotation_edit')) {
+            abort(403, 'Unauthorized access to edit quotations.');
+        }
+
         $request->validate([
             'customer_id' => 'required',
             'warehouse_id' => 'required',
@@ -466,6 +494,10 @@ class QuotationController extends Controller
 
     public function destroy($id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('quotation_delete')) {
+            abort(403, 'Unauthorized access to delete quotations.');
+        }
+
         try {
             $storeId = current_store_id();
             $quotation = DbQuotation::where('id', $id)->where('store_id', $storeId)->first();
@@ -505,6 +537,10 @@ class QuotationController extends Controller
 
     public function updateStatus(Request $request, $id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('quotation_edit')) {
+            abort(403, 'Unauthorized access to update quotation status.');
+        }
+
         $request->validate([
             'status' => 'required|in:Quoted,Accepted,Rejected',
         ]);
@@ -532,6 +568,15 @@ class QuotationController extends Controller
 
     public function convertToSale(Request $request, $id)
     {
+        // Converting a quotation creates a real sale (stock + ledger effects), so
+        // it requires BOTH the quotation-edit right and the sales_add right.
+        if (auth()->check() && !auth()->user()->hasPermission('sales_add')) {
+            abort(403, 'Unauthorized access to convert quotations to sales.');
+        }
+        if (auth()->check() && !auth()->user()->hasPermission('quotation_edit')) {
+            abort(403, 'Unauthorized access to convert quotations.');
+        }
+
         try {
             return \App\Services\CodeGeneratorService::executeWithRetry(function () use ($request, $id) {
                 try {

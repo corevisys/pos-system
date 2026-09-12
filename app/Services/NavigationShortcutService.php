@@ -31,13 +31,13 @@ class NavigationShortcutService
             'module_key' => 'S',
             'module' => 'Sales',
             'items' => [
-                ['label' => 'POS', 'page_key' => 'P', 'route' => 'sales.pos', 'permission' => 'sales_include_pos_add'],
-                ['label' => 'Add Sale', 'page_key' => 'A', 'route' => 'sales.add', 'permission' => 'sales_include_pos_add'],
-                ['label' => 'Sales List', 'page_key' => 'L', 'route' => 'sales.list', 'permission' => 'sales_include_pos_view'],
-                ['label' => 'Sales Payments', 'page_key' => 'Y', 'route' => 'sales.payments', 'permission' => 'sales_include_pos_sales_payments_view'],
+                ['label' => 'POS', 'page_key' => 'P', 'route' => 'sales.pos', 'permission' => 'sales_add'],
+                ['label' => 'Add Sale', 'page_key' => 'A', 'route' => 'sales.add', 'permission' => 'sales_add'],
+                ['label' => 'Sales List', 'page_key' => 'L', 'route' => 'sales.list', 'permission' => 'sales_view'],
+                ['label' => 'Sales Payments', 'page_key' => 'Y', 'route' => 'sales.payments', 'permission' => 'sales_payment_view'],
                 ['label' => 'Sales Returns List', 'page_key' => 'R', 'route' => 'sales.returns', 'permission' => 'sales_return_view'],
-                ['label' => 'EMI Sale List', 'page_key' => 'E', 'route' => 'sales.emi.list', 'permission' => 'sales_include_pos_view'],
-                ['label' => 'Hold Sales List', 'page_key' => 'H', 'route' => 'sales.hold.list', 'permission' => 'sales_include_pos_view'],
+                ['label' => 'EMI Sale List', 'page_key' => 'E', 'route' => 'sales.emi.list', 'permission' => 'sales_view'],
+                ['label' => 'Hold Sales List', 'page_key' => 'H', 'route' => 'sales.hold.list', 'permission' => 'sales_view'],
             ]
         ],
         'Contacts' => [

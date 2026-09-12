@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Traits\StoreScoped;
 use Illuminate\Database\Eloquent\Model;
 
 class DbPermission extends Model
 {
+    use StoreScoped;
+
     protected $table = 'db_permissions';
 
     protected $fillable = [

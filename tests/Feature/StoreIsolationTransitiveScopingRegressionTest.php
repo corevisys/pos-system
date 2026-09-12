@@ -48,6 +48,8 @@ function setupTransitiveScopingEnvironment() {
         'profit_report', 'sales_summary_report', 'cash_flow_report',
         'items_view', 'items_delete', 'services_view', 'services_delete',
         'accounts_view', 'accounts_delete',
+        // Reports now have a single route-level gate.
+        'reports_view',
     ];
 
     DbPermission::firstOrCreate(['role_id' => $roleA->id], [

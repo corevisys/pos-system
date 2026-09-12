@@ -6,5 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class SmsBlacklist extends Model
 {
-    protected $fillable = ['phone', 'reason', 'added_by'];
+    protected $fillable = ['store_id', 'phone', 'reason', 'added_by'];
+
+    public function store()
+    {
+        return $this->belongsTo(DbStore::class, 'store_id');
+    }
 }

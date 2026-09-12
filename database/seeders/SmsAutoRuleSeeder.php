@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\SmsAutoRule;
 use App\Models\DbSmsTemplate;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class SmsAutoRuleSeeder extends Seeder
 {
@@ -176,22 +177,38 @@ class SmsAutoRuleSeeder extends Seeder
             ],
         ];
 
-        foreach ($rules as $rule) {
-            $template = DbSmsTemplate::where('template_name', $rule['template_name'])->first();
-            
-            if ($template) {
-                SmsAutoRule::updateOrCreate(
-                    ['event_type' => $rule['event_type']],
-                    [
-                        'rule_name' => $rule['rule_name'],
-                        'event_source' => $rule['event_source'],
-                        'template_id' => $template->id,
-                        'trigger_time' => $rule['trigger_time'],
-                        'days_offset' => $rule['days_offset'],
-                        'cooldown_days' => 0,
-                        'is_active' => true,
-                    ]
-                );
+        // Rules are per-store (a store's rules must resolve to THAT store's
+        // provider and templates), so seed one rule set per active store, pointing
+        // at the matching per-store template row.
+        $storeIds = \Illuminate\Support\Facades\DB::table('db_store')
+            ->where('status', 1)
+            ->orderBy('id')
+            ->pluck('id')
+            ->all();
+        if (empty($storeIds)) {
+            $storeIds = [1];
+        }
+
+        foreach ($storeIds as $storeId) {
+            foreach ($rules as $rule) {
+                $template = DbSmsTemplate::where('store_id', $storeId)
+                    ->where('template_name', $rule['template_name'])
+                    ->first();
+
+                if ($template) {
+                    SmsAutoRule::updateOrCreate(
+                        ['event_type' => $rule['event_type'], 'store_id' => $storeId],
+                        [
+                            'rule_name' => $rule['rule_name'],
+                            'event_source' => $rule['event_source'],
+                            'template_id' => $template->id,
+                            'trigger_time' => $rule['trigger_time'],
+                            'days_offset' => $rule['days_offset'],
+                            'cooldown_days' => 0,
+                            'is_active' => true,
+                        ]
+                    );
+                }
             }
         }
     }

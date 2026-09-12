@@ -56,10 +56,10 @@ trait ImportsItems
         $categories = DbCategory::where('status', 1)->where('store_id', $storeId)->get();
         $brands = DbBrand::where('status', 1)->where('store_id', $storeId)->get();
         $units = DbUnit::where('status', 1)
-            ->where(fn($w) => $w->where('store_id', $storeId)->orWhereNull('store_id'))
+            ->where('store_id', $storeId)
             ->get();
         $taxes = DbTax::where('status', 1)
-            ->where(fn($w) => $w->where('store_id', $storeId)->orWhereNull('store_id'))
+            ->where('store_id', $storeId)
             ->get();
         $warehouses = DbWarehouse::where('status', 1)->where('store_id', $storeId)->get();
 
@@ -200,10 +200,10 @@ trait ImportsItems
             // taxes are store-scoped in their seeders (store_id=1) and the Add Item
             // form loads them unscoped, so match by name the same way.
             $units = DbUnit::where('status', 1)
-                ->where(fn($w) => $w->where('store_id', $storeId)->orWhereNull('store_id'))
+                ->where('store_id', $storeId)
                 ->get()->keyBy(fn($u) => strtolower(trim((string) $u->unit_name)));
             $taxes = DbTax::where('status', 1)
-                ->where(fn($w) => $w->where('store_id', $storeId)->orWhereNull('store_id'))
+                ->where('store_id', $storeId)
                 ->get()->keyBy(fn($t) => strtolower(trim((string) $t->tax_name)));
 
             // Auto-create resolution caches (lowercased name => model). The cache is

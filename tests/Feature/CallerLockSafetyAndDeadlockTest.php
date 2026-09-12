@@ -82,7 +82,7 @@ try {
 }
 
 $store = \App\Models\DbStore::create(['id' => 1, 'store_name' => 'Deadlock Test Store', 'status' => 1, 'sales_init' => 'SA', 'item_init' => 'IT']);
-$role = \App\Models\DbRole::create(['id' => 1, 'store_id' => 1, 'role_name' => 'Super Admin', 'status' => 1]);
+$role = \App\Models\DbRole::create(['id' => 1, 'store_id' => 1, 'role_name' => 'Super Admin', 'status' => 1, 'is_super_admin' => true]);
 \App\Models\DbPermission::create(['role_id' => 1, 'store_id' => 1, 'permissions' => []]);
 $user = \App\Models\User::factory()->create(['id' => 1, 'store_id' => 1, 'role_id' => 1, 'role_name' => 'Super Admin']);
 

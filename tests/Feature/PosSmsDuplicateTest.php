@@ -99,6 +99,7 @@ test('pos checkout creates only one SMS log entry for invoice created', function
     ]);
 
     $rule = SmsAutoRule::create([
+        'store_id' => 1,
         'rule_name' => 'Invoice Created Rule',
         'event_type' => 'InvoiceCreated',
         'event_source' => 'invoice',

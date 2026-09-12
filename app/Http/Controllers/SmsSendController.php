@@ -82,6 +82,7 @@ class SmsSendController extends Controller
         $scheduledAt = $isScheduled ? $request->input('scheduled_at') : null;
 
         $campaign = SmsCampaign::create([
+            'store_id'         => current_store_id(),
             'name'             => ($isScheduled ? 'Scheduled' : 'Broadcast') . ' – ' . now()->format('d M Y, h:i A'),
             'target_type'      => $request->target,
             'target_filters'   => $filters,

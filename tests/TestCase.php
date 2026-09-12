@@ -23,5 +23,13 @@ abstract class TestCase extends BaseTestCase
         if (function_exists('flush_store_settings_cache')) {
             flush_store_settings_cache();
         }
+
+        // Test-fixture convenience: many existing fixtures create a role named
+        // "Super Admin" as shorthand for "make this a super admin". That name-based
+        // grant is DISABLED in production (DbRole::$seedSuperAdminByName defaults
+        // to false) precisely so it can never be a privilege-escalation vector via
+        // any application request. Opting in here keeps those fixtures working
+        // without weakening the production behaviour.
+        \App\Models\DbRole::seedSuperAdminByName(true);
     }
 }

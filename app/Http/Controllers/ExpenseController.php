@@ -233,8 +233,7 @@ class ExpenseController extends Controller
         $storeId = current_store_id();
         // Categories: own store OR legacy rows created before multi-store (store_id NULL).
         $categories = DbExpenseCategory::where(function ($q) use ($storeId) {
-                $q->where('store_id', $storeId)
-                    ->orWhereNull('store_id');
+                $q->where('store_id', $storeId);
             })
             ->where('status', 1)
             ->orderBy('category_name')
@@ -270,9 +269,7 @@ class ExpenseController extends Controller
             'category_id'  => [
                 'required',
                 Rule::exists('db_expense_category', 'id')->where(function ($q) use ($storeId) {
-                    return $q->where(function ($sq) use ($storeId) {
-                        $sq->where('store_id', $storeId)->orWhereNull('store_id');
-                    });
+                    return $q->where('store_id', $storeId);
                 }),
             ],
             'expense_for'  => 'required|string|max:255',
@@ -342,8 +339,7 @@ class ExpenseController extends Controller
 
         // Categories: own store OR legacy rows created before multi-store (store_id NULL).
         $categories = DbExpenseCategory::where(function ($q) use ($storeId) {
-                $q->where('store_id', $storeId)
-                    ->orWhereNull('store_id');
+                $q->where('store_id', $storeId);
             })
             ->where('status', 1)
             ->orderBy('category_name')
@@ -382,9 +378,7 @@ class ExpenseController extends Controller
             'category_id'  => [
                 'required',
                 Rule::exists('db_expense_category', 'id')->where(function ($q) use ($storeId) {
-                    return $q->where(function ($sq) use ($storeId) {
-                        $sq->where('store_id', $storeId)->orWhereNull('store_id');
-                    });
+                    return $q->where('store_id', $storeId);
                 }),
             ],
             'expense_for'  => 'required|string|max:255',

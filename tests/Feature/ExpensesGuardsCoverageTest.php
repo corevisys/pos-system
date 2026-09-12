@@ -39,9 +39,16 @@ class ExpensesGuardsCoverageTest extends TestCase
         $this->store($storeId);
 
         // ALWAYS seed the Super Admin role first (id=1) so a Limited role never
-        // receives id=1 and accidentally passes isSuperAdmin()'s role_id===1 check.
-        DbRole::firstOrCreate(['id' => 1], ['store_id' => 1, 'role_name' => 'Super Admin', 'status' => 1]);
-        DbPermission::firstOrCreate(['role_id' => 1], ['store_id' => 1, 'permissions' => []]);
+        // receives id=1 and accidentally passes isSuperAdmin(). The flag is now
+        // authoritative, so it must be set explicitly here.
+        // Seed with the store scope bypassed: DbRole is now StoreScoped, and this
+        // helper may be called while acting as a different store's user, which would
+        // otherwise hide the existing store-1 role and trip the per-store unique.
+        DbRole::allStores()->firstOrCreate(
+            ['id' => 1],
+            ['store_id' => 1, 'role_name' => 'Super Admin', 'status' => 1, 'is_super_admin' => true]
+        );
+        DbPermission::allStores()->firstOrCreate(['role_id' => 1], ['store_id' => 1, 'permissions' => []]);
 
         if (empty($permissions)) {
             return User::factory()->create(['store_id' => $storeId, 'role_id' => 1, 'role_name' => 'Super Admin']);

@@ -29,6 +29,10 @@ class CustomerController extends Controller
      */
     public function index(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('customers_view')) {
+            abort(403, 'Unauthorized access to customers.');
+        }
+
         $query = DbCustomer::where('delete_bit', 0);
 
         if ($request->has('search') && $request->search != '') {
@@ -107,6 +111,10 @@ class CustomerController extends Controller
      */
     public function create()
     {
+        if (auth()->check() && !auth()->user()->hasPermission('customers_add')) {
+            abort(403, 'Unauthorized access to add customers.');
+        }
+
         $countries = DbCountry::all();
         $states = DbState::all();
         $customer = null;
@@ -118,6 +126,10 @@ class CustomerController extends Controller
      */
     public function quickStore(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('customers_add')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized access to add customers.'], 403);
+        }
+
         $request->validate([
             'customer_name' => 'required|string|max:255',
             'mobile' => 'required|string|regex:/^\d{11}$/|unique:db_customers,mobile',
@@ -185,6 +197,10 @@ class CustomerController extends Controller
      */
     public function store(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('customers_add')) {
+            abort(403, 'Unauthorized access to add customers.');
+        }
+
         $request->validate([
             'customer_name' => 'required|string|max:255',
             'customer_type' => 'required|string|in:regular,emi',
@@ -332,6 +348,10 @@ class CustomerController extends Controller
 
     public function saveStep(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('customers_add')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized access to save customers.'], 403);
+        }
+
         $step = $request->input('current_step');
         $id = $request->input('id');
         $customerType = $request->input('customer_type', 'regular');
@@ -562,6 +582,10 @@ class CustomerController extends Controller
 
     public function edit($id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('customers_edit')) {
+            abort(403, 'Unauthorized access to edit customers.');
+        }
+
         $customer = DbCustomer::with(['guardians', 'guarantors'])->find($id);
         if (!$customer) {
             return redirect()->route('contacts.customers.list')->with('error', 'Customer not found.');
@@ -573,6 +597,10 @@ class CustomerController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('customers_edit')) {
+            abort(403, 'Unauthorized access to edit customers.');
+        }
+
         $customer = DbCustomer::find($id);
         if (!$customer) {
             return redirect()->route('contacts.customers.list')->with('error', 'Customer not found.');
@@ -724,6 +752,10 @@ class CustomerController extends Controller
 
     public function destroy($id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('customers_delete')) {
+            abort(403, 'Unauthorized access to delete customers.');
+        }
+
         $customer = DbCustomer::withCount(['sales', 'emiSales', 'payments'])->find($id);
 
         if (!$customer) {
@@ -753,6 +785,10 @@ class CustomerController extends Controller
      */
     public function import()
     {
+        if (auth()->check() && !auth()->user()->hasPermission('import_customers')) {
+            abort(403, 'Unauthorized access to import customers.');
+        }
+
         return view('module.contacts.import_customers');
     }
 
@@ -761,6 +797,10 @@ class CustomerController extends Controller
      */
     public function importTemplate()
     {
+        if (auth()->check() && !auth()->user()->hasPermission('import_customers')) {
+            abort(403, 'Unauthorized access to the customer import template.');
+        }
+
         $headers = [
             'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="customers_import_template.csv"',
@@ -852,6 +892,10 @@ class CustomerController extends Controller
      */
     public function importStore(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('import_customers')) {
+            abort(403, 'Unauthorized access to import customers.');
+        }
+
         $request->validate([
             'import_file' => 'required|file|mimes:csv,txt|max:5120',
         ], [

@@ -132,10 +132,10 @@ class ItemController extends Controller
         $categories = DbCategory::where('status', 1)->where('store_id', current_store_id())->get();
         $brands = DbBrand::where('status', 1)->where('store_id', current_store_id())->get();
         $units = DbUnit::where('status', 1)
-            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->where('store_id', current_store_id())
             ->get();
         $taxes = DbTax::where('status', 1)
-            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->where('store_id', current_store_id())
             ->get();
         // Phase 4: store-scoped + active-only warehouse dropdown.
         $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->where('delete_bit', 0)->get();
@@ -468,10 +468,10 @@ class ItemController extends Controller
         $categories = DbCategory::where('status', 1)->where('store_id', current_store_id())->get();
         $brands = DbBrand::where('status', 1)->where('store_id', current_store_id())->get();
         $units = DbUnit::where('status', 1)
-            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->where('store_id', current_store_id())
             ->get();
         $taxes = DbTax::where('status', 1)
-            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->where('store_id', current_store_id())
             ->get();
         // Phase 4: store-scoped + active-only warehouse dropdown.
         $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->where('delete_bit', 0)->get();

@@ -40,22 +40,21 @@ class SettingsRolloutRuntimeVerificationTest extends TestCase
     }
 
     /**
-     * Create a NON-super-admin user (role_id != 1) holding the given slugs.
-     * DbRole::create() auto-increments from 1, so the first role created in a
-     * fresh test DB would have id = 1 and isSuperAdmin() (role_id === 1) would
-     * short-circuit every permission check to TRUE — a harness trap, not a code
-     * defect. We force a distinct role id (e.g. 50) to stay out of that branch.
+     * Create a NON-super-admin user holding the given slugs.
+     *
+     * is_super_admin is the authoritative global-privilege flag, so these helper
+     * roles are created with it explicitly FALSE. A distinct forced role id (50+)
+     * is still used for readability, though id no longer confers super powers.
      */
     private function makeRole(int $storeId, array $permissions, int $forcedId): DbRole
     {
-        // forceCreate (not create) bypasses DbRole::$fillable, which does NOT list
-        // 'id' — a plain create() silently drops the forced id and the row gets
-        // auto-increment id 1, which would make this user a SUPER ADMIN.
+        // forceCreate (not create) bypasses DbRole::$fillable, which does NOT list 'id'.
         $role = DbRole::forceCreate([
             'id' => $forcedId,
             'role_name' => 'Role S' . $storeId . ' ' . uniqid(),
             'status' => 1,
             'store_id' => $storeId,
+            'is_super_admin' => false,
         ]);
         DbPermission::create([
             'role_id' => $role->id,
@@ -310,8 +309,8 @@ class SettingsRolloutRuntimeVerificationTest extends TestCase
         // other store's cached list is untouched.
         // Store 1 must be able to BOTH read the tax dropdown (sales view) and
         // create a tax (tax_add); Store 2 only needs to read.
-        $store1 = $this->makeNonSuperAdminUser(1, ['sales_include_pos_add', 'sales_include_pos_view', 'tax_add'], 90);
-        $store2 = $this->makeNonSuperAdminUser(2, ['sales_include_pos_add', 'sales_include_pos_view'], 91);
+        $store1 = $this->makeNonSuperAdminUser(1, ['sales_add', 'sales_view', 'tax_add'], 90);
+        $store2 = $this->makeNonSuperAdminUser(2, ['sales_add', 'sales_view'], 91);
 
         // Warm BOTH per-store keys via the Add Sale page (SaleController::create()).
         $this->actingAs($store1)->get(route('sales.add'))->assertOk();

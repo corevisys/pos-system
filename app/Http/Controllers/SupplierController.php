@@ -20,6 +20,10 @@ class SupplierController extends Controller
      */
     public function index(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('suppliers_view')) {
+            abort(403, 'Unauthorized access to suppliers.');
+        }
+
         // Store-scoped base query — cross-store supplier rows must never appear on this list.
         $query = DbSupplier::where('delete_bit', 0)
             ->where('store_id', current_store_id());
@@ -182,6 +186,10 @@ class SupplierController extends Controller
      */
     public function create()
     {
+        if (auth()->check() && !auth()->user()->hasPermission('suppliers_add')) {
+            abort(403, 'Unauthorized access to add suppliers.');
+        }
+
         $countries = DbCountry::all();
         $states = DbState::all();
         $currencySymbol = \App\Providers\AppServiceProvider::resolveCurrencySymbol();
@@ -193,6 +201,10 @@ class SupplierController extends Controller
      */
     public function store(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('suppliers_add')) {
+            abort(403, 'Unauthorized access to add suppliers.');
+        }
+
         $storeId = current_store_id();
 
         // PER-STORE uniqueness (Phase 4): mobile/email are unique only within the current
@@ -259,6 +271,10 @@ class SupplierController extends Controller
 
     public function edit($id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('suppliers_edit')) {
+            abort(403, 'Unauthorized access to edit suppliers.');
+        }
+
         // Store-scoped lookup (IDOR protection) — only this store's suppliers may be edited.
         $supplier = DbSupplier::where('store_id', current_store_id())->where('delete_bit', 0)->find($id);
         if (!$supplier) {
@@ -272,6 +288,10 @@ class SupplierController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('suppliers_edit')) {
+            abort(403, 'Unauthorized access to edit suppliers.');
+        }
+
         $storeId = current_store_id();
 
         // PER-STORE uniqueness with ignore-self. The ignore is scoped to (store_id = this
@@ -413,6 +433,10 @@ class SupplierController extends Controller
 
     public function destroy($id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('suppliers_delete')) {
+            abort(403, 'Unauthorized access to delete suppliers.');
+        }
+
         $storeId = current_store_id();
 
         // Store-scoped lookup (IDOR protection) — mirrors Account/Transfer/Deposit/Reconciliation.
@@ -469,6 +493,10 @@ class SupplierController extends Controller
      */
     public function import()
     {
+        if (auth()->check() && !auth()->user()->hasPermission('import_suppliers')) {
+            abort(403, 'Unauthorized access to import suppliers.');
+        }
+
         return view('module.contacts.import_suppliers');
     }
 
@@ -477,6 +505,10 @@ class SupplierController extends Controller
      */
     public function importTemplate()
     {
+        if (auth()->check() && !auth()->user()->hasPermission('import_suppliers')) {
+            abort(403, 'Unauthorized access to the supplier import template.');
+        }
+
         $headers = [
             'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="suppliers_import_template.csv"',
@@ -547,6 +579,10 @@ class SupplierController extends Controller
      */
     public function importStore(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('import_suppliers')) {
+            abort(403, 'Unauthorized access to import suppliers.');
+        }
+
         $request->validate([
             'import_file' => 'required|file|mimes:csv,txt|max:5120',
         ], [

@@ -49,7 +49,9 @@ function setupCacheScopingStores() {
 
     $allPerms = [
         'dashboard_view', 'sales_view', 'sales_add', 'sales_edit',
-        'profit_report', 'sales_summary_report', 'cash_flow_report', 'cash_reconciliation_report'
+        'profit_report', 'sales_summary_report', 'cash_flow_report', 'cash_reconciliation_report',
+        // Reports now have a single route-level gate.
+        'reports_view',
     ];
 
     DbPermission::firstOrCreate(['role_id' => $roleA->id], [
@@ -347,6 +349,7 @@ test('Cache isolation: sms_rules_{eventType} is store-scoped in RuleResolverServ
     ]);
 
     $ruleB = SmsAutoRule::create([
+        'store_id'    => $env['storeB']->id,
         'rule_name'   => 'Invoice Rule Beta',
         'event_type'  => 'InvoiceCreated',
         'event_source'=> 'invoice',

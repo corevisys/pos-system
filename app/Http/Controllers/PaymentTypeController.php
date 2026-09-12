@@ -19,7 +19,7 @@ class PaymentTypeController extends Controller
         // Phase 1 (store scoping): acting store's types PLUS shared (store_id NULL)
         // rows — mirrors PurchaseController/QuotationController read pattern.
         $storeId = current_store_id();
-        $query = DbPaymentType::where(fn($w) => $w->where('store_id', $storeId)->orWhereNull('store_id'));
+        $query = DbPaymentType::where('store_id', $storeId);
 
         // Phase 4.1: server-side search + pagination (Units/Tax list pattern),
         // replacing the decorative dead search box and absent pagination.
@@ -73,7 +73,7 @@ class PaymentTypeController extends Controller
             'status' => 'required|integer|in:0,1',
         ]);
 
-        $paymentType = DbPaymentType::where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+        $paymentType = DbPaymentType::where('store_id', current_store_id())
             ->findOrFail($id);
 
         // Phase 2.5: server-side CASH guard (the Blade @if can be bypassed by a
@@ -100,7 +100,7 @@ class PaymentTypeController extends Controller
             abort(403, 'Unauthorized access to delete payment types.');
         }
 
-        $paymentType = DbPaymentType::where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+        $paymentType = DbPaymentType::where('store_id', current_store_id())
             ->findOrFail($id);
 
         // Phase 2.5: server-side CASH guard + reference warning. The type is stored

@@ -205,9 +205,9 @@
                     @endif
 
                     <!-- Sales -->
-                    @if(auth()->user()->hasPermission('sales_include_pos_view') || auth()->user()->hasPermission('sales_include_pos_add') || auth()->user()->hasPermission('sales_return_view'))
+                    @if(auth()->user()->hasPermission('sales_view') || auth()->user()->hasPermission('sales_add') || auth()->user()->hasPermission('sales_return_view'))
                         @php
-                            $salesDefaultUrl = auth()->user()->hasPermission('sales_include_pos_add') ? route('sales.pos') : (auth()->user()->hasPermission('sales_include_pos_view') ? route('sales.list') : route('sales.returns'));
+                            $salesDefaultUrl = auth()->user()->hasPermission('sales_add') ? route('sales.pos') : (auth()->user()->hasPermission('sales_view') ? route('sales.list') : route('sales.returns'));
                         @endphp
                         <div>
                             <button type="button" @click="handleMenuClick('sales', '{{ $salesDefaultUrl }}', $event)"
@@ -228,19 +228,19 @@
                                 <x-sidebar-tooltip text="Sales" />
                             </button>
                             <div x-show="expandedMenus['sales']" x-collapse class="pl-12 space-y-1 mt-1">
-                                @if(auth()->user()->hasPermission('sales_include_pos_add'))
+                                @if(auth()->user()->hasPermission('sales_add'))
                                     <a href="{{ route('sales.pos') }}"
                                         class="block w-full text-left text-sm py-2 {{ request()->routeIs('sales.pos') ? 'text-primary-600 font-bold' : 'text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400' }}">POS</a>
                                     <a href="{{ route('sales.add') }}"
                                         class="block w-full text-left text-sm py-2 {{ request()->routeIs('sales.add') ? 'text-primary-600 font-bold' : 'text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400' }}">Add
                                         Sale</a>
                                 @endif
-                                @if(auth()->user()->hasPermission('sales_include_pos_view'))
+                                @if(auth()->user()->hasPermission('sales_view'))
                                     <a href="{{ route('sales.list') }}"
                                         class="block w-full text-left text-sm py-2 {{ request()->routeIs('sales.list') ? 'text-primary-600 font-bold' : 'text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400' }}">Sales
                                         List</a>
                                 @endif
-                                @if(auth()->user()->hasPermission('sales_include_pos_sales_payments_view'))
+                                @if(auth()->user()->hasPermission('sales_payment_view'))
                                     <a href="{{ route('sales.payments') }}"
                                         class="block w-full text-left text-sm py-2 {{ request()->routeIs('sales.payments') ? 'text-primary-600 font-bold' : 'text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400' }}">Sales
                                         Payments</a>
@@ -250,7 +250,7 @@
                                         class="block w-full text-left text-sm py-2 {{ request()->routeIs('sales.returns') ? 'text-primary-600 font-bold' : 'text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400' }}">Sales
                                         Returns List</a>
                                 @endif
-                                @if(auth()->user()->hasPermission('sales_include_pos_view'))
+                                @if(auth()->user()->hasPermission('sales_view'))
                                     <a href="{{ route('sales.emi.list') }}"
                                         class="block w-full text-left text-sm py-2 {{ request()->routeIs('sales.emi.list') ? 'text-primary-600 font-bold' : 'text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400' }}">EMI
                                         Sale List</a>
@@ -747,6 +747,11 @@
                                     <a href="{{ route('sms.logs') }}"
                                         class="block w-full text-left text-sm py-2 {{ request()->routeIs('sms.logs') ? 'text-primary-600 font-bold' : 'text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400' }}">SMS
                                         Logs</a>
+                                @endif
+                                @if(auth()->user()->hasPermission('sms_blacklist_view') || auth()->user()->isSuperAdmin())
+                                    <a href="{{ route('sms.blacklist') }}"
+                                        class="block w-full text-left text-sm py-2 {{ request()->routeIs('sms.blacklist') ? 'text-primary-600 font-bold' : 'text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400' }}">SMS
+                                        Blacklist</a>
                                 @endif
                                 @if(auth()->user()->hasPermission('sms_whatsapp_message_settings'))
                                     <a href="{{ route('sms.auto-rules') }}"

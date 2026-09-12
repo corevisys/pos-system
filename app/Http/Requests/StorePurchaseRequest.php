@@ -8,10 +8,17 @@ class StorePurchaseRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
+     *
+     * A FormRequest's authorize() runs BEFORE rules(), so returning `true`
+     * unconditionally here would mean Laravel performs full validation for ANY
+     * authenticated user — leaking information (e.g. which warehouse/supplier IDs
+     * exist for the acting store) before the controller's inline gate could 403.
+     * The gate is therefore enforced at this earliest point as well as via the
+     * route-level `permission:purchase_add` middleware.
      */
     public function authorize(): bool
     {
-        return true;
+        return auth()->check() && auth()->user()->hasPermission('purchase_add');
     }
 
     /**

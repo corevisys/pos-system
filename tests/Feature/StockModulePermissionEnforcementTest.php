@@ -29,7 +29,7 @@ class StockModulePermissionEnforcementTest extends TestCase
         DbStore::firstOrCreate(['id' => 1], ['store_name' => 'Perm Test Store', 'status' => 1, 'mobile' => '01711111111']);
 
         // Role 1 is always Super Admin (exempt). Use a distinct role for limited users.
-        DbRole::firstOrCreate(['id' => 1], ['store_id' => 1, 'role_name' => 'Super Admin', 'status' => 1]);
+        DbRole::firstOrCreate(['id' => 1], ['store_id' => 1, 'role_name' => 'Super Admin', 'status' => 1, 'is_super_admin' => true]);
 
         $role = DbRole::create(['store_id' => 1, 'role_name' => 'Limited-' . uniqid(), 'status' => 1]);
         DbPermission::create(['role_id' => $role->id, 'store_id' => 1, 'permissions' => $permissions]);
@@ -44,7 +44,7 @@ class StockModulePermissionEnforcementTest extends TestCase
     protected function makeSuperAdmin(): User
     {
         DbStore::firstOrCreate(['id' => 1], ['store_name' => 'Perm Test Store', 'status' => 1, 'mobile' => '01711111111']);
-        $role = DbRole::firstOrCreate(['id' => 1], ['store_id' => 1, 'role_name' => 'Super Admin', 'status' => 1]);
+        $role = DbRole::firstOrCreate(['id' => 1], ['store_id' => 1, 'role_name' => 'Super Admin', 'status' => 1, 'is_super_admin' => true]);
         DbPermission::firstOrCreate(['role_id' => 1], ['store_id' => 1, 'permissions' => []]);
         return User::factory()->create(['store_id' => 1, 'role_id' => 1, 'role_name' => 'Super Admin']);
     }

@@ -35,7 +35,7 @@ class ServiceStoreScopeTest extends TestCase
         DbPermission::create([
             'role_id' => $role1->id,
             'store_id' => 1,
-            'permissions' => ['services_view', 'services_add'],
+            'permissions' => ['services_view', 'services_add', 'services_edit', 'sales_add', 'sales_view'],
         ]);
         $this->store1User = User::factory()->create(['store_id' => 1, 'role_id' => $role1->id]);
 
@@ -43,7 +43,7 @@ class ServiceStoreScopeTest extends TestCase
         DbPermission::create([
             'role_id' => $role2->id,
             'store_id' => 2,
-            'permissions' => ['services_view', 'services_add'],
+            'permissions' => ['services_view', 'services_add', 'services_edit', 'sales_add', 'sales_view'],
         ]);
         $this->store2User = User::factory()->create(['store_id' => 2, 'role_id' => $role2->id]);
 
@@ -172,6 +172,7 @@ class ServiceStoreScopeTest extends TestCase
         $this->actingAs($this->store1User)
             ->post(route('items.service.update', $service->id), [
                 'item_name' => 'IMG-SVC-2',
+                'item_code' => 'IMG-SVC-2',
                 'category_id' => $this->cat1->id,
                 'price' => 100.00,
                 'tax_id' => $this->tax1->id,

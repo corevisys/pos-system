@@ -40,7 +40,10 @@ class MessageTemplateController extends Controller
                 'template_name' => $request->template_name,
                 'content' => $request->content,
                 'status' => $request->status ?? 1,
-                'store_id' => session('store_id') ?? 1, // Fallback to 1 if not set
+                // Resolve the acting store from the authenticated user, not
+                // session('store_id') — that key is never set, so the old code
+                // always wrote templates under store #1 in a multi-store deployment.
+                'store_id' => current_store_id(),
             ]);
 
             return redirect()->route('messaging.templates')->with('success', 'Template Created Successfully');

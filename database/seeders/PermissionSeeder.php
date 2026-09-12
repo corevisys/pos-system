@@ -14,12 +14,13 @@ class PermissionSeeder extends Seeder
     public function run(): void
     {
         // Ensurse a Super Admin role exists
-        $role = DbRole::firstOrCreate(
+        $role = DbRole::updateOrCreate(
             ['role_name' => 'Super Admin'],
             [
                 'description' => 'Super Admin Role with full permissions',
                 'status' => 1,
                 'store_id' => 1, // Assuming default store ID
+                'is_super_admin' => true,
             ]
         );
 
@@ -62,6 +63,7 @@ class PermissionSeeder extends Seeder
             'expense_report', 'profit_report', 'stock_report', 'item_sales_report',
             'expense_category_add', 'expense_category_edit', 'expense_category_delete', 'expense_category_view',
             'send_sms', 'sms_template_edit', 'sms_template_view', 'sms_api_view', 'sms_api_edit',
+            'sms_blacklist_view', 'sms_blacklist_add', 'sms_blacklist_delete',
             'supplier_items_report', 'quotation_add', 'quotation_edit', 'quotation_delete', 'quotation_view',
             'cash_transactions', 'show_all_users_sales_invoices', 'show_all_users_sales_return_invoices',
             'show_all_users_purchase_invoices', 'show_all_users_purchase_return_invoices',
@@ -74,7 +76,10 @@ class PermissionSeeder extends Seeder
             'sales_gst_report', 'purchase_gst_report',
             'customerCouponAdd', 'customerCouponEdit', 'customerCouponDelete', 'customerCouponView',
             'return_items_report', 'help_link', 'recent_sales_invoice_list',
-            'cash_reconciliation_view', 'cash_reconciliation_add', 'cash_reconciliation_adjust', 'cash_reconciliation_delete', 'cash_reconciliation_report'
+            'cash_reconciliation_view', 'cash_reconciliation_add', 'cash_reconciliation_adjust', 'cash_reconciliation_delete', 'cash_reconciliation_report',
+            // Single coarse gate for the whole reports/* route group (matches the
+            // sidebar, which wraps the entire Reports menu in reports_view).
+            'reports_view'
         ];
 
         DbPermission::updateOrCreate(

@@ -54,15 +54,17 @@ class StoreSettingsPermissionGateTest extends TestCase
 
     private function makeUser(string $roleName, array $permissions): User
     {
-        // Force a non-1 role id via forceCreate: DbRole::$fillable excludes
-        // 'id', so a plain create() would silently ignore it and auto-increment
-        // to id=1 on a fresh test DB — and isSuperAdmin() treats role_id === 1
-        // as full access, defeating the permission-gate assertions below.
+        // Force a non-1 role id via forceCreate and leave is_super_admin at its
+        // false default: DbRole::$fillable excludes 'id', so a plain create()
+        // would silently ignore it and auto-increment to id=1 on a fresh test DB.
+        // Super-admin status is now the explicit is_super_admin flag, which a
+        // limited role must NOT have (otherwise the gate assertions are defeated).
         $role = DbRole::forceCreate([
             'id' => $this->nextRoleId++,
             'role_name' => $roleName,
             'status' => 1,
             'store_id' => 1,
+            'is_super_admin' => false,
         ]);
 
         DbPermission::create([

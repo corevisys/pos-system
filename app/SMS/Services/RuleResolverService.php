@@ -14,11 +14,20 @@ class RuleResolverService
     public static function resolve(string $eventType, ?int $storeId = null)
     {
         $storeId = $storeId ?? current_store_id();
-        return Cache::remember("sms_rules_{$eventType}_s{$storeId}", 3600, function () use ($eventType) {
-            return SmsAutoRule::where('event_type', $eventType)
+        return Cache::remember("sms_rules_{$eventType}_s{$storeId}", 3600, function () use ($eventType, $storeId) {
+            $query = SmsAutoRule::where('event_type', $eventType)
                 ->where('is_active', true)
-                ->with('template')
-                ->get();
+                ->with('template');
+
+            // Genuinely filter by store. The per-store cache key above would
+            // otherwise just cache the SAME global result set once per store id.
+            // When $storeId cannot be resolved, fall back to an unfiltered query so
+            // CLI/queue contexts without an acting store still resolve something.
+            if (!empty($storeId)) {
+                $query->where('store_id', $storeId);
+            }
+
+            return $query->get();
         });
     }
 

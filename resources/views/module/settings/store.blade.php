@@ -493,6 +493,93 @@
             </form>
         </x-card>
 
+        <!-- RECENT ACTIVITY (read-only) -->
+        <div class="mt-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-3">
+                <h2 class="text-[10px] font-black uppercase text-text-muted tracking-[0.2em]">Recent Activity</h2>
+
+                <form action="{{ route('settings.store') }}" method="GET" class="flex flex-wrap items-center gap-2">
+                    <select name="action" class="input-base !py-1.5 !text-[10px] !font-bold !w-auto">
+                        <option value="">All Actions</option>
+                        @foreach ($activityActions as $actionOption)
+                            <option value="{{ $actionOption }}" {{ request('action') === $actionOption ? 'selected' : '' }}>{{ $actionOption }}</option>
+                        @endforeach
+                    </select>
+                    <input type="date" name="from_date" value="{{ request('from_date') }}" class="input-base !py-1.5 !text-[10px] !font-bold !w-auto">
+                    <input type="date" name="to_date" value="{{ request('to_date') }}" class="input-base !py-1.5 !text-[10px] !font-bold !w-auto">
+                    <button type="submit" class="btn-primary !py-1.5 !px-3 !text-[10px] tracking-widest">Filter</button>
+                    @if (request('action') || request('from_date') || request('to_date'))
+                        <a href="{{ route('settings.store') }}" class="text-[9px] font-black uppercase tracking-wider text-danger hover:underline">Clear</a>
+                    @endif
+                </form>
+            </div>
+
+            <x-card padding="p-0" class="overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-background dark:bg-dark-bg border-b border-border dark:border-dark-border">
+                            <tr>
+                                <th class="px-4 py-2.5 text-[9px] font-black text-text-muted uppercase tracking-widest">When</th>
+                                <th class="px-4 py-2.5 text-[9px] font-black text-text-muted uppercase tracking-widest">User</th>
+                                <th class="px-4 py-2.5 text-[9px] font-black text-text-muted uppercase tracking-widest">Action</th>
+                                <th class="px-4 py-2.5 text-[9px] font-black text-text-muted uppercase tracking-widest">Details</th>
+                                <th class="px-4 py-2.5 text-[9px] font-black text-text-muted uppercase tracking-widest">IP</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-border-light dark:divide-dark-border">
+                            @forelse ($activities as $activity)
+                                <tr class="hover:bg-slate-50/30 dark:hover:bg-slate-800/30 transition-colors">
+                                    <td class="px-4 py-2">
+                                        <span class="text-[10px] font-bold text-text-secondary dark:text-text-muted tabular-nums">{{ $activity->created_at?->format('Y-m-d H:i:s') }}</span>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <span class="text-[10px] font-bold text-text-primary dark:text-dark-text">{{ $activity->user?->name ?? 'System' }}</span>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <span class="bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest">{{ $activity->action }}</span>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        @if (!empty($activity->new_values))
+                                            <div class="space-y-0.5">
+                                                @foreach ($activity->new_values as $field => $newValue)
+                                                    <p class="text-[9px] font-bold text-text-secondary dark:text-text-muted">
+                                                        <span class="text-text-muted uppercase tracking-wider">{{ $field }}</span>:
+                                                        <span class="line-through opacity-60">{{ \Illuminate\Support\Str::limit((string) ($activity->old_values[$field] ?? '—'), 40) }}</span>
+                                                        <span class="text-primary">&rarr;</span>
+                                                        <span class="text-text-primary dark:text-dark-text">{{ \Illuminate\Support\Str::limit(is_scalar($newValue) ? (string) $newValue : json_encode($newValue), 40) }}</span>
+                                                    </p>
+                                                @endforeach
+                                            </div>
+                                        @else
+                                            <span class="text-[9px] font-bold text-text-muted">&mdash;</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <span class="text-[10px] font-bold text-text-muted tabular-nums">{{ $activity->ip_address ?? '—' }}</span>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="px-6 py-8 text-center">
+                                        <p class="text-[9px] font-black text-text-muted uppercase tracking-widest italic leading-none">No activity recorded yet</p>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="px-4 py-3 border-t border-border dark:border-dark-border bg-background/40 dark:bg-white/5 flex flex-wrap justify-between items-center gap-3">
+                    <p class="text-[8px] font-black text-text-muted uppercase tracking-widest italic leading-none">
+                        Showing {{ $activities->firstItem() ?? 0 }} to {{ $activities->lastItem() ?? 0 }} of {{ $activities->total() }} entries
+                    </p>
+                    <div class="flex gap-1">
+                        {{ $activities->links() }}
+                    </div>
+                </div>
+            </x-card>
+        </div>
+
         <!-- CURRENCY SWITCH CONFIRMATION MODAL -->
         <div x-show="showCurrencyConfirmModal" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
             <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">

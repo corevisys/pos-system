@@ -43,8 +43,10 @@ class WarehouseRolloutTest extends TestCase
     {
         $this->store($storeId);
 
-        DbRole::firstOrCreate(['id' => 1], ['store_id' => 1, 'role_name' => 'Super Admin', 'status' => 1]);
-        DbPermission::firstOrCreate(['role_id' => 1], ['store_id' => 1, 'permissions' => []]);
+        // Store scope bypassed: DbRole/DbPermission are StoreScoped now, and this
+        // helper may run while acting as another store's user.
+        DbRole::allStores()->firstOrCreate(['id' => 1], ['store_id' => 1, 'role_name' => 'Super Admin', 'status' => 1]);
+        DbPermission::allStores()->firstOrCreate(['role_id' => 1], ['store_id' => 1, 'permissions' => []]);
 
         if (empty($permissions)) {
             return User::factory()->create(['store_id' => $storeId, 'role_id' => 1, 'role_name' => 'Super Admin']);

@@ -43,10 +43,12 @@ class ExpensesRolloutTest extends TestCase
     protected function makeUser(int $storeId = 1, array $permissions = []): User
     {
         $this->store($storeId);
-        $role = DbRole::firstOrCreate(['id' => 1], ['store_id' => 1, 'role_name' => 'Super Admin', 'status' => 1]);
+        // Store scope bypassed: DbRole is StoreScoped now, and this helper may run
+        // while acting as another store's user.
+        $role = DbRole::allStores()->firstOrCreate(['id' => 1], ['store_id' => 1, 'role_name' => 'Super Admin', 'status' => 1, 'is_super_admin' => true]);
 
         if (empty($permissions)) {
-            // Super Admin role id=1 is exempt via isSuperAdmin().
+            // Super Admin role id=1 is exempt via isSuperAdmin() (is_super_admin flag).
             DbPermission::firstOrCreate(['role_id' => 1], ['store_id' => 1, 'permissions' => []]);
             return User::factory()->create(['store_id' => $storeId, 'role_id' => 1, 'role_name' => 'Super Admin']);
         }
@@ -677,7 +679,7 @@ try {
 }
 
 \App\Models\DbStore::create(['id' => 1, 'store_name' => 'Parallel Expense Store', 'status' => 1, 'mobile' => '01700000123']);
-$role = \App\Models\DbRole::firstOrCreate(['id' => 1], ['store_id' => 1, 'role_name' => 'Super Admin', 'status' => 1]);
+$role = \App\Models\DbRole::firstOrCreate(['id' => 1], ['store_id' => 1, 'role_name' => 'Super Admin', 'status' => 1, 'is_super_admin' => true]);
 \App\Models\DbPermission::firstOrCreate(['role_id' => 1], ['store_id' => 1, 'permissions' => []]);
 $user = \App\Models\User::factory()->create(['store_id' => 1, 'role_id' => 1, 'role_name' => 'Super Admin']);
 

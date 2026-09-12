@@ -39,7 +39,7 @@ class TaxController extends Controller
         // Store-1's tax rates.
         $storeId = current_store_id();
         $storeScoped = function ($q) use ($storeId) {
-            $q->where(fn($w) => $w->where('store_id', $storeId)->orWhereNull('store_id'));
+            $q->where('store_id', $storeId);
         };
 
         // Full individual-tax collection — contract consumed by the Tax Group
@@ -103,7 +103,7 @@ class TaxController extends Controller
             // Phase 1.5: constrain the group sum to the acting store's (or
             // shared/null) sub-tax rows only — never sum another store's rates.
             $tax_rate = DbTax::whereIn('id', $request->subtax_ids_array)
-                ->where(fn($w) => $w->where('store_id', $storeId)->orWhereNull('store_id'))
+                ->where('store_id', $storeId)
                 ->sum('tax');
         }
 
@@ -148,15 +148,14 @@ class TaxController extends Controller
         ]);
 
         $storeId = current_store_id();
-        $tax = DbTax::where(fn($w) => $w->where('store_id', $storeId)->orWhereNull('store_id'))
-            ->findOrFail($id);
+        $tax = DbTax::where('store_id', $storeId)->findOrFail($id);
         $tax_rate = $request->tax ?? 0;
         $subtax_ids = null;
 
         if ($tax->group_bit == 1 && $request->has('subtax_ids_array')) {
             $subtax_ids = implode(',', $request->subtax_ids_array);
             $tax_rate = DbTax::whereIn('id', $request->subtax_ids_array)
-                ->where(fn($w) => $w->where('store_id', $storeId)->orWhereNull('store_id'))
+                ->where('store_id', $storeId)
                 ->sum('tax');
         }
 
@@ -190,8 +189,7 @@ class TaxController extends Controller
             abort(403, 'Unauthorized access to delete taxes.');
         }
 
-        $tax = DbTax::where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
-            ->findOrFail($id);
+        $tax = DbTax::where('store_id', current_store_id())->findOrFail($id);
 
         $refCounts = [
             'items' => \App\Models\DbItem::where('tax_id', $tax->id)->count(),

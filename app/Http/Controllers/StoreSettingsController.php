@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\DbCurrency;
 use App\Models\DbLanguage;
 use App\Models\DbStore;
@@ -60,7 +61,41 @@ class StoreSettingsController extends Controller
             return ['id' => $tz, 'name' => $tz];
         });
 
-        return view('module.settings.store', compact('store', 'languages', 'currencies', 'countries', 'states', 'timezones'));
+        // Minimal read-only activity surface for the acting store. Explicitly
+        // scoped with forStore() (the audit table intentionally has NO silent
+        // global scope) so one store's trail is never shown to another.
+        $actingStoreId = (int) $store->id;
+
+        $activityQuery = ActivityLog::query()->forStore($actingStoreId);
+
+        if ($actionFilter = request('action')) {
+            $activityQuery->where('action', $actionFilter);
+        }
+        if ($fromDate = request('from_date')) {
+            $activityQuery->whereDate('created_at', '>=', $fromDate);
+        }
+        if ($toDate = request('to_date')) {
+            $activityQuery->whereDate('created_at', '<=', $toDate);
+        }
+
+        $activities = $activityQuery->latest('id')->paginate(15, ['*'], 'activity_page')->withQueryString();
+
+        $activityActions = ActivityLog::query()
+            ->forStore($actingStoreId)
+            ->distinct()
+            ->orderBy('action')
+            ->pluck('action');
+
+        return view('module.settings.store', compact(
+            'store',
+            'languages',
+            'currencies',
+            'countries',
+            'states',
+            'timezones',
+            'activities',
+            'activityActions'
+        ));
     }
 
     public function getStates($country_id)
@@ -156,6 +191,11 @@ class StoreSettingsController extends Controller
             DbLanguage::where('id', $selectedLanguageId)->where('status', 1)->doesntExist()
         );
 
+        // Snapshot the CURRENT values of the submitted fields BEFORE the write so
+        // a genuine old→new diff can be logged. Only keys present in $data are
+        // snapshotted, so unchanged fields never produce log noise.
+        $before = $store->only(array_keys($data));
+
         DB::transaction(function () use (
             $store,
             $data,
@@ -164,7 +204,8 @@ class StoreSettingsController extends Controller
             $currencyNeedsActivation,
             $selectedLanguageId,
             $languageNeedsActivation,
-            $actingStoreId
+            $actingStoreId,
+            $before
         ) {
             if ($request->hasFile('logo')) {
                 if ($store->store_logo) {
@@ -183,9 +224,93 @@ class StoreSettingsController extends Controller
                 DbLanguage::activateLanguage($selectedLanguageId, $actingStoreId);
             }
 
+            // Activity trail: record ONLY fields whose value actually changed.
+            // A submission that posts identical values must not create a row.
+            $this->recordSettingsActivity($request, $store, $before, array_keys($data));
+
             store_settings(true, $actingStoreId);
         });
 
         return redirect()->route('settings.store')->with('success', 'Store settings updated successfully.');
+    }
+
+    /**
+     * Persist one activity_logs row describing which store-settings fields
+     * actually changed (old → new). No row is written when nothing changed.
+     *
+     * Comparisons are normalised to strings so a DB-native int (e.g. 1) and a
+     * form-posted string (e.g. "1") do not register as a spurious change.
+     *
+     * @param  array<string,mixed>  $before    Field values captured before the write.
+     * @param  array<int,string>    $fieldNames Keys present in the submitted payload.
+     */
+    private function recordSettingsActivity(Request $request, DbStore $store, array $before, array $fieldNames): void
+    {
+        $old = [];
+        $new = [];
+
+        foreach ($fieldNames as $field) {
+            // `logo` is the transient file-input value (an UploadedFile); the
+            // persisted value lives in `store_logo`, so skip the raw input key.
+            if ($field === 'logo') {
+                continue;
+            }
+
+            $oldValue = $before[$field] ?? null;
+            $newValue = $store->{$field};
+
+            if ($this->settingValuesDiffer($oldValue, $newValue)) {
+                $old[$field] = $oldValue;
+                $new[$field] = $newValue;
+            }
+        }
+
+        if (empty($new)) {
+            // Nothing actually changed — do not create an audit row.
+            return;
+        }
+
+        ActivityLog::create([
+            'store_id' => $store->id,
+            'user_id' => auth()->id(),
+            'action' => 'settings_updated',
+            'entity_type' => DbStore::class,
+            'entity_id' => $store->id,
+            'old_values' => $old,
+            'new_values' => $new,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+    }
+
+    /**
+     * Whether a store-settings value materially changed between the pre-write
+     * snapshot and the persisted value, ignoring int/string representation.
+     */
+    private function settingValuesDiffer(mixed $old, mixed $new): bool
+    {
+        $normalise = function (mixed $value): ?string {
+            if ($value === null) {
+                return null;
+            }
+            if (is_bool($value)) {
+                return $value ? '1' : '0';
+            }
+            return trim((string) $value);
+        };
+
+        $oldNormalised = $normalise($old);
+        $newNormalised = $normalise($new);
+
+        // Treat null and empty-string as equivalent (both mean "no value"), so a
+        // nullable field left blank does not flood the log on every save.
+        $oldEmpty = $oldNormalised === null || $oldNormalised === '';
+        $newEmpty = $newNormalised === null || $newNormalised === '';
+
+        if ($oldEmpty && $newEmpty) {
+            return false;
+        }
+
+        return $oldNormalised !== $newNormalised;
     }
 }

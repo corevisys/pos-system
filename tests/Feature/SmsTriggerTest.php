@@ -96,6 +96,7 @@ test('SalesReturnConfirmation SMS trigger maps grand_total to amount variable co
     ]);
 
     $rule = SmsAutoRule::create([
+        'store_id' => 1,
         'rule_name' => 'Sales Return Rule Test',
         'event_type' => 'SalesReturnConfirmation',
         'event_source' => 'invoice',

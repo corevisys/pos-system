@@ -10,8 +10,8 @@ class SmsAutoRule extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'rule_name', 'event_type', 'event_source', 'template_id', 
-        'trigger_time', 'days_offset', 'cooldown_days', 
+        'store_id', 'rule_name', 'event_type', 'event_source', 'template_id',
+        'trigger_time', 'days_offset', 'cooldown_days',
         'is_active', 'last_executed_at'
     ];
 

@@ -33,6 +33,10 @@ class SaleController extends Controller
 
     public function create()
     {
+        if (auth()->check() && !auth()->user()->hasPermission('sales_add')) {
+            abort(403, 'Unauthorized access to add sales.');
+        }
+
         $customers = DbCustomer::where('status', 1)->select('id', 'customer_name', 'customer_type')->get();
         // Phase 4: store-scoped + active-only warehouse dropdown.
         $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->where('delete_bit', 0)->select('id', 'warehouse_name')->get();
@@ -52,12 +56,12 @@ class SaleController extends Controller
         $taxStoreId = current_store_id();
         $taxes = Cache::remember('db_taxes_list_' . $taxStoreId, 3600, function () use ($taxStoreId) {
             return DbTax::where('status', 1)
-                ->where(fn($w) => $w->where('store_id', $taxStoreId)->orWhereNull('store_id'))
+                ->where('store_id', $taxStoreId)
                 ->select('id', 'tax_name', 'tax')->get();
         });
         
         $paymentTypes = DbPaymentType::where('status', 1)
-            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->where('store_id', current_store_id())
             ->select('id', 'payment_type')->get();
         
         $nextSalesCode = \App\Services\CodeGeneratorService::generate('sales');
@@ -67,11 +71,19 @@ class SaleController extends Controller
 
     public function store(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('sales_add')) {
+            abort(403, 'Unauthorized access to add sales.');
+        }
+
         return app(PosController::class)->store($request);
     }
 
     public function edit($id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('sales_edit')) {
+            abort(403, 'Unauthorized access to edit sales.');
+        }
+
         $sale = DbSale::with(['items.item.tax', 'customer', 'warehouse'])->findOrFail($id);
         $customers = DbCustomer::where('status', 1)->get();
         // Phase 4: store-scoped + active-only warehouse dropdown.
@@ -80,10 +92,10 @@ class SaleController extends Controller
         $categories = DbCategory::where('status', 1)->get();
         $brands = DbBrand::where('status', 1)->get();
         $taxes = DbTax::where('status', 1)
-            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->where('store_id', current_store_id())
             ->get();
         $paymentTypes = DbPaymentType::where('status', 1)
-            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->where('store_id', current_store_id())
             ->get();
 
         return view('module.sales.edit', compact('sale', 'customers', 'warehouses', 'accounts', 'categories', 'brands', 'taxes', 'paymentTypes'));
@@ -91,17 +103,29 @@ class SaleController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('sales_edit')) {
+            abort(403, 'Unauthorized access to edit sales.');
+        }
+
         $request->merge(['sale_id' => $id]);
         return app(PosController::class)->store($request);
     }
 
     public function storeEmi(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('sales_add')) {
+            abort(403, 'Unauthorized access to add sales.');
+        }
+
         return app(PosController::class)->storeEmi($request);
     }
 
     public function index(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('sales_view')) {
+            abort(403, 'Unauthorized access to sales list.');
+        }
+
         $storeId = current_store_id();
         $query = DbSale::with(['customer', 'warehouse', 'items', 'serials', 'payments', 'user', 'emi', 'returnItems', 'returns'])
             ->where('store_id', $storeId);
@@ -211,6 +235,10 @@ class SaleController extends Controller
 
     public function show($id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('sales_view')) {
+            abort(403, 'Unauthorized access to sale details.');
+        }
+
         $sale = DbSale::with([
             'customer',
             'warehouse',
@@ -286,6 +314,10 @@ class SaleController extends Controller
 
     public function destroy($id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('sales_delete')) {
+            abort(403, 'Unauthorized access to delete sales.');
+        }
+
         $storeId = current_store_id();
 
         try {
@@ -370,6 +402,10 @@ class SaleController extends Controller
     }
     public function emiList(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('sales_view')) {
+            abort(403, 'Unauthorized access to EMI sales.');
+        }
+
         $storeId = current_store_id();
 
         // Store scoping (A6): db_emi_sales has no store_id column, so scope through
@@ -487,6 +523,10 @@ class SaleController extends Controller
 
     public function emiShow($id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('sales_view')) {
+            abort(403, 'Unauthorized access to EMI sale details.');
+        }
+
         $emiSale = \App\Models\DbEmiSale::with(['sale.warehouse', 'sale.items.item', 'sale.serials', 'customer', 'schedule'])->findOrFail($id);
         $accounts = \App\Models\AcAccount::where('status', 1)->get();
         $amount_in_words = $this->convertNumberToWords($emiSale->total_payable);
@@ -503,6 +543,10 @@ class SaleController extends Controller
 
     public function payEmiInstallment(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('sales_payment_add')) {
+            abort(403, 'Unauthorized access to EMI payments.');
+        }
+
         try {
             DB::beginTransaction();
             
@@ -627,6 +671,10 @@ class SaleController extends Controller
     }
     public function paymentsList(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('sales_payment_view')) {
+            abort(403, 'Unauthorized access to sales payments.');
+        }
+
         $storeId = current_store_id();
 
         $query = \App\Models\DbSalePayment::with(['sale', 'customer', 'account', 'user'])
@@ -675,7 +723,7 @@ class SaleController extends Controller
         ];
 
         $paymentTypes = \App\Models\DbPaymentType::where('status', 1)
-            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->where('store_id', current_store_id())
             ->orderBy('payment_type')->get();
         
         return view('module.sales.payments', compact('payments', 'globalStats', 'paymentTypes'));
@@ -683,16 +731,24 @@ class SaleController extends Controller
 
     public function receivePayment($id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('sales_payment_add')) {
+            abort(403, 'Unauthorized access to receive payments.');
+        }
+
         $sale = DbSale::with(['customer', 'payments.account', 'warehouse', 'items.item'])->findOrFail($id);
         $accounts = \App\Models\AcAccount::where('status', 1)->get();
         $paymentTypes = \App\Models\DbPaymentType::where('status', 1)
-            ->where(fn($w) => $w->where('store_id', current_store_id())->orWhereNull('store_id'))
+            ->where('store_id', current_store_id())
             ->get();
         return view('module.sales.receive_payment', compact('sale', 'accounts', 'paymentTypes'));
     }
 
     public function storePayment(Request $request)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('sales_payment_add')) {
+            abort(403, 'Unauthorized access to store payments.');
+        }
+
         $request->validate([
             'sales_id' => 'required|exists:db_sales,id',
             'amount' => 'required|numeric|min:0.01',
@@ -794,6 +850,10 @@ class SaleController extends Controller
 
     public function destroyPayment($id)
     {
+        if (auth()->check() && !auth()->user()->hasPermission('sales_payment_delete')) {
+            abort(403, 'Unauthorized access to delete sales payments.');
+        }
+
         try {
             DB::beginTransaction();
 

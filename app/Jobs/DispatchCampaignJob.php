@@ -58,6 +58,10 @@ class DispatchCampaignJob implements ShouldQueue
                 $mobile,
                 $personalizedMessage,
                 [
+                    // The job runs in a queue with NO request context, so
+                    // current_store_id() is unreliable here. Pass the campaign's own
+                    // store so every message resolves THAT store's provider.
+                    'store_id'    => (int) $campaign->store_id,
                     'campaign_id' => $campaign->id,
                     'customer_id' => $recipient->id ?? null,
                     'batch_id'    => $batchId,

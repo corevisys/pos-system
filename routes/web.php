@@ -173,12 +173,15 @@ Route::middleware(['auth', 'verified', 'ensure.store'])->group(function () {
     // Purchase
     Route::prefix('purchase')->name('purchase.')->group(function () {
         Route::get('new', [App\Http\Controllers\PurchaseController::class, 'create'])->name('new');
-        Route::post('store', [App\Http\Controllers\PurchaseController::class, 'store'])->name('store');
+        // Route-level gate for the FormRequest-backed actions: StorePurchaseRequest
+        // validates BEFORE the controller body, so an in-controller check cannot
+        // see an invalid payload. The middleware enforces the permission first.
+        Route::post('store', [App\Http\Controllers\PurchaseController::class, 'store'])->middleware('permission:purchase_add')->name('store');
         Route::get('list', [App\Http\Controllers\PurchaseController::class, 'index'])->name('list');
         Route::get('invoice/{id}', [App\Http\Controllers\PurchaseController::class, 'invoice'])->name('invoice');
         Route::get('barcode/{id}', [App\Http\Controllers\PurchaseController::class, 'barcode'])->name('barcode');
         Route::get('edit/{id}', [App\Http\Controllers\PurchaseController::class, 'edit'])->name('edit');
-        Route::post('update/{id}', [App\Http\Controllers\PurchaseController::class, 'update'])->name('update');
+        Route::post('update/{id}', [App\Http\Controllers\PurchaseController::class, 'update'])->middleware('permission:purchase_edit')->name('update');
         Route::get('search-items', [App\Http\Controllers\PurchaseController::class, 'searchItems'])->name('search.items');
         Route::post('quick-item-store', [App\Http\Controllers\PurchaseController::class, 'quickStoreItem'])->name('quick.item.store');
         
@@ -341,7 +344,9 @@ Route::middleware(['auth', 'verified', 'ensure.store'])->group(function () {
     });
 
     // Reports
-    Route::prefix('reports')->name('reports.')->group(function () {
+    // Single coarse gate for every report (view + /data JSON endpoints), matching
+    // the sidebar which wraps the whole Reports menu in reports_view.
+    Route::prefix('reports')->name('reports.')->middleware('permission:reports_view')->group(function () {
         Route::get('sales-summary', [App\Http\Controllers\ReportController::class, 'salesSummary'])->name('sales_summary');
         Route::get('sales-summary/data', [App\Http\Controllers\ReportController::class, 'getSalesSummaryData'])->name('sales_summary_data');
         Route::get('profit-loss', [App\Http\Controllers\ReportController::class, 'profitLoss'])->name('profit_loss');
@@ -479,6 +484,11 @@ Route::middleware(['auth', 'verified', 'ensure.store'])->group(function () {
         Route::post('campaigns/{id}/update', [SmsCampaignController::class, 'update'])->name('campaigns.update');
         Route::delete('campaigns/{id}', [SmsCampaignController::class, 'destroy'])->name('campaigns.delete');
         Route::get('logs', [SmsLogController::class, 'index'])->name('logs');
+
+        // SMS Blacklist (per-store opt-out list)
+        Route::get('blacklist', [App\Http\Controllers\SmsBlacklistController::class, 'index'])->name('blacklist');
+        Route::post('blacklist', [App\Http\Controllers\SmsBlacklistController::class, 'store'])->name('blacklist.store');
+        Route::delete('blacklist/{id}', [App\Http\Controllers\SmsBlacklistController::class, 'destroy'])->name('blacklist.delete');
         Route::get('auto-rules', [SmsAutoRuleController::class, 'index'])->name('auto-rules');
         Route::post('auto-rules/store', [SmsAutoRuleController::class, 'store'])->name('auto-rules.store');
         Route::post('auto-rules/{id}/update', [SmsAutoRuleController::class, 'update'])->name('auto-rules.update');

@@ -43,12 +43,12 @@ function createStoreIsolationEnvironment() {
 
     DbPermission::firstOrCreate(['role_id' => $roleA->id], [
         'store_id'    => $storeA->id,
-        'permissions' => ['dashboard_view', 'profit_report', 'sales_view', 'stock_adjustment_view'],
+        'permissions' => ['dashboard_view', 'profit_report', 'sales_view', 'stock_adjustment_view', 'reports_view'],
     ]);
 
     DbPermission::firstOrCreate(['role_id' => $roleB->id], [
         'store_id'    => $storeB->id,
-        'permissions' => ['dashboard_view', 'profit_report', 'sales_view', 'stock_adjustment_view'],
+        'permissions' => ['dashboard_view', 'profit_report', 'sales_view', 'stock_adjustment_view', 'reports_view'],
     ]);
 
     $userA = User::factory()->create([

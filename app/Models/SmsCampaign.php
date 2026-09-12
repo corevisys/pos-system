@@ -10,7 +10,7 @@ class SmsCampaign extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'name', 'template_id', 'target_type', 'target_filters', 
+        'store_id', 'name', 'template_id', 'target_type', 'target_filters',
         'total_recipients', 'total_sent', 'total_delivered', 
         'total_failed', 'estimated_cost', 'status', 
         'scheduled_at', 'started_at', 'completed_at', 'created_by'

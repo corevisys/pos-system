@@ -70,7 +70,15 @@ class User extends Authenticatable
 
     public function role()
     {
-        return $this->belongsTo(DbRole::class, 'role_id');
+        // Exempt from the StoreScoped global scope on purpose.
+        //
+        // This relation backs isSuperAdmin() and hasPermission(), which control
+        // AUTHENTICATION and must never be filtered by current_store_id() — that
+        // value is itself derived from this user (circular), and a super admin is
+        // by definition allowed to operate across stores. Without this exemption a
+        // user whose role row's store_id differs from their own would silently lose
+        // all privileges (and EnsureUserHasStore's super-admin bypass).
+        return $this->belongsTo(DbRole::class, 'role_id')->withoutGlobalScope('store_id');
     }
 
     public function scopeSearch($query, $term)
@@ -98,9 +106,21 @@ class User extends Authenticatable
         return "{$this->first_name} {$this->last_name}";
     }
 
+    /**
+     * Whether this user's role is a genuine (global) super-admin role.
+     *
+     * Authoritative source is db_roles.is_super_admin — NOT the role NAME (three
+     * per-store roles were all called "Super Admin") and NOT role_id === 1 (roles
+     * created through the Roles UI auto-increment, so a new store's Super Admin
+     * can receive any id).
+     *
+     * The role relation is memoised by Eloquent on first access, so the repeated
+     * hasPermission() calls during a single request (sidebar rendering) resolve
+     * the role row at most once.
+     */
     public function isSuperAdmin()
     {
-        return $this->role_id === 1 || $this->role_name === 'Super Admin';
+        return (bool) optional($this->role)->is_super_admin;
     }
 
     public function hasPermission($permission)
