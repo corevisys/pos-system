@@ -199,7 +199,16 @@ class SmsStoreScopingTest extends TestCase
 
     public function test_campaign_idor_edit_update_destroy_cancel_return_404_across_stores(): void
     {
-        $store1Admin = \App\Models\User::factory()->create(['store_id' => 1, 'role_id' => null]);
+        // SmsCampaignController is now gated on sms_api_view (seeded slug); give the
+        // store-1 actor that permission so this test still reaches the IDOR guard
+        // (which is what it asserts — a 404, not a 403).
+        $role = \App\Models\DbRole::create([
+            'store_id' => 1, 'role_name' => 'Campaign IDOR Role ' . uniqid(), 'status' => 1,
+        ]);
+        \App\Models\DbPermission::create([
+            'role_id' => $role->id, 'store_id' => 1, 'permissions' => ['sms_api_view'],
+        ]);
+        $store1Admin = \App\Models\User::factory()->create(['store_id' => 1, 'role_id' => $role->id]);
         $otherCampaign = SmsCampaign::create([
             'store_id' => 2, 'name' => 'Store Two Campaign',
             'target_type' => 'all', 'status' => 'Scheduled',

@@ -16,6 +16,11 @@ class CustomerCouponController extends Controller
      */
     public function index(Request $request)
     {
+        // Permission gate (view) — seeded customerCouponView slug.
+        if (auth()->check() && !auth()->user()->hasPermission('customerCouponView')) {
+            abort(403, 'Unauthorized access to customer coupons.');
+        }
+
         $query = DbCustomerCoupon::with('customer')->orderBy('id', 'desc');
 
         if ($request->filled('search')) {
@@ -47,6 +52,11 @@ class CustomerCouponController extends Controller
      */
     public function create()
     {
+        // Permission gate (add) — seeded customerCouponAdd slug.
+        if (auth()->check() && !auth()->user()->hasPermission('customerCouponAdd')) {
+            abort(403, 'Unauthorized access to add customer coupons.');
+        }
+
         $customers = DbCustomer::select('id', 'customer_name', 'customer_code')->get();
         return view('module.coupons.create_customer_coupon', compact('customers'));
     }
@@ -56,6 +66,11 @@ class CustomerCouponController extends Controller
      */
     public function store(Request $request)
     {
+        // Permission gate (add) — seeded customerCouponAdd slug.
+        if (auth()->check() && !auth()->user()->hasPermission('customerCouponAdd')) {
+            abort(403, 'Unauthorized access to add customer coupons.');
+        }
+
         $request->validate([
             'customer_id' => ['required', \Illuminate\Validation\Rule::exists('db_customers', 'id')->where('store_id', current_store_id())],
             'name'        => 'required|string|max:255',
@@ -117,6 +132,11 @@ class CustomerCouponController extends Controller
      */
     public function edit($id)
     {
+        // Permission gate (edit) — seeded customerCouponEdit slug.
+        if (auth()->check() && !auth()->user()->hasPermission('customerCouponEdit')) {
+            abort(403, 'Unauthorized access to edit customer coupons.');
+        }
+
         $coupon = DbCustomerCoupon::findOrFail($id);
         $customers = DbCustomer::select('id', 'customer_name', 'customer_code')->get();
         return view('module.coupons.edit_customer_coupon', compact('coupon', 'customers'));
@@ -127,10 +147,15 @@ class CustomerCouponController extends Controller
      */
     public function update(Request $request, $id)
     {
+        // Permission gate (edit) — seeded customerCouponEdit slug.
+        if (auth()->check() && !auth()->user()->hasPermission('customerCouponEdit')) {
+            abort(403, 'Unauthorized access to edit customer coupons.');
+        }
+
         $coupon = DbCustomerCoupon::findOrFail($id);
 
         $request->validate([
-            'customer_id' => 'required|exists:db_customers,id',
+            'customer_id' => ['required', \Illuminate\Validation\Rule::exists('db_customers', 'id')->where('store_id', current_store_id())],
             'name'        => 'required|string|max:255',
             'code'        => 'required|string|max:50|unique:db_customer_coupons,code,' . $coupon->id,
             'type'        => 'required|in:Percentage,Fixed',
@@ -183,6 +208,11 @@ class CustomerCouponController extends Controller
      */
     public function destroy($id)
     {
+        // Permission gate (delete) — seeded customerCouponDelete slug.
+        if (auth()->check() && !auth()->user()->hasPermission('customerCouponDelete')) {
+            abort(403, 'Unauthorized access to delete customer coupons.');
+        }
+
         try {
             $coupon = DbCustomerCoupon::findOrFail($id);
             $coupon->delete();

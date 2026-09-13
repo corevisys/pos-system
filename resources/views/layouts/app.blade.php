@@ -15,8 +15,8 @@
     <title>{{ $tabTitle }}</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js (Phase 7 item 18: vendored locally for offline/intranet deployments) -->
+    <script src="{{ asset('vendor/chart.umd.min.js') }}"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
@@ -135,7 +135,7 @@
                 <!-- Navigation -->
                 <nav class="flex-1 px-4 space-y-1 overflow-y-auto scrollbar-hide pb-20">
 
-                    @if(auth()->user()->hasPermission('dashboard_view_dashboard_data'))
+                    @if(auth()->user()->hasPermission('dashboard_view'))
                         <a href="{{ route('dashboard') }}"
                             class="relative flex items-center w-full gap-2 px-3 py-2 rounded-lg transition-all duration-200 group text-sm font-medium {{ request()->routeIs('dashboard') ? 'bg-primary text-white' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/5' }}">
                             <svg class="w-4 h-4 transition-transform group-hover:scale-110" fill="none"
@@ -307,12 +307,12 @@
                                         class="block w-full text-left text-sm py-2 {{ request()->routeIs('contacts.suppliers.list') ? 'text-primary-600 font-bold' : 'text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400' }}">Suppliers
                                         List</a>
                                 @endif
-                                @if(auth()->user()->hasPermission('customers_import_customers'))
+                                @if(auth()->user()->hasPermission('import_customers'))
                                     <a href="{{ route('contacts.customers.import') }}"
                                         class="block w-full text-left text-sm py-2 {{ request()->routeIs('contacts.customers.import') ? 'text-primary-600 font-bold' : 'text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400' }}">Import
                                         Customers</a>
                                 @endif
-                                @if(auth()->user()->hasPermission('suppliers_import_suppliers'))
+                                @if(auth()->user()->hasPermission('import_suppliers'))
                                     <a href="{{ route('contacts.suppliers.import') }}"
                                         class="block w-full text-left text-sm py-2 {{ request()->routeIs('contacts.suppliers.import') ? 'text-primary-600 font-bold' : 'text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400' }}">Import
                                         Suppliers</a>
@@ -322,7 +322,7 @@
                     @endif
 
                     <!-- Advance -->
-                    @if(auth()->user()->hasPermission('customers_advance_payments_view'))
+                    @if(auth()->user()->hasPermission('cust_adv_payments_view'))
                         @php
                             $advanceDefaultUrl = route('advance.list');
                         @endphp
@@ -346,7 +346,7 @@
                                 <x-sidebar-tooltip text="Advance" />
                             </button>
                             <div x-show="expandedMenus['advance']" x-collapse class="pl-12 space-y-1 mt-1">
-                                @if(auth()->user()->hasPermission('customers_advance_payments_add'))
+                                @if(auth()->user()->hasPermission('cust_adv_payments_add'))
                                     <a href="{{ route('advance.add') }}"
                                         class="block w-full text-left text-sm py-2 {{ request()->routeIs('advance.add') ? 'text-primary-600 font-bold' : 'text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400' }}">Add
                                         Advance</a>
@@ -359,9 +359,9 @@
                     @endif
 
                     <!-- Coupons -->
-                    @if(auth()->user()->hasPermission('discount_coupon_view') || auth()->user()->hasPermission('customer_coupon_view'))
+                    @if(auth()->user()->hasPermission('discountCouponView') || auth()->user()->hasPermission('customerCouponView'))
                         @php
-                            $couponsDefaultUrl = auth()->user()->hasPermission('customer_coupon_view') ? route('coupons.customer.list') : (auth()->user()->hasPermission('discount_coupon_view') ? route('coupons.master') : route('coupons.customer.create'));
+                            $couponsDefaultUrl = auth()->user()->hasPermission('customerCouponView') ? route('coupons.customer.list') : (auth()->user()->hasPermission('discountCouponView') ? route('coupons.master') : route('coupons.customer.create'));
                         @endphp
                         <div>
                             <button type="button" @click="handleMenuClick('coupons', '{{ $couponsDefaultUrl }}', $event)"
@@ -385,22 +385,22 @@
                                 <x-sidebar-tooltip text="Coupons" />
                             </button>
                             <div x-show="expandedMenus['coupons']" x-collapse class="pl-12 space-y-1 mt-1">
-                                @if(auth()->user()->hasPermission('customer_coupon_add'))
+                                @if(auth()->user()->hasPermission('customerCouponAdd'))
                                     <a href="{{ route('coupons.customer.create') }}"
                                         class="block w-full text-left text-sm py-2 {{ request()->routeIs('coupons.customer.create') ? 'text-primary-600 font-bold' : 'text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400' }}">Create
                                         Customer Coupon</a>
                                 @endif
-                                @if(auth()->user()->hasPermission('customer_coupon_view'))
+                                @if(auth()->user()->hasPermission('customerCouponView'))
                                     <a href="{{ route('coupons.customer.list') }}"
                                         class="block w-full text-left text-sm py-2 {{ request()->routeIs('coupons.customer.list') ? 'text-primary-600 font-bold' : 'text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400' }}">Customer
                                         Coupons List</a>
                                 @endif
-                                @if(auth()->user()->hasPermission('discount_coupon_add'))
+                                @if(auth()->user()->hasPermission('discountCouponAdd'))
                                     <a href="{{ route('coupons.create') }}"
                                         class="block w-full text-left text-sm py-2 {{ request()->routeIs('coupons.create') ? 'text-primary-600 font-bold' : 'text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400' }}">Create
                                         Coupon</a>
                                 @endif
-                                @if(auth()->user()->hasPermission('discount_coupon_view'))
+                                @if(auth()->user()->hasPermission('discountCouponView'))
                                     <a href="{{ route('coupons.master') }}"
                                         class="block w-full text-left text-sm py-2 {{ request()->routeIs('coupons.master') ? 'text-primary-600 font-bold' : 'text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400' }}">Coupons
                                         Master</a>
@@ -702,9 +702,9 @@
                     @endif
 
                     <!-- Messaging -->
-                    @if(auth()->user()->hasPermission('sms_whatsapp_send_message') || auth()->user()->hasPermission('sms_whatsapp_message_template_view') || auth()->user()->hasPermission('sms_whatsapp_message_api_view') || auth()->user()->hasPermission('sms_whatsapp_message_settings'))
+                    @if(auth()->user()->hasPermission('send_sms') || auth()->user()->hasPermission('sms_template_view') || auth()->user()->hasPermission('sms_api_view') || auth()->user()->hasPermission('sms_settings'))
                         @php
-                            $messagingDefaultUrl = auth()->user()->hasPermission('sms_whatsapp_message_api_view') ? route('sms.history') : (auth()->user()->hasPermission('sms_whatsapp_send_message') ? route('sms.send') : (auth()->user()->hasPermission('sms_whatsapp_message_template_view') ? route('sms.templates') : route('messaging.settings')));
+                            $messagingDefaultUrl = auth()->user()->hasPermission('sms_api_view') ? route('sms.history') : (auth()->user()->hasPermission('send_sms') ? route('sms.send') : (auth()->user()->hasPermission('sms_template_view') ? route('sms.templates') : route('messaging.settings')));
                         @endphp
                         <div>
                             <button type="button" @click="handleMenuClick('messaging', '{{ $messagingDefaultUrl }}', $event)"
@@ -726,22 +726,22 @@
                                 <x-sidebar-tooltip text="Messaging" />
                             </button>
                             <div x-show="expandedMenus['messaging']" x-collapse class="pl-12 space-y-1 mt-1">
-                                @if(auth()->user()->hasPermission('sms_whatsapp_message_api_view'))
+                                @if(auth()->user()->hasPermission('sms_api_view'))
                                     <a href="{{ route('sms.history') }}"
                                         class="block w-full text-left text-sm py-2 {{ request()->routeIs('sms.history') ? 'text-primary-600 font-bold' : 'text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400' }}">SMS
                                         History</a>
                                 @endif
-                                @if(auth()->user()->hasPermission('sms_whatsapp_send_message'))
+                                @if(auth()->user()->hasPermission('send_sms'))
                                     <a href="{{ route('sms.send') }}"
                                         class="block w-full text-left text-sm py-2 {{ request()->routeIs('sms.send') ? 'text-primary-600 font-bold' : 'text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400' }}">Send
                                         SMS</a>
                                 @endif
-                                @if(auth()->user()->hasPermission('sms_whatsapp_message_template_view'))
+                                @if(auth()->user()->hasPermission('sms_template_view'))
                                     <a href="{{ route('sms.templates') }}"
                                         class="block w-full text-left text-sm py-2 {{ request()->routeIs('sms.templates') ? 'text-primary-600 font-bold' : 'text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400' }}">SMS
                                         Templates</a>
                                 @endif
-                                @if(auth()->user()->hasPermission('sms_whatsapp_message_api_view'))
+                                @if(auth()->user()->hasPermission('sms_api_view'))
                                     <a href="{{ route('sms.campaigns') }}"
                                         class="block w-full text-left text-sm py-2 {{ request()->routeIs('sms.campaigns') ? 'text-primary-600 font-bold' : 'text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400' }}">Campaigns</a>
                                     <a href="{{ route('sms.logs') }}"
@@ -753,7 +753,7 @@
                                         class="block w-full text-left text-sm py-2 {{ request()->routeIs('sms.blacklist') ? 'text-primary-600 font-bold' : 'text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400' }}">SMS
                                         Blacklist</a>
                                 @endif
-                                @if(auth()->user()->hasPermission('sms_whatsapp_message_settings'))
+                                @if(auth()->user()->hasPermission('sms_settings'))
                                     <a href="{{ route('sms.auto-rules') }}"
                                         class="block w-full text-left text-sm py-2 {{ request()->routeIs('sms.auto-rules') ? 'text-primary-600 font-bold' : 'text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400' }}">Auto
                                         Rules</a>
@@ -922,7 +922,7 @@
                     @endif
 
                     <!-- Settings -->
-                    @if(auth()->user()->hasPermission('store_settings_view') || auth()->user()->hasPermission('language_view') || auth()->user()->hasPermission('country_view') || auth()->user()->hasPermission('state_view') || auth()->user()->hasPermission('tax_view') || auth()->user()->hasPermission('unit_view') || auth()->user()->hasPermission('payment_types_view') || auth()->user()->hasPermission('site_settings_view') || auth()->user()->hasPermission('smtp_settings_view') || auth()->user()->hasPermission('currency_view') || auth()->user()->hasPermission('change_password') || auth()->user()->hasPermission('database_backup') || auth()->user()->hasPermission('sms_whatsapp_message_settings'))
+                    @if(auth()->user()->hasPermission('store_settings_view') || auth()->user()->hasPermission('language_view') || auth()->user()->hasPermission('country_view') || auth()->user()->hasPermission('state_view') || auth()->user()->hasPermission('tax_view') || auth()->user()->hasPermission('units_view') || auth()->user()->hasPermission('payment_types_view') || auth()->user()->hasPermission('site_settings_view') || auth()->user()->hasPermission('smtp_settings_view') || auth()->user()->hasPermission('currency_view') || auth()->user()->hasPermission('change_password') || auth()->user()->hasPermission('database_backup') || auth()->user()->hasPermission('sms_settings'))
                         @php
                             $settingsDefaultUrl = auth()->user()->hasPermission('store_settings_view') ? route('settings.store') : route('settings.languages.index');
                         @endphp
@@ -965,7 +965,7 @@
                                         class="block w-full text-left text-sm py-2 {{ request()->routeIs('settings.states') ? 'text-primary-600 font-bold' : 'text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400' }}">States
                                         List</a>
                                 @endif
-                                @if(auth()->user()->hasPermission('sms_whatsapp_message_settings'))
+                                @if(auth()->user()->hasPermission('sms_settings'))
                                     <a href="{{ route('sms.settings') }}"
                                         class="block w-full text-left text-sm py-2 {{ request()->routeIs('sms.settings') ? 'text-primary-600 font-bold' : 'text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400' }}">SMS/WhatsApp
                                         API</a>
@@ -975,7 +975,7 @@
                                         class="block w-full text-left text-sm py-2 {{ request()->routeIs('settings.tax') ? 'text-primary-600 font-bold' : 'text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400' }}">Tax
                                         List</a>
                                 @endif
-                                @if(auth()->user()->hasPermission('unit_view'))
+                                @if(auth()->user()->hasPermission('units_view'))
                                     <a href="{{ route('settings.units') }}"
                                         class="block w-full text-left text-sm py-2 {{ request()->routeIs('settings.units') ? 'text-primary-600 font-bold' : 'text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400' }}">Units
                                         List</a>

@@ -32,7 +32,7 @@ class PermissionSeeder extends Seeder
             'sales_payment_view', 'sales_payment_add', 'sales_payment_delete',
             'sales_report', 'sales_payments_report',
             'items_category_add', 'items_category_edit', 'items_category_delete', 'items_category_view',
-            'print_labels', 'dashboard_view',
+            'items_print_labels', 'dashboard_view',
             'dashboard_info_box_1', 'dashboard_info_box_2', 'dashboard_pur_sal_chart',
             'dashboard_recent_items', 'dashboard_stock_alert', 'dashboard_trending_items_chart',
             'sales_return_add', 'sales_return_edit', 'sales_return_delete', 'sales_return_view',
@@ -79,7 +79,10 @@ class PermissionSeeder extends Seeder
             'cash_reconciliation_view', 'cash_reconciliation_add', 'cash_reconciliation_adjust', 'cash_reconciliation_delete', 'cash_reconciliation_report',
             // Single coarse gate for the whole reports/* route group (matches the
             // sidebar, which wraps the entire Reports menu in reports_view).
-            'reports_view'
+            'reports_view',
+            // Whole-database backup/restore (matches the sidebar's existing
+            // `database_backup` check — previously referenced but never seeded).
+            'database_backup'
         ];
 
         DbPermission::updateOrCreate(

@@ -50,7 +50,8 @@ class CrossStoreValidationGapsTest extends TestCase
         DB::table('db_permissions')->insert([
             'role_id' => $roleId,
             'store_id' => $storeId,
-            'permissions' => json_encode(['sales_add', 'sales_view', 'purchase_add', 'cust_adv_payments_add', 'discountCouponAdd']),
+            // customerCouponAdd is required by the now-gated CustomerCouponController::store().
+            'permissions' => json_encode(['sales_add', 'sales_view', 'purchase_add', 'cust_adv_payments_add', 'discountCouponAdd', 'customerCouponAdd']),
             'created_at' => now(),
             'updated_at' => now(),
         ]);

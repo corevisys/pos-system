@@ -29,6 +29,12 @@ class ItemController extends Controller
     use ImportsItems;
     public function index(Request $request)
     {
+        // Permission gate (view) — inline hasPermission()+abort(403) convention,
+        // matching the seeded items_view slug. Mirrors SupplierController::index.
+        if (auth()->check() && !auth()->user()->hasPermission('items_view')) {
+            abort(403, 'Unauthorized access to items.');
+        }
+
         // Store-scoped base query — cross-store item rows must never appear on this
         // list or its exports. Mirrors SupplierController::index / CustomerController::index.
         $query = DbItem::where('child_bit', 0) // Only list parents or single items
@@ -129,6 +135,11 @@ class ItemController extends Controller
 
     public function create()
     {
+        // Permission gate (add) — seeded items_add slug.
+        if (auth()->check() && !auth()->user()->hasPermission('items_add')) {
+            abort(403, 'Unauthorized access to add items.');
+        }
+
         $categories = DbCategory::where('status', 1)->where('store_id', current_store_id())->get();
         $brands = DbBrand::where('status', 1)->where('store_id', current_store_id())->get();
         $units = DbUnit::where('status', 1)
@@ -148,6 +159,11 @@ class ItemController extends Controller
 
     public function store(Request $request)
     {
+        // Permission gate (add) — seeded items_add slug.
+        if (auth()->check() && !auth()->user()->hasPermission('items_add')) {
+            abort(403, 'Unauthorized access to add items.');
+        }
+
         // 1. Enhanced Validation
         $rules = [
             'item_name' => 'required|string|max:255',
@@ -464,6 +480,11 @@ class ItemController extends Controller
 
     public function edit($id)
     {
+        // Permission gate (edit) — seeded items_edit slug.
+        if (auth()->check() && !auth()->user()->hasPermission('items_edit')) {
+            abort(403, 'Unauthorized access to edit items.');
+        }
+
         $item = DbItem::with(['serials', 'warehouseItems'])->findOrFail($id);
         $categories = DbCategory::where('status', 1)->where('store_id', current_store_id())->get();
         $brands = DbBrand::where('status', 1)->where('store_id', current_store_id())->get();
@@ -520,6 +541,11 @@ class ItemController extends Controller
 
     public function update(Request $request, $id)
     {
+        // Permission gate (edit) — seeded items_edit slug.
+        if (auth()->check() && !auth()->user()->hasPermission('items_edit')) {
+            abort(403, 'Unauthorized access to edit items.');
+        }
+
         // Load the existing item FIRST so the change-detection rules can compare the
         // submitted sku / custom_barcode against the stored (possibly legacy) value.
         $item = DbItem::findOrFail($id);
@@ -777,6 +803,11 @@ class ItemController extends Controller
 
     public function destroy($id)
     {
+        // Permission gate (delete) — seeded items_delete slug.
+        if (auth()->check() && !auth()->user()->hasPermission('items_delete')) {
+            abort(403, 'Unauthorized access to delete items.');
+        }
+
         $storeId = current_store_id();
 
         // Store-scoped lookup (IDOR protection) — a Store-2 user must never be able

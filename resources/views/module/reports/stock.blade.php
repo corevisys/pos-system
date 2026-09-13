@@ -76,10 +76,7 @@
                 </div>
 
                 <div class="flex items-center gap-2 mb-3">
-                    <div class="flex bg-slate-100 dark:bg-slate-800 rounded-xl p-1 gap-1">
-                        <button class="px-3 py-1 text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-primary-600 hover:bg-white dark:hover:bg-dark-card rounded-lg transition-all">Excel</button>
-                        <button class="px-3 py-1 text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-primary-600 hover:bg-white dark:hover:bg-dark-card rounded-lg transition-all">PDF</button>
-                    </div>
+                    <x-report-export-buttons :route="route('reports.stock_data')" />
                     <div class="relative group">
                         <input type="text" x-model="searchTerm" placeholder="Search..." class="bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border rounded-xl py-1.5 px-8 text-[10px] font-bold focus:ring-1 focus:ring-primary-500 outline-none w-40 shadow-sm transition-all">
                         <svg class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -91,25 +88,21 @@
                 <table class="w-full text-left border-collapse">
                     <thead class="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-dark-border">
                         <tr x-show="viewType === 'item-wise'">
-                            <th class="px-6 py-3 w-10 text-center">
-                                <input type="checkbox" x-model="selectedAll" @change="toggleAll()" class="w-3.5 h-3.5 rounded border-slate-300 text-primary-600 focus:ring-primary-500">
-                            </th>
+                            
                             <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Item Information</th>
                             <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Category & Brand</th>
                             <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Purchase Price ({{ $currencySymbol }})</th>
                             <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Sales Price ({{ $currencySymbol }})</th>
                             <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Stock</th>
                             <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Stock Value ({{ $currencySymbol }})</th>
-                            <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Action</th>
+                            
                         </tr>
                         <tr x-show="viewType === 'brand-wise'" x-cloak>
-                            <th class="px-6 py-3 w-10 text-center">
-                                <input type="checkbox" x-model="selectedAll" @change="toggleAll()" class="w-3.5 h-3.5 rounded border-slate-300 text-primary-600 focus:ring-primary-500">
-                            </th>
+                            
                             <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Brand Name</th>
                             <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Total Stock</th>
                             <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Total Value ({{ $currencySymbol }})</th>
-                            <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Action</th>
+                            
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-50 dark:divide-dark-border">
@@ -134,9 +127,7 @@
                         <template x-if="viewType === 'item-wise'">
                             <template x-for="record in filteredRecords" :key="record.id">
                                 <tr class="hover:bg-slate-50/30 dark:hover:bg-slate-800/30 transition-colors group">
-                                    <td class="px-6 py-2.5 text-center">
-                                        <input type="checkbox" :value="record.id" x-model="selectedRecords" class="w-3.5 h-3.5 rounded border-slate-300 text-primary-600 focus:ring-primary-500">
-                                    </td>
+                                    
                                     <td class="px-6 py-2.5 text-[11px]">
                                         <div class="flex flex-col">
                                             <span class="font-bold text-slate-700 dark:text-slate-200" x-text="record.name"></span>
@@ -153,20 +144,7 @@
                                     <td class="px-6 py-2.5 text-right font-mono text-[11px] font-black text-primary-600" x-text="'{{ $currencySymbol }}' + record.salesPrice"></td>
                                     <td class="px-6 py-2.5 text-right font-mono text-[11px] font-black text-emerald-600" x-text="record.stock"></td>
                                     <td class="px-6 py-2.5 text-right font-mono text-[11px] font-black text-slate-800 dark:text-white" x-text="'{{ $currencySymbol }}' + record.value"></td>
-                                    <td class="px-6 py-2.5 text-center">
-                                        <div x-data="{ open: false }" class="relative inline-block text-left">
-                                            <button @click="open = !open" class="px-3 py-1 bg-rose-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-rose-700 transition-all shadow-sm">
-                                                Action
-                                                <svg class="w-2.5 h-2.5 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
-                                            </button>
-                                            <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-36 origin-top-right rounded-xl bg-white dark:bg-dark-card shadow-2xl border border-slate-100 dark:border-dark-border z-20 overflow-hidden text-left" x-cloak>
-                                                <div class="py-1">
-                                                    <a href="#" class="block px-4 py-2 text-[10px] font-bold text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-500/10 transition-colors uppercase tracking-widest">History</a>
-                                                    <a href="#" class="block px-4 py-2 text-[10px] font-bold text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-500/10 transition-colors uppercase tracking-widest border-t border-slate-50 dark:border-dark-border">Adjustment</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
+                                    
                                 </tr>
                             </template>
                         </template>
@@ -175,9 +153,7 @@
                         <template x-if="viewType === 'brand-wise'">
                             <template x-for="record in filteredRecords" :key="record.id">
                                 <tr class="hover:bg-slate-50/30 dark:hover:bg-slate-800/30 transition-colors group">
-                                    <td class="px-6 py-2.5 text-center">
-                                        <input type="checkbox" :value="record.id" x-model="selectedRecords" class="w-3.5 h-3.5 rounded border-slate-300 text-primary-600 focus:ring-primary-500">
-                                    </td>
+                                    
                                     <td class="px-6 py-2.5 text-[11px] font-black uppercase text-slate-700 dark:text-slate-200" x-text="record.brand"></td>
                                     <td class="px-6 py-2.5 text-right font-mono text-[11px] font-black text-emerald-600" x-text="record.stock"></td>
                                     <td class="px-6 py-2.5 text-right font-mono text-[11px] font-black text-slate-800 dark:text-white" x-text="'{{ $currencySymbol }}' + record.value"></td>
@@ -190,17 +166,15 @@
                     </tbody>
                     <tfoot class="bg-slate-50/80 dark:bg-slate-800/80 border-t border-slate-200">
                         <tr class="font-black text-slate-700 dark:text-slate-200" x-show="viewType === 'item-wise'">
-                            <td colspan="5" class="px-6 py-3 text-right uppercase text-[9px] tracking-widest text-slate-500 italic">Total Inventory Summary</td>
+                            <td colspan="7" class="px-6 py-3 text-right uppercase text-[9px] tracking-widest text-slate-500 italic">Total Inventory Summary</td>
                             <td class="px-6 py-3 text-[11px] tabular-nums text-right text-emerald-600 font-mono" x-text="formatNumber(records.reduce((acc, r) => acc + parseRaw(r.stock), 0))"></td>
                             <td class="px-6 py-3 text-[11px] tabular-nums text-right text-slate-800 dark:text-white font-mono">{{ $currencySymbol }}<span x-text="formatNumber(records.reduce((acc, r) => acc + parseRaw(r.value), 0))"></span></td>
-                            <td></td>
-                        </tr>
+                            </tr>
                         <tr class="font-black text-slate-700 dark:text-slate-200" x-show="viewType === 'brand-wise'" x-cloak>
-                            <td colspan="2" class="px-6 py-3 text-right uppercase text-[9px] tracking-widest text-slate-500 italic">Total Brand Summary</td>
+                            <td colspan="7" class="px-6 py-3 text-right uppercase text-[9px] tracking-widest text-slate-500 italic">Total Brand Summary</td>
                             <td class="px-6 py-3 text-[11px] tabular-nums text-right text-emerald-600 font-mono" x-text="formatNumber(records.reduce((acc, r) => acc + parseRaw(r.stock), 0))"></td>
                             <td class="px-6 py-3 text-[11px] tabular-nums text-right text-slate-800 dark:text-white font-mono">{{ $currencySymbol }}<span x-text="formatNumber(records.reduce((acc, r) => acc + parseRaw(r.value), 0))"></span></td>
-                            <td></td>
-                        </tr>
+                            </tr>
                     </tfoot>
                 </table>
             </div>
@@ -219,9 +193,6 @@
                 isLoading: false,
                 records: [],
                 searchTerm: '',
-                selectedAll: false,
-                selectedRecords: [],
-                
                 get filteredRecords() {
                     if (this.searchTerm === '') return this.records;
                     const search = this.searchTerm.toLowerCase();
@@ -231,14 +202,6 @@
                         (r.brand && r.brand.toLowerCase().includes(search)) ||
                         (r.category && r.category.toLowerCase().includes(search))
                     );
-                },
-
-                toggleAll() {
-                    if (this.selectedAll) {
-                        this.selectedRecords = this.filteredRecords.map(r => r.id);
-                    } else {
-                        this.selectedRecords = [];
-                    }
                 },
 
                 changeView(type) {

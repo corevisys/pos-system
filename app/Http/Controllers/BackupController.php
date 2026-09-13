@@ -21,6 +21,12 @@ class BackupController extends Controller
 
     public function index()
     {
+        // Permission gate — whole-database backup access (seeded `database_backup`,
+        // matching the sidebar's existing check).
+        if (auth()->check() && !auth()->user()->hasPermission('database_backup')) {
+            abort(403, 'Unauthorized access to database backups.');
+        }
+
         $backups = [];
         $appName = config('backup.backup.name', env('APP_NAME', 'laravel-backup'));
         $path = \Illuminate\Support\Facades\Storage::disk('local')->path($appName);
@@ -49,6 +55,11 @@ class BackupController extends Controller
 
     public function create()
     {
+        // Permission gate — triggering a full database backup.
+        if (auth()->check() && !auth()->user()->hasPermission('database_backup')) {
+            abort(403, 'Unauthorized access to database backups.');
+        }
+
         try {
             if (PHP_OS_FAMILY === 'Windows') {
                 $SystemRoot = getenv('SystemRoot') ?: 'C:\Windows';
@@ -86,6 +97,11 @@ class BackupController extends Controller
 
     public function download($filename)
     {
+        // Permission gate — downloading a full database backup.
+        if (auth()->check() && !auth()->user()->hasPermission('database_backup')) {
+            abort(403, 'Unauthorized access to database backups.');
+        }
+
         $appName = config('backup.backup.name', env('APP_NAME', 'laravel-backup'));
         $path = \Illuminate\Support\Facades\Storage::disk('local')->path($appName . '/' . $filename);
 
@@ -98,6 +114,11 @@ class BackupController extends Controller
 
     public function destroy($filename)
     {
+        // Permission gate — deleting a full database backup.
+        if (auth()->check() && !auth()->user()->hasPermission('database_backup')) {
+            abort(403, 'Unauthorized access to database backups.');
+        }
+
         $appName = config('backup.backup.name', env('APP_NAME', 'laravel-backup'));
         $path = \Illuminate\Support\Facades\Storage::disk('local')->path($appName . '/' . $filename);
 

@@ -106,6 +106,8 @@ class StoreSettingsFixRolloutTest extends TestCase
                 'profit_report', 'smtp_settings_view',
                 // Reports now have a single route-level gate.
                 'reports_view',
+                // MessageTemplateController now gates on the email_template_* slugs.
+                'email_template_view', 'email_template_edit',
             ],
         ]);
 

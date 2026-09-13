@@ -57,20 +57,10 @@
             
             <!-- Table Controls -->
             <div class="px-4 py-3 border-b border-slate-50 dark:border-dark-border bg-slate-50/20 dark:bg-white/5 flex flex-wrap justify-between items-center gap-4">
-                <div class="flex items-center gap-2">
-                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">Show</label>
-                    <select class="bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border rounded-lg py-1 px-1 text-[10px] font-bold outline-none focus:ring-1 focus:ring-primary-500 transition-all">
-                        <option>10</option>
-                        <option>25</option>
-                    </select>
-                </div>
+                
 
                 <div class="flex items-center gap-2">
-                    <div class="flex bg-slate-100 dark:bg-slate-800 rounded-xl p-1 gap-1">
-                        <button class="px-3 py-1 text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-primary-600 hover:bg-white dark:hover:bg-dark-card rounded-lg transition-all">Copy</button>
-                        <button class="px-3 py-1 text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-primary-600 hover:bg-white dark:hover:bg-dark-card rounded-lg transition-all">Excel</button>
-                        <button class="px-3 py-1 text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-primary-600 hover:bg-white dark:hover:bg-dark-card rounded-lg transition-all">PDF</button>
-                    </div>
+                    <x-report-export-buttons :route="route('reports.customer_orders_data')" />
                     <div class="relative group">
                         <input type="text" x-model="searchTerm" placeholder="Search..." class="bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border rounded-xl py-1.5 px-8 text-[10px] font-bold focus:ring-1 focus:ring-primary-500 outline-none w-40 shadow-sm transition-all">
                         <svg class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -82,22 +72,17 @@
                 <table class="w-full text-left border-collapse">
                     <thead class="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-dark-border">
                         <tr>
-                            <th class="px-6 py-3 w-10 text-center">
-                                <input type="checkbox" x-model="selectedAll" @change="toggleAll()" class="w-3.5 h-3.5 rounded border-slate-300 text-primary-600 focus:ring-primary-500">
-                            </th>
+                            
                             <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Customer Info</th>
                             <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Order ID</th>
                             <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Last Order</th>
                             <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Days Since</th>
-                            <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Action</th>
+                            
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-50 dark:divide-dark-border">
                         <template x-for="order in filteredOrders" :key="order.id">
                             <tr class="hover:bg-slate-50/30 dark:hover:bg-slate-800/30 transition-colors group">
-                                <td class="px-6 py-2.5 text-center">
-                                    <input type="checkbox" :value="order.id" x-model="selectedOrders" class="w-3.5 h-3.5 rounded border-slate-300 text-primary-600 focus:ring-primary-500">
-                                </td>
                                 <td class="px-6 py-2.5">
                                     <div class="flex items-center gap-3">
                                         <div class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 flex items-center justify-center font-black text-[9px]" x-text="order.name ? order.name.split(' ').map(n=>n?n[0]:'').join('').substring(0,2) : ''"></div>
@@ -111,20 +96,7 @@
                                 <td class="px-6 py-2.5 text-right font-mono">
                                      <span class="text-[10px] font-black text-slate-600 dark:text-slate-300" x-text="order.inDays + ' Days'"></span>
                                 </td>
-                                <td class="px-6 py-2.5 text-center">
-                                     <div x-data="{ open: false }" class="relative inline-block text-left">
-                                        <button @click="open = !open" class="px-3 py-1 bg-rose-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-rose-700 transition-all shadow-sm">
-                                            Action
-                                            <svg class="w-2.5 h-2.5 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
-                                        </button>
-                                        <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-36 origin-top-right rounded-xl bg-white dark:bg-dark-card shadow-2xl border border-slate-100 dark:border-dark-border z-20 overflow-hidden text-left" x-cloak>
-                                            <div class="py-1">
-                                                <a href="#" class="block px-4 py-2 text-[10px] font-bold text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-500/10 transition-colors uppercase tracking-widest">View Details</a>
-                                                <a href="#" class="block px-4 py-2 text-[10px] font-bold text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-500/10 transition-colors uppercase tracking-widest border-t border-slate-50 dark:border-dark-border">Order History</a>
-                                            </div>
-                                        </div>
-                                     </div>
-                                </td>
+                                
                             </tr>
                         </template>
                     </tbody>
@@ -152,9 +124,6 @@
                 isLoading: false,
                 orders: [],
                 searchTerm: '',
-                selectedAll: false,
-                selectedOrders: [],
-                
                 get filteredOrders() {
                     if (this.searchTerm === '') {
                         return this.orders;
@@ -165,14 +134,6 @@
                     );
                 },
                 
-                toggleAll() {
-                    if (this.selectedAll) {
-                        this.selectedOrders = this.filteredOrders.map(o => o.id);
-                    } else {
-                        this.selectedOrders = [];
-                    }
-                },
-
                 resetFilters() {
                     this.customerId = '';
                     this.tillDate = new Date().toISOString().split('T')[0];

@@ -195,7 +195,10 @@ class SmsSettingsController extends Controller
             '🔹 Admin Intelligence' => ['EodSummary', 'LargeTransactionAlert', 'BackupCompletedAlert']
         ];
 
-        $rules = SmsAutoRule::whereIn('event_type', array_keys($eventTypes))
+        // Phase 2/4: store-scoped (SmsAutoRule now uses the StoreScoped trait, and
+        // this explicit filter keeps the isolation obvious at the call site).
+        $rules = SmsAutoRule::where('store_id', current_store_id())
+            ->whereIn('event_type', array_keys($eventTypes))
             ->with('template')
             ->get()
             ->groupBy('event_type');
@@ -216,8 +219,14 @@ class SmsSettingsController extends Controller
             'is_active' => 'required|boolean'
         ]);
 
-        $rules = SmsAutoRule::where('event_type', $request->event_type)->get();
-        
+        // Phase 4: WITHOUT the store filter this flipped the SAME event_type on
+        // EVERY store (the query only filtered by event_type). Scope it to the
+        // acting store; after Phase 5's per-store unique there is exactly ONE
+        // matching row per store per event_type.
+        $rules = SmsAutoRule::where('store_id', current_store_id())
+            ->where('event_type', $request->event_type)
+            ->get();
+
         if ($rules->isEmpty()) {
             return response()->json(['status' => 'error', 'success' => false, 'message' => 'No rule found for this event. Please create one in Auto Triggers first.']);
         }

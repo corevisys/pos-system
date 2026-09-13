@@ -15,6 +15,11 @@ class CouponController extends Controller
      */
     public function index(Request $request)
     {
+        // Permission gate (view) — seeded discountCouponView slug.
+        if (auth()->check() && !auth()->user()->hasPermission('discountCouponView')) {
+            abort(403, 'Unauthorized access to coupons.');
+        }
+
         $query = DbCoupon::withCount('customerCoupons')->orderBy('id', 'desc');
 
         if ($request->filled('search')) {
@@ -43,6 +48,11 @@ class CouponController extends Controller
      */
     public function create()
     {
+        // Permission gate (add) — seeded discountCouponAdd slug.
+        if (auth()->check() && !auth()->user()->hasPermission('discountCouponAdd')) {
+            abort(403, 'Unauthorized access to add coupons.');
+        }
+
         return view('module.coupons.create_coupon');
     }
 
@@ -51,6 +61,11 @@ class CouponController extends Controller
      */
     public function store(Request $request)
     {
+        // Permission gate (add) — seeded discountCouponAdd slug.
+        if (auth()->check() && !auth()->user()->hasPermission('discountCouponAdd')) {
+            abort(403, 'Unauthorized access to add coupons.');
+        }
+
         $request->validate([
             'name'        => 'required|string|max:255',
             'code'        => 'required|string|max:50|unique:db_coupons,code',
@@ -110,6 +125,11 @@ class CouponController extends Controller
      */
     public function edit($id)
     {
+        // Permission gate (edit) — seeded discountCouponEdit slug.
+        if (auth()->check() && !auth()->user()->hasPermission('discountCouponEdit')) {
+            abort(403, 'Unauthorized access to edit coupons.');
+        }
+
         $coupon = DbCoupon::findOrFail($id);
         return view('module.coupons.edit_coupon', compact('coupon'));
     }
@@ -119,6 +139,11 @@ class CouponController extends Controller
      */
     public function update(Request $request, $id)
     {
+        // Permission gate (edit) — seeded discountCouponEdit slug.
+        if (auth()->check() && !auth()->user()->hasPermission('discountCouponEdit')) {
+            abort(403, 'Unauthorized access to edit coupons.');
+        }
+
         $coupon = DbCoupon::findOrFail($id);
 
         $request->validate([
@@ -173,6 +198,11 @@ class CouponController extends Controller
      */
     public function destroy($id)
     {
+        // Permission gate (delete) — seeded discountCouponDelete slug.
+        if (auth()->check() && !auth()->user()->hasPermission('discountCouponDelete')) {
+            abort(403, 'Unauthorized access to delete coupons.');
+        }
+
         try {
             $coupon = DbCoupon::findOrFail($id);
             $coupon->delete();

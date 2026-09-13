@@ -41,8 +41,12 @@ class DispatchCampaignJob implements ShouldQueue
             return;
         }
 
-        // Resolve recipients using the shared helper
-        $recipients = SmsSendController::resolveRecipients($campaign->target_type, $filters)->get();
+        // Resolve recipients using the shared helper, passing the campaign's own
+        // store EXPLICITLY. This job runs in a queue with no request context, so
+        // resolveRecipients() must not fall back to current_store_id() (which
+        // would resolve to the default store and silently mis-target recipients
+        // for any non-default store's campaign).
+        $recipients = SmsSendController::resolveRecipients($campaign->target_type, $filters, (int) $campaign->store_id)->get();
 
         $batchId = uniqid('batch_');
         $sent = 0;

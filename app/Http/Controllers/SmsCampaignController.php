@@ -6,8 +6,22 @@ use Illuminate\Http\Request;
 
 class SmsCampaignController extends Controller
 {
+    /**
+     * Permission gate — SMS campaigns use the seeded `sms_api_view` slug. The
+     * Campaigns link lives in the same sidebar block that is itself gated by the
+     * SMS api-view slug, and NO dedicated campaign slug is seeded.
+     */
+    private function gateCampaignAccess(): void
+    {
+        if (auth()->check() && !auth()->user()->hasPermission('sms_api_view')) {
+            abort(403, 'Unauthorized access to SMS campaigns.');
+        }
+    }
+
     public function index()
     {
+        $this->gateCampaignAccess();
+
         return view('module.sms.campaigns');
     }
 
@@ -21,8 +35,10 @@ class SmsCampaignController extends Controller
 
     public function edit($id)
     {
+        $this->gateCampaignAccess();
+
         $campaign = $this->findActingStoreCampaign($id);
-        
+
         if ($campaign->status === 'Completed') {
             return back()->with('error', 'Completed campaigns cannot be edited.');
         }
@@ -32,8 +48,10 @@ class SmsCampaignController extends Controller
 
     public function update(Request $request, $id)
     {
+        $this->gateCampaignAccess();
+
         $campaign = $this->findActingStoreCampaign($id);
-        
+
         if ($campaign->status === 'Completed') {
             return back()->with('error', 'Completed campaigns cannot be updated.');
         }
@@ -61,6 +79,8 @@ class SmsCampaignController extends Controller
 
     public function destroy($id)
     {
+        $this->gateCampaignAccess();
+
         $campaign = $this->findActingStoreCampaign($id);
         $campaign->delete();
 

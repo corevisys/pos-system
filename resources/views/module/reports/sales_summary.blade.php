@@ -446,7 +446,7 @@
                             <th class="p-3 text-right">Paid</th>
                             <th class="p-3 text-right">Due</th>
                             <th class="p-3 text-center">Status</th>
-                            <th class="p-3 text-center">Action</th>
+                            
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-dark-border">
@@ -479,7 +479,7 @@
                             </tr>
                         </template>
                         <tr x-show="filteredInvoices.length === 0">
-                            <td colspan="9" class="p-8 text-center text-slate-400 font-bold">No sales invoices found matching your filter criteria.</td>
+                            <td colspan="8" class="p-8 text-center text-slate-400 font-bold">No sales invoices found matching your filter criteria.</td>
                         </tr>
                     </tbody>
                 </table>

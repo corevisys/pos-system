@@ -27,6 +27,9 @@
                     <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                     Reconciliations List
                 </a>
+                {{-- Phase 6 item 12: Cash Reconciliation's previously-missing CSV/
+                     print export, via the shared mechanism. --}}
+                <x-report-export-buttons :route="route('reports.cash_reconciliation_data')" class="!bg-white dark:!bg-dark-card border border-slate-200 dark:border-dark-border" />
                 <button @click="window.print()" class="px-4 py-2.5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-800 dark:hover:bg-white transition-all shadow-sm flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                     Print Report
@@ -36,7 +39,7 @@
 
         <!-- FILTER CARD -->
         <div class="bg-white dark:bg-dark-card rounded-2xl border border-slate-100 dark:border-dark-border p-5 mb-6 shadow-sm">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
                 <div>
                     <label class="block text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1.5">From Date</label>
                     <input type="date" x-model="filters.start_date" @change="fetchData()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl py-2 px-3 text-xs font-bold outline-none">
@@ -60,6 +63,17 @@
                         <option value="">All Accounts</option>
                         @foreach($accounts as $acc)
                             <option value="{{ $acc->id }}">{{ $acc->account_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                {{-- Phase 4 item 7: wire the previously orphaned user_id filter.
+                     $users is now store-scoped (Phase 2). --}}
+                <div>
+                    <label class="block text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1.5">User</label>
+                    <select x-model="filters.user_id" @change="fetchData()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl py-2 px-3 text-xs font-bold outline-none">
+                        <option value="">All Users</option>
+                        @foreach($users as $u)
+                            <option value="{{ $u->id }}">{{ $u->username ?: trim(($u->first_name ?? '') . ' ' . ($u->last_name ?? '')) }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -172,7 +186,8 @@
                     start_date: '',
                     end_date: '',
                     warehouse_id: '',
-                    account_id: ''
+                    account_id: '',
+                    user_id: ''
                 },
                 summary: {},
                 records: [],
@@ -194,7 +209,7 @@
                         .finally(() => this.loading = false);
                 },
                 resetFilters() {
-                    this.filters = { start_date: '', end_date: '', warehouse_id: '', account_id: '' };
+                    this.filters = { start_date: '', end_date: '', warehouse_id: '', account_id: '', user_id: '' };
                     this.fetchData();
                 },
                 formatMoney(num) {

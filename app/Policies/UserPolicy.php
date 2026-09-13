@@ -33,17 +33,28 @@ class UserPolicy
 
     /**
      * Determine whether the user can update the model.
+     *
+     * Aligned to the app-wide inline hasPermission() convention (was
+     * isSuperAdmin()-only, which made the seeded users_edit slug decorative).
+     * isSuperAdmin() continues to bypass every check, and a user may still edit
+     * their own account.
      */
     public function update(User $user, User $model): bool
     {
-        return $user->isSuperAdmin() || $user->id === $model->id;
+        return $user->isSuperAdmin()
+            || $user->id === $model->id
+            || $user->hasPermission('users_edit');
     }
 
     /**
      * Determine whether the user can delete the model.
+     *
+     * Honours the seeded users_delete slug for non-super-admins; a user may never
+     * delete their own account, and isSuperAdmin() still bypasses the slug check.
      */
     public function delete(User $user, User $model): bool
     {
-        return $user->isSuperAdmin() && $user->id !== $model->id;
+        return $user->id !== $model->id
+            && ($user->isSuperAdmin() || $user->hasPermission('users_delete'));
     }
 }

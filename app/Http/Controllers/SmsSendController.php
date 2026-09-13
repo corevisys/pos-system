@@ -10,8 +10,21 @@ use Illuminate\Http\Request;
 
 class SmsSendController extends Controller
 {
+    /**
+     * Permission gate — bulk/direct SMS sending (seeded `send_sms` slug),
+     * mirroring the established inline hasPermission()+abort(403) convention.
+     */
+    private function gateSendAccess(): void
+    {
+        if (auth()->check() && !auth()->user()->hasPermission('send_sms')) {
+            abort(403, 'Unauthorized access to send SMS.');
+        }
+    }
+
     public function index()
     {
+        $this->gateSendAccess();
+
         return view('module.sms.send');
     }
 
@@ -21,6 +34,8 @@ class SmsSendController extends Controller
      */
     public function getCount(Request $request)
     {
+        $this->gateSendAccess();
+
         $target = $request->input('target', 'all');
         $filters = $request->all();
         
@@ -29,7 +44,7 @@ class SmsSendController extends Controller
             $filters['customer_ids'] = $request->input('customer_ids') ? [$request->input('customer_ids')] : [];
         }
 
-        $query = $this->resolveRecipients($target, $filters);
+        $query = $this->resolveRecipients($target, $filters, current_store_id());
 
         return response()->json([
             'count' => $query->count(),
@@ -41,6 +56,8 @@ class SmsSendController extends Controller
      */
     public function searchCustomers(Request $request)
     {
+        $this->gateSendAccess();
+
         $q = $request->get('q');
         $customers = DbCustomer::where('status', 1)
             ->where('delete_bit', 0)
@@ -63,6 +80,8 @@ class SmsSendController extends Controller
      */
     public function process(Request $request)
     {
+        $this->gateSendAccess();
+
         $request->validate([
             'message'      => 'required|string',
             'target'       => 'required|string',
@@ -77,7 +96,7 @@ class SmsSendController extends Controller
             'customer_ids' => $request->input('customer_ids') ? (is_array($request->input('customer_ids')) ? $request->input('customer_ids') : [$request->input('customer_ids')]) : [],
         ];
 
-        $targetCount = $this->resolveRecipients($request->target, $request->all())->count();
+        $targetCount = $this->resolveRecipients($request->target, $request->all(), current_store_id())->count();
         $isScheduled = $request->boolean('is_scheduled');
         $scheduledAt = $isScheduled ? $request->input('scheduled_at') : null;
 
@@ -120,9 +139,17 @@ class SmsSendController extends Controller
     /**
      * Shared helper: build a query for recipients based on target_type & filters.
      * Returns a Builder that can be counted or iterated.
+     *
+     * @param int|null $storeId  Acting store. Passed EXPLICITLY (never inferred
+     *   from current_store_id() inside this helper) because the queued path
+     *   (DispatchCampaignJob::handle) runs with NO auth context — there
+     *   current_store_id() silently falls back to the default store and the
+     *   StoreScoped model scopes do not apply at all (auth()->check() is false).
+     *   Falls back to current_store_id() for direct web callers.
      */
-    public static function resolveRecipients(string $targetType, array $filters = [])
+    public static function resolveRecipients(string $targetType, array $filters = [], ?int $storeId = null)
     {
+        $storeId = $storeId ?? current_store_id();
         $minDue = $filters['min_due'] ?? null;
         $area   = $filters['area'] ?? null;
         $customerIds = $filters['customer_ids'] ?? [];
@@ -158,7 +185,15 @@ class SmsSendController extends Controller
         }
 
         if ($targetType === 'emi') {
+            // Phase 6: db_emi_sales has NO store_id column, so scope through the
+            // parent db_sales row — the exact convention established by
+            // SaleController::emiList() (SaleController.php:411-416) and the
+            // ReportController EMI interest query. Without this, a Store-B blast
+            // pulled every store's active-EMI customers.
             $emiCustomerIds = DbEmiSale::where('status', 'Active')
+                ->whereHas('sale', function ($q) use ($storeId) {
+                    $q->where('store_id', $storeId);
+                })
                 ->pluck('customer_id')
                 ->unique();
             $query->whereIn('id', $emiCustomerIds);

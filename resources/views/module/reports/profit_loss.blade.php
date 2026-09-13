@@ -14,11 +14,10 @@
                     <span class="text-slate-600 text-[10px] font-black uppercase tracking-wider">Profit & Loss</span>
                 </div>
             </div>
-            <div class="flex gap-2">
-                <button class="px-4 py-2 bg-rose-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-200/50 dark:shadow-none flex items-center gap-2">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    Export Report
-                </button>
+            <div class="flex gap-2 items-center">
+                {{-- Phase 6 item 13: the dead "Export Report" button is now wired to
+                     the shared export mechanism (CSV / PDF / Copy). --}}
+                <x-report-export-buttons :route="route('reports.profit_loss_data')" class="!bg-white dark:!bg-dark-card border border-slate-200 dark:border-dark-border" />
             </div>
         </div>
 
@@ -38,15 +37,28 @@
                      class="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-dark-card rounded-xl shadow-xl border border-slate-100 dark:border-dark-border z-50 p-2">
                     <div class="space-y-0.5">
                         <template x-for="range in ['Today', 'Yesterday', 'Last 7 Days', 'Last 30 Days', 'This Month', 'Last Month', 'Custom Range']">
-                            <button @click="dateRange = range; isDatePickerOpen = false" 
+                            <button @click="dateRange = range; if (range !== 'Custom Range') { isDatePickerOpen = false; }"
                                     class="w-full text-left px-3 py-2 rounded-lg text-[10px] font-bold transition-all uppercase tracking-wider"
                                     :class="dateRange === range ? 'bg-primary-50 text-primary-600 dark:bg-primary-900/10' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'"
                                     x-text="range">
                             </button>
                         </template>
                     </div>
+                    {{-- Phase 5 item 11: Custom Range now reveals real date inputs
+                         (mirroring Cash Flow's preset handling) instead of silently
+                         leaving the previous preset's dates in place. --}}
+                    <div x-show="dateRange === 'Custom Range'" x-cloak class="mt-2 pt-2 border-t border-slate-50 dark:border-dark-border grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[8px] font-black uppercase text-slate-400 tracking-widest mb-1">From</label>
+                            <input type="date" x-model="startDate" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-lg py-1.5 px-2 text-[10px] font-bold outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[8px] font-black uppercase text-slate-400 tracking-widest mb-1">To</label>
+                            <input type="date" x-model="endDate" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-lg py-1.5 px-2 text-[10px] font-bold outline-none">
+                        </div>
+                    </div>
                     <div class="mt-2 pt-2 border-t border-slate-50 dark:border-dark-border flex gap-2">
-                        <button @click="isDatePickerOpen = false" class="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[9px] font-black uppercase tracking-widest transition-all">Apply</button>
+                        <button @click="applySelection(); isDatePickerOpen = false" class="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[9px] font-black uppercase tracking-widest transition-all">Apply</button>
                         <button @click="isDatePickerOpen = false" class="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all">Cancel</button>
                     </div>
                 </div>
@@ -113,8 +125,12 @@
                         <div>
                             <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Total Sales</p>
                             <h4 class="text-2xl font-black text-white">{{ $currencySymbol }}<span x-text="sales.totalSales">0.00</span></h4>
-                            <p class="text-[9px] text-emerald-400 font-bold mt-1 flex items-center gap-1">
-                                <span>▲</span> <span>+12.5% vs prev</span>
+                            {{-- Phase 5 item 8: the previous "+12.5% vs prev" was a static
+                                 hardcoded string presented as a computed trend. Removed
+                                 rather than inventing an undefined period-over-period
+                                 formula (not in the audit's protected-formula list). --}}
+                            <p class="text-[9px] text-slate-500 font-bold mt-1 flex items-center gap-1">
+                                <span>Selected period</span>
                             </p>
                         </div>
                         <div>
@@ -301,7 +317,8 @@
 
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    {{-- Phase 7 item 18: Moment.js vendored locally (asset()) instead of a CDN. --}}
+    <script src="{{ asset('vendor/moment.min.js') }}"></script>
     <script>
         function profitLossReport() {
             return {
@@ -365,8 +382,22 @@
                             this.startDate = moment().subtract(1, 'month').startOf('month').format('YYYY-MM-DD');
                             this.endDate = moment().subtract(1, 'month').endOf('month').format('YYYY-MM-DD');
                             break;
+                        case 'Custom Range':
+                            // Phase 5 item 11: do NOT overwrite the user's chosen
+                            // startDate/endDate and do NOT auto-fetch — the user
+                            // supplies dates then clicks Apply (applySelection()).
+                            return;
                     }
                     this.fetchData();
+                },
+
+                // Invoked by the Apply button: for a custom range it runs the report
+                // with the user-entered startDate/endDate; for a preset the watch
+                // already fetched, so this is a harmless no-op refetch guard.
+                applySelection() {
+                    if (this.dateRange === 'Custom Range') {
+                        this.fetchData();
+                    }
                 },
 
                 async fetchData() {

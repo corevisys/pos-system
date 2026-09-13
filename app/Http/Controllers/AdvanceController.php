@@ -17,6 +17,11 @@ class AdvanceController extends Controller
      */
     public function index(Request $request)
     {
+        // Permission gate (view) — seeded cust_adv_payments_view slug.
+        if (auth()->check() && !auth()->user()->hasPermission('cust_adv_payments_view')) {
+            abort(403, 'Unauthorized access to advance payments.');
+        }
+
         $query = DbCustAdvance::with('customer')
             ->where('store_id', current_store_id())
             ->orderBy('id', 'desc');
@@ -40,6 +45,11 @@ class AdvanceController extends Controller
      */
     public function create()
     {
+        // Permission gate (add) — seeded cust_adv_payments_add slug.
+        if (auth()->check() && !auth()->user()->hasPermission('cust_adv_payments_add')) {
+            abort(403, 'Unauthorized access to add advance payments.');
+        }
+
         $customers = DbCustomer::select('id', 'customer_name', 'customer_code')->get();
         $accounts = AcAccount::where('status', 1)->where('delete_bit', 0)->get();
         return view('module.advance.add_advance', compact('customers', 'accounts'));
@@ -50,12 +60,19 @@ class AdvanceController extends Controller
      */
     public function store(Request $request)
     {
+        // Permission gate (add) — seeded cust_adv_payments_add slug.
+        if (auth()->check() && !auth()->user()->hasPermission('cust_adv_payments_add')) {
+            abort(403, 'Unauthorized access to add advance payments.');
+        }
+
         $request->validate([
             'payment_date' => 'required|date',
             'customer_id' => ['required', \Illuminate\Validation\Rule::exists('db_customers', 'id')->where('store_id', current_store_id())],
             'amount' => 'required|numeric|min:0.01',
             'payment_type' => 'required|string',
-            'account_id' => 'required|exists:ac_accounts,id',
+            // Store-scoped: a cross-store account id must be rejected, mirroring the
+            // customer_id rule directly above (was a bare exists:ac_accounts,id).
+            'account_id' => ['required', \Illuminate\Validation\Rule::exists('ac_accounts', 'id')->where('store_id', current_store_id())],
         ]);
 
         try {
@@ -126,6 +143,11 @@ class AdvanceController extends Controller
      */
     public function edit($id)
     {
+        // Permission gate (edit) — seeded cust_adv_payments_edit slug.
+        if (auth()->check() && !auth()->user()->hasPermission('cust_adv_payments_edit')) {
+            abort(403, 'Unauthorized access to edit advance payments.');
+        }
+
         $advance = DbCustAdvance::where('store_id', current_store_id())->findOrFail($id);
         $customers = DbCustomer::select('id', 'customer_name', 'customer_code')->get();
         $accounts = AcAccount::where('status', 1)->where('delete_bit', 0)->get();
@@ -137,12 +159,18 @@ class AdvanceController extends Controller
      */
     public function update(Request $request, $id)
     {
+        // Permission gate (edit) — seeded cust_adv_payments_edit slug.
+        if (auth()->check() && !auth()->user()->hasPermission('cust_adv_payments_edit')) {
+            abort(403, 'Unauthorized access to edit advance payments.');
+        }
+
         $request->validate([
             'payment_date' => 'required|date',
-            'customer_id' => 'required|exists:db_customers,id',
+            'customer_id' => ['required', \Illuminate\Validation\Rule::exists('db_customers', 'id')->where('store_id', current_store_id())],
             'amount' => 'required|numeric|min:0.01',
             'payment_type' => 'required|string',
-            'account_id' => 'required|exists:ac_accounts,id',
+            // Store-scoped: reject a cross-store account id (was a bare exists: rule).
+            'account_id' => ['required', \Illuminate\Validation\Rule::exists('ac_accounts', 'id')->where('store_id', current_store_id())],
         ]);
 
         try {
@@ -261,6 +289,11 @@ class AdvanceController extends Controller
      */
     public function destroy($id)
     {
+        // Permission gate (delete) — seeded cust_adv_payments_delete slug.
+        if (auth()->check() && !auth()->user()->hasPermission('cust_adv_payments_delete')) {
+            abort(403, 'Unauthorized access to delete advance payments.');
+        }
+
         try {
             DB::beginTransaction();
 

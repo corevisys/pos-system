@@ -19,6 +19,14 @@ class SaleInvoiceController extends Controller
      */
     public function show(Request $request, $id)
     {
+        // Store-scoped lookup (IDOR guard). DbSale carries the StoreScoped trait,
+        // so this resolves ONLY within the acting store's rows — a Store-B user
+        // requesting Store-A's invoice by id gets a clean 404 instead of the
+        // invoice. Investigation confirmed there is NO signed-URL/customer-facing
+        // mechanism for this route (no `signed` middleware anywhere) and every
+        // link generator is an authenticated in-app context operating on the
+        // acting store's own sales — so the previous allStores() bypass had no
+        // legitimate purpose and was removed.
         $sale = DbSale::with([
             'items.item',
             'customer.country',
@@ -28,7 +36,7 @@ class SaleInvoiceController extends Controller
             'warehouse',
             'serials',
             'emi.schedule'
-        ])->allStores()->findOrFail($id);
+        ])->findOrFail($id);
 
         $paperSize = strtolower($request->query('paper_size', 'a4'));
         if (!in_array($paperSize, ['a4', 'letter'], true)) {

@@ -3,11 +3,27 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use App\Models\SmsAutoRule;
 use App\Models\DbSmsTemplate;
 
 class SmsAutoRuleController extends Controller
 {
+    /**
+     * Phase 3: store-scoped rule lookup (IDOR guard).
+     *
+     * A cross-store rule id resolves to "not found" and 404s, mirroring
+     * SmsCampaignController::findActingStoreCampaign(). The StoreScoped trait on
+     * SmsAutoRule ALSO applies this filter as a global scope; the explicit
+     * where() keeps the protection obvious at the call site (and independent of
+     * whether the global scope is ever bypassed), matching the pattern used by
+     * VariantController / CategoryController / BrandController.
+     */
+    private function findActingStoreRule($id): SmsAutoRule
+    {
+        return SmsAutoRule::where('store_id', current_store_id())->findOrFail($id);
+    }
+
     public function index()
     {
         $templates = DbSmsTemplate::where('status', 1)->get();
@@ -18,7 +34,18 @@ class SmsAutoRuleController extends Controller
     {
         $request->validate([
             'rule_name' => 'required|string|max:255',
-            'event_type' => 'required|string|max:255|unique:sms_auto_rules,event_type,NULL,id,deleted_at,NULL',
+            // Phase 5: unique PER STORE — mirrors the category/brand/variant/
+            // warehouse convention. Previously globally unique, so Store B could
+            // not create a rule for an event_type Store A already used. This
+            // matches the plain (store_id, event_type) composite unique added by
+            // migration 2026_09_13_000001 — deliberately NOT excluding
+            // soft-deleted rows, so validation and the DB constraint agree (a
+            // re-create collides with a clean 422 instead of an uncaught 500).
+            'event_type' => [
+                'required', 'string', 'max:255',
+                Rule::unique('sms_auto_rules', 'event_type')
+                    ->where('store_id', current_store_id()),
+            ],
             'event_source' => 'required|string|max:255',
             'template_id' => 'required|exists:db_smstemplates,id',
             'trigger_time' => 'required|string|in:immediate,before_due,after_due',
@@ -28,7 +55,14 @@ class SmsAutoRuleController extends Controller
 
         $data = $request->all();
         $data['is_active'] = true;
-        
+
+        // Phase 1: sms_auto_rules.store_id is NOT NULL (migration
+        // 2026_09_12_000004) and is never submitted by the form. Set it
+        // explicitly from the acting store instead of relying on
+        // mass-assignment from request input, which produced a
+        // NOT-NULL constraint violation on every create.
+        $data['store_id'] = current_store_id();
+
         $rule = SmsAutoRule::create($data);
         
         if (class_exists('\App\SMS\Services\RuleResolverService')) {
@@ -41,7 +75,14 @@ class SmsAutoRuleController extends Controller
     {
         $request->validate([
             'rule_name' => 'required|string|max:255',
-            'event_type' => 'required|string|max:255|unique:sms_auto_rules,event_type,' . $id . ',id,deleted_at,NULL',
+            // Phase 5: per-store unique; ignore this row on update. Same plain
+            // semantics as the composite DB unique (see store() above).
+            'event_type' => [
+                'required', 'string', 'max:255',
+                Rule::unique('sms_auto_rules', 'event_type')
+                    ->where('store_id', current_store_id())
+                    ->ignore($id),
+            ],
             'event_source' => 'required|string|max:255',
             'template_id' => 'required|exists:db_smstemplates,id',
             'trigger_time' => 'required|string|in:immediate,before_due,after_due',
@@ -49,7 +90,8 @@ class SmsAutoRuleController extends Controller
             'cooldown_days' => 'required|integer|min:0'
         ]);
 
-        $rule = SmsAutoRule::findOrFail($id);
+        // Phase 3: store-scoped lookup (404 on cross-store).
+        $rule = $this->findActingStoreRule($id);
         $oldEvent = $rule->event_type;
         
         $data = $request->except('is_active');
@@ -67,7 +109,8 @@ class SmsAutoRuleController extends Controller
 
     public function toggleStatus($id)
     {
-        $rule = SmsAutoRule::findOrFail($id);
+        // Phase 3: store-scoped lookup (404 on cross-store).
+        $rule = $this->findActingStoreRule($id);
         $rule->is_active = !$rule->is_active;
         $rule->save();
 
@@ -84,7 +127,8 @@ class SmsAutoRuleController extends Controller
 
     public function destroy($id)
     {
-        $rule = SmsAutoRule::findOrFail($id);
+        // Phase 3: store-scoped lookup (404 on cross-store).
+        $rule = $this->findActingStoreRule($id);
         if (class_exists('\App\SMS\Services\RuleResolverService')) {
             \App\SMS\Services\RuleResolverService::clearCache($rule->event_type);
         }

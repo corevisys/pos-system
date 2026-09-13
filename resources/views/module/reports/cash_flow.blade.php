@@ -652,7 +652,8 @@
 
     <!-- SCRIPT & CHART INITIALIZATION -->
     @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {{-- Phase 7 item 18: Chart.js vendored locally (asset()) instead of a CDN. --}}
+    <script src="{{ asset('vendor/chart.umd.min.js') }}"></script>
     <script>
         function cashFlowReport() {
             return {

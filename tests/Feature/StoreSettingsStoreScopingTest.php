@@ -275,8 +275,10 @@ class StoreSettingsStoreScopingTest extends TestCase
             'status' => 1,
         ]);
 
-        // Acting as Store A's admin, viewing Store B's invoice
-        $response = $this->actingAs($this->userA)->get(route('sales.invoice', ['id' => $sale->id]));
+        // The invoice is now store-scoped (IDOR guard): it must be viewed by its
+        // OWN store's user. This still proves the exact intent of this test — the
+        // header resolves from the SALE's store (Beta), not the acting user.
+        $response = $this->actingAs($this->userB)->get(route('sales.invoice', ['id' => $sale->id]));
 
         $response->assertStatus(200);
         $response->assertSee('Beta Store');

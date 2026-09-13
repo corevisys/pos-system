@@ -542,7 +542,12 @@ class GlobalSearchController extends Controller
 
         // ── 13. Users (Super Admin or explicit users_view only) ────────────
         if ($user->isSuperAdmin() || $user->hasPermission('users_view')) {
+            // Store-scoped for everyone EXCEPT a confirmed super-admin, who may
+            // legitimately search users across the whole network (mirroring the
+            // multi-store dashboard). User has no StoreScoped trait, so the scoping
+            // is explicit — same pattern as the transfer/adjustment blocks above.
             $results = User::where('status', 1)
+                ->when(!$user->isSuperAdmin(), fn ($q) => $q->where('store_id', $user->store_id))
                 ->where(function ($q2) use ($like) {
                     $q2->where('username', 'like', $like)
                         ->orWhere('first_name', 'like', $like)

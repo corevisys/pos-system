@@ -37,6 +37,9 @@ use Illuminate\Support\Facades\Log;
 
 class ReportController extends Controller
 {
+    use \App\Http\Controllers\Concerns\ValidatesReportFilters;
+    use \App\Http\Controllers\Concerns\ExportsReportData;
+
     public function profitLoss()
     {
         // Resolve the acting store (the reporting user's own store) rather than
@@ -49,6 +52,10 @@ class ReportController extends Controller
 
     public function getProfitLossData(Request $request)
     {
+        if ($error = $this->validateReportFilters($request)) {
+            return $error;
+        }
+
         try {
             // 1. Parse dates
             // Assuming format like 'January 8, 2026 - February 6, 2026'
@@ -350,12 +357,16 @@ class ReportController extends Controller
 
     public function salesPayment()
     {
-        $customers = DbCustomer::where('status', 1)->get();
+        $customers = DbCustomer::where('status', 1)->where('delete_bit', 0)->get();
         return view('module.reports.sales_payment', compact('customers'));
     }
 
     public function getSalesPaymentData(Request $request)
     {
+        if ($error = $this->validateReportFilters($request, ['customer_id'])) {
+            return $error;
+        }
+
         try {
             $customerId = $request->customer_id;
             
@@ -547,17 +558,31 @@ class ReportController extends Controller
                 return strtotime($a['date']) <=> strtotime($b['date']);
             });
 
-            // Calculate running balance
+            // Calculate running balance.
+            //
+            // Phase 1 fix: the footer totals must be aggregated from the RAW numeric
+            // values, captured here BEFORE the display-formatting step below overwrites
+            // billAmt/receive with comma-separated strings. Previously the totals were
+            // computed via array_sum() on the already-formatted string columns, and
+            // PHP's string-to-float cast stops at the first comma — (float)"1,250.00"
+            // === 1.0 — so every row >= 1,000 was truncated to its leading digits.
             $runningBalance = $previousDue;
+            $totalBillAmt = 0.0;
+            $totalReceive = 0.0;
             foreach ($records as &$record) {
+                // Accumulate footer aggregates from the raw floats first.
+                $totalBillAmt += (float) $record['billAmt'];
+                $totalReceive += (float) $record['receive'];
+
                 // Balance = previous + bill - receive
                 $runningBalance = $runningBalance + $record['billAmt'] - $record['receive'];
                 $record['total'] = number_format((float)$runningBalance, 2, '.', ',');
                 
-                // Format numbers for display
+                // Format numbers for display (display-only strings; never re-summed).
                 $record['billAmt'] = number_format((float)$record['billAmt'], 2, '.', ',');
                 $record['receive'] = number_format((float)$record['receive'], 2, '.', ',');
             }
+            unset($record);
 
 
             $customerInfo = [
@@ -571,8 +596,8 @@ class ReportController extends Controller
                 'status' => 'success',
                 'customerInfo' => $customerInfo,
                 'records' => array_values($records),
-                'totalBillAmt' => array_sum(array_column($records, 'billAmt')),
-                'totalReceive' => array_sum(array_column($records, 'receive'))
+                'totalBillAmt' => number_format($totalBillAmt, 2, '.', ''),
+                'totalReceive' => number_format($totalReceive, 2, '.', '')
             ]);
 
         } catch (\Exception $e) {
@@ -586,12 +611,16 @@ class ReportController extends Controller
 
     public function customerOrders()
     {
-        $customers = DbCustomer::where('status', 1)->get();
+        $customers = DbCustomer::where('status', 1)->where('delete_bit', 0)->get();
         return view('module.reports.customer_orders', compact('customers'));
     }
 
     public function getCustomerOrdersData(Request $request)
     {
+        if ($error = $this->validateReportFilters($request, ['customer_id'])) {
+            return $error;
+        }
+
         try {
             $customerId = $request->customer_id;
             
@@ -663,6 +692,10 @@ class ReportController extends Controller
 
     public function getGstr1Data(Request $request)
     {
+        if ($error = $this->validateReportFilters($request)) {
+            return $error;
+        }
+
         try {
             $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : Carbon::now()->startOfDay();
             $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : Carbon::now()->endOfDay();
@@ -681,10 +714,12 @@ class ReportController extends Controller
             foreach ($sales as $sale) {
                 $taxAmt = $sale->items->sum('tax_amt');
                 $taxableAmt = $sale->subtotal;
-                $cgst = '0.00';
-                $sgst = '0.00';
-                $igst = '0.00';
-                
+
+                // Phase 5 item 9: the previous cgst/sgst/igst fields were hardcoded
+                // "0.00" placeholders with no real tax-component split, and were not
+                // even rendered by the GSTR views. Removed rather than emitting a
+                // confident-looking 0.00 that implies "no tax" (materially different
+                // from "not computed"). A real split remains deferred/out of scope.
                 $records[] = [
                     'id' => $sale->id,
                     'invoice' => $sale->sales_code,
@@ -693,9 +728,6 @@ class ReportController extends Controller
                     'gst' => $sale->customer ? $sale->customer->gstin : '',
                     'rate' => number_format((float)$taxableAmt, 2, '.', ''),
                     'tax' => number_format((float)$taxAmt, 2, '.', ''),
-                    'cgst' => $cgst,
-                    'sgst' => $sgst,
-                    'igst' => $igst,
                     'total' => number_format((float)$sale->grand_total, 2, '.', '')
                 ];
             }
@@ -720,6 +752,10 @@ class ReportController extends Controller
 
     public function getGstr2Data(Request $request)
     {
+        if ($error = $this->validateReportFilters($request)) {
+            return $error;
+        }
+
         try {
             $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : Carbon::now()->startOfDay();
             $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : Carbon::now()->endOfDay();
@@ -738,10 +774,10 @@ class ReportController extends Controller
             foreach ($purchases as $purchase) {
                 $taxAmt = $purchase->items->sum('tax_amt');
                 $taxableAmt = $purchase->subtotal;
-                $cgst = '0.00';
-                $sgst = '0.00';
-                $igst = '0.00';
-                
+
+                // Phase 5 item 9: same as GSTR-1 — hardcoded cgst/sgst/igst
+                // placeholders (never rendered) removed rather than implying a
+                // computed "0.00" tax component.
                 $records[] = [
                     'id' => $purchase->id,
                     'invoice' => $purchase->purchase_code,
@@ -750,9 +786,6 @@ class ReportController extends Controller
                     'gst' => $purchase->supplier ? $purchase->supplier->gstin : '',
                     'rate' => number_format((float)$taxableAmt, 2, '.', ''),
                     'tax' => number_format((float)$taxAmt, 2, '.', ''),
-                    'cgst' => $cgst,
-                    'sgst' => $sgst,
-                    'igst' => $igst,
                     'total' => number_format((float)$purchase->grand_total, 2, '.', '')
                 ];
             }
@@ -772,12 +805,16 @@ class ReportController extends Controller
 
     public function salesGst()
     {
-        $customers = DbCustomer::where('status', 1)->get();
+        $customers = DbCustomer::where('status', 1)->where('delete_bit', 0)->get();
         return view('module.reports.sales_gst', compact('customers'));
     }
 
     public function getSalesGstData(Request $request)
     {
+        if ($error = $this->validateReportFilters($request, ['customer_id'])) {
+            return $error;
+        }
+
         try {
             $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : Carbon::now()->startOfDay();
             $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : Carbon::now()->endOfDay();
@@ -833,12 +870,16 @@ class ReportController extends Controller
 
     public function purchaseGst()
     {
-        $suppliers = DbSupplier::where('status', 1)->get();
+        $suppliers = DbSupplier::where('status', 1)->where('delete_bit', 0)->get();
         return view('module.reports.purchase_gst', compact('suppliers'));
     }
 
     public function getPurchaseGstData(Request $request)
     {
+        if ($error = $this->validateReportFilters($request, ['supplier_id'])) {
+            return $error;
+        }
+
         try {
             $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : Carbon::now()->startOfDay();
             $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : Carbon::now()->endOfDay();
@@ -897,6 +938,10 @@ class ReportController extends Controller
 
     public function getSalesTaxData(Request $request)
     {
+        if ($error = $this->validateReportFilters($request)) {
+            return $error;
+        }
+
         try {
             $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : Carbon::now()->startOfDay();
             $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : Carbon::now()->endOfDay();
@@ -948,6 +993,10 @@ class ReportController extends Controller
 
     public function getPurchaseTaxData(Request $request)
     {
+        if ($error = $this->validateReportFilters($request)) {
+            return $error;
+        }
+
         try {
             $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : Carbon::now()->startOfDay();
             $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : Carbon::now()->endOfDay();
@@ -995,13 +1044,17 @@ class ReportController extends Controller
     public function supplierItems()
     {
         $items = DbItem::where('status', 1)->get();
-        $suppliers = DbSupplier::where('status', 1)->get();
+        $suppliers = DbSupplier::where('status', 1)->where('delete_bit', 0)->get();
         
         return view('module.reports.supplier_items', compact('items', 'suppliers'));
     }
 
     public function getSupplierItemsData(Request $request)
     {
+        if ($error = $this->validateReportFilters($request, ['item_id', 'supplier_id'])) {
+            return $error;
+        }
+
         try {
             $itemId = $request->item_id;
             $supplierId = $request->supplier_id;
@@ -1064,12 +1117,16 @@ class ReportController extends Controller
 
     public function salesReport()
     {
-        $customers = DbCustomer::where('status', 1)->get();
+        $customers = DbCustomer::where('status', 1)->where('delete_bit', 0)->get();
         return view('module.reports.sales', compact('customers'));
     }
 
     public function getSalesReportData(Request $request)
     {
+        if ($error = $this->validateReportFilters($request, ['customer_id'])) {
+            return $error;
+        }
+
         try {
             $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : Carbon::now()->startOfDay();
             $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : Carbon::now()->endOfDay();
@@ -1077,7 +1134,9 @@ class ReportController extends Controller
             $customerId = $request->customer_id;
             $paymentStatus = $request->payment_status;
 
-            $query = DbSale::with(['customer', 'warehouse'])
+            // Phase 5 item 10: eager-load payments so the payment-method column can
+            // reflect the real single payment type instead of a hardcoded 'Cash'.
+            $query = DbSale::with(['customer', 'warehouse', 'payments'])
                 ->whereBetween('sales_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')]);
 
             if ($customerId && $customerId !== 'all') {
@@ -1101,7 +1160,7 @@ class ReportController extends Controller
                     'customer' => $sale->customer ? $sale->customer->customer_name : 'Walk-in customer',
                     'location' => $sale->warehouse ? $sale->warehouse->warehouse_name : 'Main Store',
                     'status' => $sale->payment_status ?: 'Due',
-                    'method' => 'Cash', // Placeholder, multi-payment system makes this tricky
+                    'method' => $this->derivePaymentMethodLabel($sale),
                     'total' => number_format((float)$sale->grand_total, 2, '.', ''),
                     'paid' => number_format((float)$sale->paid_amount, 2, '.', ''),
                     'due' => number_format((float)($sale->grand_total - $sale->paid_amount), 2, '.', '')
@@ -1123,7 +1182,7 @@ class ReportController extends Controller
 
     public function salesReturnReport()
     {
-        $customers = DbCustomer::where('status', 1)->get();
+        $customers = DbCustomer::where('status', 1)->where('delete_bit', 0)->get();
         // Phase 4: store-scoped + active-only warehouse dropdown.
         $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->where('delete_bit', 0)->get();
         return view('module.reports.sales_return', compact('customers', 'warehouses'));
@@ -1131,6 +1190,10 @@ class ReportController extends Controller
 
     public function getSalesReturnReportData(Request $request)
     {
+        if ($error = $this->validateReportFilters($request, ['customer_id', 'warehouse_id'])) {
+            return $error;
+        }
+
         try {
             $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : Carbon::now()->startOfDay();
             $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : Carbon::now()->endOfDay();
@@ -1181,7 +1244,10 @@ class ReportController extends Controller
 
     public function sellerPointsReport()
     {
-        $users = User::where('status', 1)->get();
+        // Phase 2: store-scope the user dropdown. User has no StoreScoped trait
+        // (auth intentionally relies on unscoped User queries), so scope THIS
+        // report-specific load explicitly.
+        $users = User::where('store_id', current_store_id())->where('status', 1)->get();
         // Phase 4: store-scoped + active-only warehouse dropdown.
         $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->where('delete_bit', 0)->get();
         $items = DbItem::where('status', 1)->get();
@@ -1190,6 +1256,10 @@ class ReportController extends Controller
 
     public function getSellerPointsReportData(Request $request)
     {
+        if ($error = $this->validateReportFilters($request, ['user_id', 'warehouse_id', 'item_id'])) {
+            return $error;
+        }
+
         try {
             $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : Carbon::now()->startOfDay();
             $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : Carbon::now()->endOfDay();
@@ -1252,12 +1322,16 @@ class ReportController extends Controller
     {
         // Phase 4: store-scoped + active-only warehouse dropdown.
         $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->where('delete_bit', 0)->get();
-        $suppliers = DbSupplier::where('status', 1)->get();
+        $suppliers = DbSupplier::where('status', 1)->where('delete_bit', 0)->get();
         return view('module.reports.purchase', compact('warehouses', 'suppliers'));
     }
 
     public function getPurchaseReportData(Request $request)
     {
+        if ($error = $this->validateReportFilters($request, ['warehouse_id', 'supplier_id'])) {
+            return $error;
+        }
+
         try {
             $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : Carbon::now()->startOfDay();
             $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : Carbon::now()->endOfDay();
@@ -1315,12 +1389,16 @@ class ReportController extends Controller
     {
         // Phase 4: store-scoped + active-only warehouse dropdown.
         $warehouses = DbWarehouse::where('store_id', current_store_id())->where('status', 1)->where('delete_bit', 0)->get();
-        $suppliers = DbSupplier::where('status', 1)->get();
+        $suppliers = DbSupplier::where('status', 1)->where('delete_bit', 0)->get();
         return view('module.reports.purchase_return', compact('warehouses', 'suppliers'));
     }
 
     public function getPurchaseReturnReportData(Request $request)
     {
+        if ($error = $this->validateReportFilters($request, ['warehouse_id', 'supplier_id'])) {
+            return $error;
+        }
+
         try {
             $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : Carbon::now()->startOfDay();
             $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : Carbon::now()->endOfDay();
@@ -1377,6 +1455,10 @@ class ReportController extends Controller
 
     public function getExpenseReportData(Request $request)
     {
+        if ($error = $this->validateReportFilters($request, ['category_id'])) {
+            return $error;
+        }
+
         try {
             $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : Carbon::now()->startOfDay();
             $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : Carbon::now()->endOfDay();
@@ -1432,6 +1514,10 @@ class ReportController extends Controller
 
     public function getStockReportData(Request $request)
     {
+        if ($error = $this->validateReportFilters($request, ['warehouse_id', 'category_id', 'brand_id'])) {
+            return $error;
+        }
+
         try {
             $viewType = $request->view_type ?: 'item-wise';
             $warehouseId = $request->warehouse_id;
@@ -1539,6 +1625,10 @@ class ReportController extends Controller
 
     public function getSalesItemReportData(Request $request)
     {
+        if ($error = $this->validateReportFilters($request, ['warehouse_id', 'category_id', 'item_id'])) {
+            return $error;
+        }
+
         try {
             $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : Carbon::now()->startOfDay();
             $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : Carbon::now()->endOfDay();
@@ -1613,6 +1703,10 @@ class ReportController extends Controller
 
     public function getReturnItemsReportData(Request $request)
     {
+        if ($error = $this->validateReportFilters($request, ['warehouse_id', 'item_id'])) {
+            return $error;
+        }
+
         try {
             $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : Carbon::now()->startOfDay();
             $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : Carbon::now()->endOfDay();
@@ -1663,13 +1757,18 @@ class ReportController extends Controller
 
     public function purchasePaymentsReport()
     {
-        $suppliers = DbSupplier::where('status', 1)->get();
-        $users = User::all();
+        $suppliers = DbSupplier::where('status', 1)->where('delete_bit', 0)->get();
+        // Phase 2: store-scope the user dropdown (User has no StoreScoped trait).
+        $users = User::where('store_id', current_store_id())->get();
         return view('module.reports.purchase_payments', compact('suppliers', 'users'));
     }
 
     public function getPurchasePaymentsReportData(Request $request)
     {
+        if ($error = $this->validateReportFilters($request, ['supplier_id', 'user_id'])) {
+            return $error;
+        }
+
         try {
             $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : Carbon::now()->startOfDay();
             $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : Carbon::now()->endOfDay();
@@ -1726,13 +1825,18 @@ class ReportController extends Controller
 
     public function salesPaymentsReport()
     {
-        $customers = DbCustomer::where('status', 1)->get();
-        $users = User::all();
+        $customers = DbCustomer::where('status', 1)->where('delete_bit', 0)->get();
+        // Phase 2: store-scope the user dropdown (User has no StoreScoped trait).
+        $users = User::where('store_id', current_store_id())->get();
         return view('module.reports.sales_payments', compact('customers', 'users'));
     }
 
     public function getSalesPaymentsReportData(Request $request)
     {
+        if ($error = $this->validateReportFilters($request, ['customer_id', 'user_id'])) {
+            return $error;
+        }
+
         try {
             $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : Carbon::now()->startOfDay();
             $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : Carbon::now()->endOfDay();
@@ -1787,6 +1891,39 @@ class ReportController extends Controller
         }
     }
 
+    /**
+     * Phase 5 item 10: derive an honest payment-method label for a sale.
+     *
+     * Full multi-payment attribution (splitting a sale's total across several
+     * payment types) is deliberately NOT attempted here — it is a genuine
+     * accounts-domain change, out of scope for this pass. Instead we remove the
+     * misleading confident 'Cash' placeholder:
+     *   - no payment rows                    -> 'N/A'
+     *   - exactly one distinct payment type  -> that type (e.g. 'Cash', 'bkash')
+     *   - two or more distinct types         -> 'Mixed/Multiple'
+     *
+     * @param  \App\Models\DbSale  $sale
+     * @return string
+     */
+    private function derivePaymentMethodLabel($sale): string
+    {
+        $types = collect($sale->payments ?? [])
+            ->pluck('payment_type')
+            ->filter(fn($t) => $t !== null && $t !== '')
+            ->unique()
+            ->values();
+
+        if ($types->isEmpty()) {
+            return 'N/A';
+        }
+
+        if ($types->count() === 1) {
+            return (string) $types->first();
+        }
+
+        return 'Mixed/Multiple';
+    }
+
     private function formatNumericValues($array)
     {
         foreach ($array as $key => &$value) {
@@ -1813,7 +1950,7 @@ class ReportController extends Controller
         });
 
         $customers = store_scoped_cached_list('db_customers_summary_list', 3600, function () {
-            return DbCustomer::where('status', 1)->select('id', 'customer_name', 'customer_code')->get();
+            return DbCustomer::where('status', 1)->where('delete_bit', 0)->select('id', 'customer_name', 'customer_code')->get();
         });
 
         return view('module.reports.sales_summary', compact('warehouses', 'categories', 'customers'));
@@ -1821,8 +1958,12 @@ class ReportController extends Controller
 
     public function getSalesSummaryData(Request $request)
     {
+        if ($error = $this->validateReportFilters($request, ['warehouse_id', 'customer_id'])) {
+            return $error;
+        }
+
         try {
-            $startDate = $request->start_date 
+            $startDate = $request->start_date
                 ? Carbon::parse($request->start_date)->startOfDay() 
                 : Carbon::now()->startOfMonth()->startOfDay();
             $endDate = $request->end_date 
@@ -2125,15 +2266,27 @@ class ReportController extends Controller
         $accounts = store_scoped_cached_list('db_accounts_list', 3600, function () {
             return AcAccount::where('status', 1)->where('delete_bit', 0)->select('id', 'account_name', 'account_code')->get();
         });
-        $users = User::select('id', 'username', 'first_name', 'last_name')->get();
+        // Phase 2: store-scope the user dropdown (User has no StoreScoped trait).
+        // Currently unused by the view, but left correctly scoped rather than
+        // exposing cross-store identities in the view-data payload.
+        $users = User::where('store_id', current_store_id())
+            ->select('id', 'username', 'first_name', 'last_name')->get();
 
         return view('module.reports.cash_reconciliation', compact('warehouses', 'accounts', 'users'));
     }
 
     public function getCashReconciliationData(Request $request)
     {
+        if ($error = $this->validateReportFilters($request, ['warehouse_id', 'account_id', 'user_id'])) {
+            return $error;
+        }
+
         try {
-            $query = CashDrawerReconciliation::with(['account', 'warehouse', 'user'])->orderBy('reconciliation_date', 'desc');
+            // Phase 3: exclude soft-deleted (delete_bit=1) reconciliations, matching
+            // CashReconciliationController::index()'s delete_bit=0 base query.
+            $query = CashDrawerReconciliation::with(['account', 'warehouse', 'user'])
+                ->where('delete_bit', 0)
+                ->orderBy('reconciliation_date', 'desc');
 
             if ($request->filled('warehouse_id')) {
                 $query->where('warehouse_id', $request->warehouse_id);
@@ -2233,6 +2386,10 @@ class ReportController extends Controller
 
     public function getCashFlowReportData(Request $request)
     {
+        if ($error = $this->validateReportFilters($request, ['account_id'])) {
+            return $error;
+        }
+
         try {
             $startDate = $request->filled('start_date') ? Carbon::parse($request->start_date)->startOfDay() : Carbon::now()->startOfMonth()->startOfDay();
             $endDate = $request->filled('end_date') ? Carbon::parse($request->end_date)->endOfDay() : Carbon::now()->endOfDay();

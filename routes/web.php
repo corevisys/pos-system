@@ -346,7 +346,9 @@ Route::middleware(['auth', 'verified', 'ensure.store'])->group(function () {
     // Reports
     // Single coarse gate for every report (view + /data JSON endpoints), matching
     // the sidebar which wraps the whole Reports menu in reports_view.
-    Route::prefix('reports')->name('reports.')->middleware('permission:reports_view')->group(function () {
+    // `report.export` transparently turns any /data JSON response into a CSV/print
+    // artifact when the request carries ?export=csv|excel|pdf|print (Phase 6).
+    Route::prefix('reports')->name('reports.')->middleware(['permission:reports_view', 'report.export'])->group(function () {
         Route::get('sales-summary', [App\Http\Controllers\ReportController::class, 'salesSummary'])->name('sales_summary');
         Route::get('sales-summary/data', [App\Http\Controllers\ReportController::class, 'getSalesSummaryData'])->name('sales_summary_data');
         Route::get('profit-loss', [App\Http\Controllers\ReportController::class, 'profitLoss'])->name('profit_loss');

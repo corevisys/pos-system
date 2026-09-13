@@ -693,19 +693,16 @@ test('GAP 2.7: RuleResolverService::clearCache purges store-scoped rule cache an
     expect($initial->pluck('rule_name')->all())->toContain('Rule Initial');
     expect(Cache::has("sms_rules_InvoiceCreated_s{$sid}"))->toBeTrue();
 
-    // Create a new rule directly in DB
-    $rule2 = SmsAutoRule::create([
-        'store_id'     => $sid,
-        'rule_name'    => 'Rule Added Later',
-        'event_type'   => 'InvoiceCreated',
-        'event_source' => 'invoice',
-        'template_id'  => $template->id,
-        'trigger_time' => 'immediate',
-        'is_active'    => true,
-    ]);
+    // Change the rule directly in DB. (The SMS-automation rollout added a
+    // per-store unique on (store_id, event_type) — migration
+    // 2026_09_13_000001 — so a SECOND row for the same store + event_type is no
+    // longer allowed. This still exercises the exact intent of this test: the
+    // cache must be purged so the next resolve reflects the DB change.)
+    $rule1->update(['rule_name' => 'Rule Added Later']);
 
-    // Without clearing cache, resolve would return old cached collection
+    // Without clearing cache, resolve returns the old cached collection.
     $stillCached = RuleResolverService::resolve('InvoiceCreated');
+    expect($stillCached->pluck('rule_name')->all())->toContain('Rule Initial');
     expect($stillCached->pluck('rule_name')->all())->not->toContain('Rule Added Later');
 
     // Call clearCache
@@ -714,7 +711,7 @@ test('GAP 2.7: RuleResolverService::clearCache purges store-scoped rule cache an
 
     // Next resolve fetches fresh rules from DB
     $fresh = RuleResolverService::resolve('InvoiceCreated');
-    expect($fresh->pluck('rule_name')->all())->toContain('Rule Initial');
     expect($fresh->pluck('rule_name')->all())->toContain('Rule Added Later');
+    expect($fresh->pluck('rule_name')->all())->not->toContain('Rule Initial');
     expect(Cache::has("sms_rules_InvoiceCreated_s{$sid}"))->toBeTrue();
 });

@@ -14,7 +14,7 @@
                 </div>
             </div>
 
-            @if(auth()->user()->hasPermission('customers_advance_payments_add'))
+            @if(auth()->user()->hasPermission('cust_adv_payments_add'))
                 <a href="{{ route('advance.add') }}" class="btn-primary w-full md:w-auto">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>
                     Add Advance
