@@ -1321,27 +1321,18 @@ class PosController extends Controller
             $requestedQty[$itemId] = ($requestedQty[$itemId] ?? 0) + (float) $qty;
         }
 
-        // Stock availability check per item.
-        // Stock model: db_items.stock is the global sellable stock; db_warehouseitems
-        // is an optional per-warehouse allocation that may be absent (the store code
-        // only decrements available_qty when the row exists). Use the per-warehouse
-        // allocation when present, otherwise fall back to the item's global stock.
+        // Stock availability check per item — routed through DbItem::availableStock(),
+        // the single canonical rule (Phase 4.2): the requested warehouse's
+        // db_warehouseitems.available_qty when a row exists, otherwise the item's
+        // global db_items.stock (warehouse-less/legacy items). Eager-load the warehouse
+        // rows so this stays one query for the whole cart (no N+1).
         $itemIds = array_keys($requestedQty);
-        $warehouseStock = DbWarehouseItem::where('warehouse_id', $warehouseId)
-            ->whereIn('item_id', $itemIds)
-            ->pluck('available_qty', 'item_id')
-            ->map(fn ($q) => (float) $q)
-            ->all();
-
-        $globalStock = DbItem::whereIn('id', $itemIds)
-            ->pluck('stock', 'id')
-            ->map(fn ($q) => (float) $q)
-            ->all();
+        $itemsById = DbItem::with('warehouseItems')->whereIn('id', $itemIds)->get()->keyBy('id');
 
         // Service items (service_bit=1) are non-inventory billable lines and carry no
         // sellable stock, so they are exempt from the stock-availability gate — their
         // checkout never decrements stock either.
-        $serviceItemIds = DbItem::whereIn('id', array_keys($requestedQty))
+        $serviceItemIds = DbItem::whereIn('id', $itemIds)
             ->where('service_bit', 1)
             ->pluck('id')
             ->flip();
@@ -1350,7 +1341,7 @@ class PosController extends Controller
             if (isset($serviceItemIds[$itemId])) {
                 continue;
             }
-            $available = $warehouseStock[$itemId] ?? ($globalStock[$itemId] ?? 0);
+            $available = ($itemsById[$itemId] ?? null)?->availableStock($warehouseId) ?? 0.0;
             if ($available < $qty) {
                 $item = DbItem::find($itemId);
                 $name = $item->item_name ?? ('#' . $itemId);

@@ -68,7 +68,7 @@ class ItemController extends Controller
         // Print/PDF export view — reuses the SAME filtered, store-scoped query builder
         // as the on-screen list so exports always mirror exactly what the screen shows.
         if ($request->export === 'print' || $request->export === 'pdf') {
-            $exportItems = $query->with(['category', 'brand', 'unit'])
+            $exportItems = $query->with(['category', 'brand', 'unit', 'warehouseItems'])
                 ->orderBy('id', 'desc')
                 ->get();
 
@@ -79,7 +79,7 @@ class ItemController extends Controller
 
         // CSV export — same shared query builder.
         if ($request->export === 'csv') {
-            $exportItems = $query->with(['category', 'brand', 'unit'])
+            $exportItems = $query->with(['category', 'brand', 'unit', 'warehouseItems'])
                 ->orderBy('id', 'desc')
                 ->get();
 
@@ -108,7 +108,7 @@ class ItemController extends Controller
                         $i->category->category_name ?? '',
                         $i->brand->brand_name ?? '',
                         $i->unit->unit_name ?? '',
-                        (float) $i->stock,
+                        $i->availableStock(),
                         (float) $i->sales_price,
                         $i->status == 1 ? 'Active' : 'Inactive',
                     ]);
@@ -121,7 +121,7 @@ class ItemController extends Controller
             ? (int) $request->input('per_page', 10)
             : 10;
 
-        $items = $query->with(['category', 'brand', 'unit', 'tax'])
+        $items = $query->with(['category', 'brand', 'unit', 'tax', 'warehouseItems'])
                       ->withCount('serials')
                       ->latest()
                       ->paginate($perPage)
@@ -1226,11 +1226,7 @@ class ItemController extends Controller
      */
     private function syncGlobalStock(int $itemId): void
     {
-        $totalStock = (float) DbWarehouseItem::where('item_id', $itemId)->sum('available_qty');
-        $hasWarehouseRows = DbWarehouseItem::where('item_id', $itemId)->exists();
-
-        if ($hasWarehouseRows) {
-            DbItem::where('id', $itemId)->update(['stock' => $totalStock]);
-        }
+        // Phase 4.2 — delegate to the single canonical aggregation on the model.
+        DbItem::syncGlobalStock($itemId);
     }
 }

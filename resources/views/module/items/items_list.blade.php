@@ -138,8 +138,9 @@
                     </td>
                     <td class="px-4 py-2 text-right whitespace-nowrap">
                         <div class="flex flex-col leading-tight items-end">
-                            <span class="text-[11px] font-black text-text-primary dark:text-dark-text tabular-nums">{{ $item->stock }}</span>
-                            @if((float) $item->stock <= (float) $item->alert_qty)
+                            @php($__avail = $item->availableStock())
+                            <span class="text-[11px] font-black text-text-primary dark:text-dark-text tabular-nums">{{ $__avail }}</span>
+                            @if((float) $__avail <= (float) $item->alert_qty)
                                 <x-badge color="danger">Low Stock</x-badge>
                             @endif
                         </div>

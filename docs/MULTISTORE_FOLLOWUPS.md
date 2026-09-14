@@ -5,23 +5,40 @@ SQLite (1325 passed) and MySQL (1309 passed / 16 skipped SQLite-only harnesses).
 
 This file tracks the items that were **deliberately deferred** and are not yet done.
 
-## 1. Phase 4.2 — Deprecate `db_items.stock`
+## 1. Phase 4.2 — Stock source of truth — IMPLEMENTED (2026-09-14, pragmatic form)
 
-**Current state:** stock is dual-written to both `db_items.stock` (legacy aggregate)
-and `db_warehouseitems.available_qty` (per-warehouse truth). Both are written across
-sale / purchase / return / adjustment / quotation / item flows (the dual-write sites
-start at [`PosController`](../app/Http/Controllers/PosController.php:494)).
+**Finding (from the mandated 4.2.0/4.2.1 pre-work):** the plan's "drop the column"
+premise was unsafe. `db_items.stock` is NOT vestigial: it is the ONLY stock figure for
+a large, supported class of items that have **no `db_warehouseitems` rows at all**
+(opening-stock items created without a warehouse; seeded items). The new read-only
+`items:compare-stock-sources` command reported **45 warehouse-less items** and **0
+mismatches** where warehouse rows exist.
 
-**Why deferred:** this is a broad, cross-cutting refactor. Doing it partially would
-let the two figures diverge (the exact failure mode the gap analysis warns about), so
-it must be done as one complete piece of work:
-1. Audit every read of `db_items.stock` and repoint it to `db_warehouseitems`
-   (summed per item/warehouse as appropriate).
-2. Stop writing `db_items.stock` once nothing reads it.
-3. Keep the column (denormalised cache) or drop it in a later migration — decide
-   based on how many hot read paths benefit from the cached aggregate.
+**Chosen model (implemented):**
+- A single canonical rule lives on the model:
+  `DbItem::availableStock(?int $warehouseId = null)` — the requested warehouse's
+  `available_qty` when a row exists, otherwise `SUM(available_qty)` across the item's
+  warehouses, otherwise falls back to `db_items.stock` for warehouse-less items. It
+  uses the eager-loaded relation when present (no N+1).
+- `DbItem::syncGlobalStock($itemId)` is the single aggregation that keeps
+  `db_items.stock == SUM(available_qty)` for items WITH warehouse rows, and leaves
+  warehouse-less items untouched (never zeroes them).
+- Read sites routed through the helper: POS availability check
+  (`PosController`), SMS LowStock decision + payload (`SmsTriggerService`), items-list
+  screen/print/export and `ItemController::syncGlobalStock`. The dashboard low-stock
+  query keeps using the (provably equal) `db_items.stock` aggregate for its SQL
+  ordering.
+- **`db_items.stock` is kept, not dropped** — it is the documented authoritative figure
+  for warehouse-less items and a safe denormalised aggregate otherwise.
 
-**Risk:** Medium. Touches POS, purchase, returns, adjustments, quotations and items.
+**Verification:** SQLite 1334 passed; MySQL 1319 passed / 16 skipped. New tests in
+`tests/Feature/ItemStockSourceOfTruthTest.php` cover warehouse-less fallback,
+multi-warehouse summing, `syncGlobalStock` equality (and non-zeroing), and summed POS
+availability.
+
+**Not done (deliberate):** dropping the column, and backfilling warehouse rows for
+legacy items — both require enforcing a warehouse on every create path (a launch-time
+behaviour change) and are out of scope per the gap analysis.
 
 ## 2. Phase 4.5 — Per-store invoice templates
 

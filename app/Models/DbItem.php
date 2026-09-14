@@ -95,6 +95,67 @@ class DbItem extends Model
         return $this->hasMany(DbWarehouseItem::class, 'item_id');
     }
 
+    /**
+     * Phase 4.2 — THE canonical stock-availability rule (single source).
+     *
+     * Stock lives in db_warehouseitems.available_qty. db_items.stock is kept only as
+     * the authoritative figure for items that have NO warehouse allocation at all
+     * (legacy/opening items created without a warehouse) — it is NEVER dropped.
+     *
+     * Return value:
+     *  - $warehouseId given and that warehouse has a row → that row's available_qty.
+     *  - $warehouseId given but no row for it (nor any other) → db_items.stock fallback.
+     *  - no $warehouseId (store-wide) and warehouse rows exist → SUM(available_qty).
+     *  - no $warehouseId and no warehouse rows → db_items.stock fallback.
+     *
+     * Uses the eager-loaded relation when present so list/report loops do not trigger
+     * an N+1 query.
+     */
+    public function availableStock(?int $warehouseId = null): float
+    {
+        if ($this->relationLoaded('warehouseItems')) {
+            $rows = $this->warehouseItems;
+            if ($warehouseId !== null) {
+                $rows = $rows->where('warehouse_id', $warehouseId);
+            }
+            if ($rows->isEmpty()) {
+                return (float) ($this->stock ?? 0);
+            }
+
+            return (float) $rows->sum('available_qty');
+        }
+
+        $query = $this->warehouseItems();
+        if ($warehouseId !== null) {
+            $query->where('warehouse_id', $warehouseId);
+        }
+
+        $agg = $query->selectRaw('COUNT(*) as wh_count, COALESCE(SUM(available_qty), 0) as wh_total')->first();
+        if (!$agg || (int) $agg->wh_count === 0) {
+            return (float) ($this->stock ?? 0);
+        }
+
+        return (float) $agg->wh_total;
+    }
+
+    /**
+     * Phase 4.2 — canonical aggregation for the db_items.stock figure.
+     *
+     * Sets db_items.stock = SUM(db_warehouseitems.available_qty) for an item that HAS
+     * warehouse rows. Items with no warehouse rows are left untouched (their
+     * db_items.stock is authoritative and must not be zeroed).
+     */
+    public static function syncGlobalStock(int $itemId): void
+    {
+        $aggregate = DbWarehouseItem::where('item_id', $itemId)
+            ->selectRaw('COUNT(*) as wh_count, COALESCE(SUM(available_qty), 0) as wh_total')
+            ->first();
+
+        if ($aggregate && (int) $aggregate->wh_count > 0) {
+            static::withoutGlobalScopes()->where('id', $itemId)->update(['stock' => (float) $aggregate->wh_total]);
+        }
+    }
+
     public function variants()
     {
         return $this->hasMany(DbItem::class, 'parent_id');

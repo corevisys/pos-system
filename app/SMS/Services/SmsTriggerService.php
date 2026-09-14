@@ -54,8 +54,9 @@ class SmsTriggerService
             return;
         }
 
-        // Global Low Stock
-        if ($item->stock <= $item->alert_qty) {
+        // Global Low Stock — Phase 4.2: use the canonical availability rule
+        // (warehouse sum when rows exist, else db_items.stock).
+        if ($item->availableStock($warehouseId) <= $item->alert_qty) {
             $this->trigger('LowStock', $item);
         }
 
@@ -238,7 +239,9 @@ class SmsTriggerService
                     $data = [
                         'item_name' => $item->item_name,
                         'warehouse_name' => $warehouse->warehouse_name ?? 'Global',
-                        'current_qty' => ($model instanceof \App\Models\DbItem) ? $model->stock : $model->available_qty,
+                        // Phase 4.2 — canonical availability for DbItem (warehouse sum
+                        // when rows exist, else db_items.stock).
+                        'current_qty' => ($model instanceof \App\Models\DbItem) ? $item->availableStock() : $model->available_qty,
                     ];
                 }
                 break;

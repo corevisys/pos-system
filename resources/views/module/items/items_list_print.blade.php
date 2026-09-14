@@ -206,7 +206,7 @@
                         <td>{{ $i->custom_barcode ?? '' }}</td>
                         <td>{{ $i->category->category_name ?? '' }}</td>
                         <td>{{ $i->brand->brand_name ?? '' }}</td>
-                        <td class="text-right">{{ (float) $i->stock }}</td>
+                        <td class="text-right">{{ $i->availableStock() }}</td>
                         <td class="text-right">{{ number_format((float) $i->sales_price, 2) }}</td>
                         <td class="text-center">
                             <span class="{{ $i->status == 1 ? 'badge-active' : 'badge-inactive' }}">
