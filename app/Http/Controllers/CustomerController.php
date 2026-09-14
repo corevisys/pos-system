@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use App\SMS\Services\SmsTriggerService;
+use App\Services\CustomerIdentityResolver;
+use Illuminate\Validation\Rule;
 use Exception;
 
 class CustomerController extends Controller
@@ -130,10 +132,14 @@ class CustomerController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized access to add customers.'], 403);
         }
 
+        // Per-store phone/email uniqueness (Phase 5): the same person may legitimately
+        // exist in more than one store; identity sharing links their per-store rows.
+        $storeId = (int) (auth()->user()->store_id ?? current_store_id());
+
         $request->validate([
             'customer_name' => 'required|string|max:255',
-            'mobile' => 'required|string|regex:/^\d{11}$/|unique:db_customers,mobile',
-            'email' => 'nullable|email|max:255|unique:db_customers,email',
+            'mobile' => ['required', 'string', 'regex:/^\d{11}$/', Rule::unique('db_customers', 'mobile')->where('store_id', $storeId)->whereNull('deleted_at')],
+            'email' => ['nullable', 'email', 'max:255', Rule::unique('db_customers', 'email')->where('store_id', $storeId)->whereNull('deleted_at')],
             'customer_type' => 'sometimes|string|in:regular',
         ]);
 
@@ -148,9 +154,16 @@ class CustomerController extends Controller
             // Generate customer code
             $customer_code = \App\Services\CodeGeneratorService::generate('customer');
 
+            // Phase 5 — link to the shared cross-store identity (same phone = same person).
+            $identity = CustomerIdentityResolver::resolveOrCreate($request->mobile, [
+                'name' => $request->customer_name,
+                'email' => $request->email,
+            ]);
+
             // Create Customer
             $customer = DbCustomer::create([
-                'store_id' => auth()->user()->store_id ?? 1,
+                'store_id' => $storeId,
+                'customer_identity_id' => $identity?->id,
                 'customer_name' => $request->customer_name,
                 'customer_type' => $customerType,
                 'mobile' => $request->mobile,
@@ -201,11 +214,14 @@ class CustomerController extends Controller
             abort(403, 'Unauthorized access to add customers.');
         }
 
+        // Phase 5 — per-store phone/email uniqueness (same person may exist in several stores).
+        $storeId = (int) (auth()->user()->store_id ?? current_store_id());
+
         $request->validate([
             'customer_name' => 'required|string|max:255',
             'customer_type' => 'required|string|in:regular,emi',
-            'mobile' => 'required|string|regex:/^\d{11}$/|unique:db_customers,mobile',
-            'email' => 'nullable|email|max:255|unique:db_customers,email',
+            'mobile' => ['required', 'string', 'regex:/^\d{11}$/', Rule::unique('db_customers', 'mobile')->where('store_id', $storeId)->whereNull('deleted_at')],
+            'email' => ['nullable', 'email', 'max:255', Rule::unique('db_customers', 'email')->where('store_id', $storeId)->whereNull('deleted_at')],
             'credit_limit' => 'required|numeric|min:0',
             'opening_balance' => 'nullable|numeric|min:0',
             'price_level_type' => 'nullable|string|in:Increase,Decrease',
@@ -259,9 +275,16 @@ class CustomerController extends Controller
             // Generate customer code
             $customer_code = \App\Services\CodeGeneratorService::generate('customer');
 
+            // Phase 5 — link to the shared cross-store identity (same phone = same person).
+            $identity = CustomerIdentityResolver::resolveOrCreate($request->mobile, [
+                'name' => $request->customer_name,
+                'email' => $request->email,
+            ]);
+
             // Create Customer
             $customer = DbCustomer::create([
-                'store_id' => auth()->user()->store_id ?? current_store_id(),
+                'store_id' => $storeId,
+                'customer_identity_id' => $identity?->id,
                 'customer_name' => $request->customer_name,
                 'customer_type' => $request->customer_type,
                 'mobile' => $request->mobile,
@@ -505,7 +528,13 @@ class CustomerController extends Controller
                 } else {
                     $customer_code = \App\Services\CodeGeneratorService::generate('customer');
                     $data = $request->all();
+                    // Phase 5 — link to the shared cross-store identity.
+                    $identity = CustomerIdentityResolver::resolveOrCreate($request->mobile, [
+                        'name' => $request->customer_name,
+                        'email' => $request->email,
+                    ]);
                     $data['store_id'] = auth()->user()->store_id ?? current_store_id();
+                    $data['customer_identity_id'] = $identity?->id;
                     $data['customer_code'] = $customer_code;
                     $data['status'] = 1;
                     $data['created_date'] = date('Y-m-d');
@@ -606,11 +635,14 @@ class CustomerController extends Controller
             return redirect()->route('contacts.customers.list')->with('error', 'Customer not found.');
         }
 
+        // Phase 5 — per-store phone/email uniqueness (ignoring this row).
+        $storeId = (int) ($customer->store_id ?? current_store_id());
+
         $request->validate([
             'customer_name' => 'required|string|max:255',
             'customer_type' => 'required|string|in:regular,emi',
-            'mobile' => 'required|string|regex:/^\d{11}$/|unique:db_customers,mobile,' . $id,
-            'email' => 'nullable|email|max:255|unique:db_customers,email,' . $id,
+            'mobile' => ['required', 'string', 'regex:/^\d{11}$/', Rule::unique('db_customers', 'mobile')->where('store_id', $storeId)->whereNull('deleted_at')->ignore($id)],
+            'email' => ['nullable', 'email', 'max:255', Rule::unique('db_customers', 'email')->where('store_id', $storeId)->whereNull('deleted_at')->ignore($id)],
             'credit_limit' => 'required|numeric|min:0',
             'opening_balance' => 'nullable|numeric|min:0',
             'price_level_type' => 'nullable|string|in:Increase,Decrease',
@@ -660,8 +692,20 @@ class CustomerController extends Controller
 
         DB::beginTransaction();
         try {
+            // Phase 5 — if the phone changed, re-resolve the shared identity so the
+            // edit still points at the correct cross-store person.
+            if ($request->filled('mobile')
+                && CustomerIdentityResolver::normalizePhone($request->mobile) !== CustomerIdentityResolver::normalizePhone($customer->mobile)) {
+                $identity = CustomerIdentityResolver::resolveOrCreate($request->mobile, [
+                    'name' => $request->customer_name,
+                    'email' => $request->email,
+                ]);
+                $customer->customer_identity_id = $identity?->id;
+                $customer->save();
+            }
+
             $customer->update($request->only([
-                'customer_name', 'customer_type', 'mobile', 'email', 'phone', 'gstin', 'tax_number', 
+                'customer_name', 'customer_type', 'mobile', 'email', 'phone', 'gstin', 'tax_number',
                 'vatin', 'credit_limit', 'opening_balance', 'price_level_type', 'price_level',
                 'country_id', 'state_id', 'city', 'postcode', 'address', 'location_link',
                 'ship_country_id', 'ship_state_id', 'ship_city', 'ship_postcode', 'ship_address',
@@ -1010,8 +1054,15 @@ class CustomerController extends Controller
 
                 $customerCode = \App\Services\CodeGeneratorService::generate('customer');
 
+                // Phase 5 — link to the shared cross-store identity.
+                $identity = CustomerIdentityResolver::resolveOrCreate($mobile !== '' ? $mobile : null, [
+                    'name' => $customerName,
+                    'email' => $email !== '' ? $email : null,
+                ]);
+
                 DbCustomer::create([
                     'store_id' => auth()->user()->store_id ?? current_store_id(),
+                    'customer_identity_id' => $identity?->id,
                     'customer_name' => $customerName,
                     'customer_type' => 'regular',
                     'customer_code' => $customerCode,

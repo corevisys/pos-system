@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Services\CustomerIdentityResolver;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -37,11 +38,19 @@ class CustomerSeeder extends Seeder
         ];
 
         foreach ($customers as $index => $customer) {
+            // Phase 5 — demo rows go through the shared-identity resolver so seed data
+            // never produces orphaned or duplicated identities.
+            $identity = CustomerIdentityResolver::resolveOrCreate($customer['mobile'], [
+                'name' => $customer['customer_name'],
+                'email' => $customer['email'],
+            ]);
+
             DB::table('db_customers')->updateOrInsert(
                 ['email' => $customer['email']],
                 [
                     'store_id' => 1,
                     'customer_code' => 'CUS' . str_pad($index + 1, 4, '0', STR_PAD_LEFT),
+                    'customer_identity_id' => $identity?->id,
                     'customer_name' => $customer['customer_name'],
                     'mobile' => $customer['mobile'],
                     'address' => $customer['address'],

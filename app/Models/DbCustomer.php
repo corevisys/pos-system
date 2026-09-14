@@ -17,6 +17,8 @@ class DbCustomer extends Model
         'store_id',
         'count_id',
         'customer_code',
+        // Phase 5 — links this store-scoped row to the shared (cross-store) identity.
+        'customer_identity_id',
         'customer_name',
         'customer_type',
         'mobile',
@@ -75,6 +77,15 @@ class DbCustomer extends Model
     public function store()
     {
         return $this->belongsTo(DbStore::class, 'store_id');
+    }
+
+    /**
+     * Phase 5 — the shared cross-store identity this customer row belongs to.
+     * Not store-scoped: identity is global by design.
+     */
+    public function identity()
+    {
+        return $this->belongsTo(CustomerIdentity::class, 'customer_identity_id');
     }
 
     public function country()

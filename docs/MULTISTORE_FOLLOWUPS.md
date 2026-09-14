@@ -28,13 +28,21 @@ it must be done as one complete piece of work:
 Not built. The gap analysis marks this optional and only worth doing if document
 branding becomes a real requirement.
 
-## 3. Customer sharing (still a blocking decision)
+## 3. Customer sharing — DECIDED (2026-09-14): shared identity only
 
-Unchanged from the gap analysis: whether `db_customers` stays `StoreScoped`, whether
-`customer_code` is per-store or global, and whether loyalty/dues/advance follow a
-customer across branches remains **undecided**. As a result:
-- Phase 3.2 consolidated reporting deliberately **excludes** customer/due rollups.
-- No customer-scoped multi-store work should be started until the owner decides.
+Option (c) was chosen and is implemented as **Phase 5**:
+- New table `db_customer_identities` (NOT StoreScoped; globally unique `phone`) holds
+  the person's identity; `db_customers.customer_identity_id` links each store-scoped
+  row to it. Resolution is centralised in `App\Services\CustomerIdentityResolver`
+  (the single sanctioned cross-store read).
+- `db_customers` stays `StoreScoped`; dues/loyalty/sales history stay per store and do
+  not carry over. Phone uniqueness on `db_customers` is now **per store** (it was
+  global), which is what allows the same person to exist in two stores.
+- Phase 3.2 consolidated reporting still deliberately **excludes** customer/due
+  rollups (a cross-store customer view was explicitly deferred).
+
+Still deferred (not built): consolidated Owner customer/due view; identity merge tooling
+for corrected phone numbers.
 
 ## Verification commands
 
