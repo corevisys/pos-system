@@ -173,9 +173,23 @@ class SmsStoreScopingTest extends TestCase
         // Simulate a legacy/bad row with no store by writing raw SQL (the column is
         // NOT NULL, so bypass the model via a direct DB update on a real row).
         $rule = $this->makeRule(1, $t1->id, 'Bad Rule');
-        \Illuminate\Support\Facades\DB::table('sms_auto_rules')
-            ->where('id', $rule->id)
-            ->update(['store_id' => 0]); // 0 = unresolvable/empty
+        // Write store_id = 0 (unresolvable/empty) to simulate a legacy/bad row. On
+        // MySQL the column is UNSIGNED (so -1 overflows) AND foreign-key enforced (so
+        // 0 is rejected), so the write requires temporarily disabling FK checks.
+        $conn = \Illuminate\Support\Facades\DB::connection();
+        $isMySql = $conn->getDriverName() === 'mysql';
+        if ($isMySql) {
+            $conn->statement('SET FOREIGN_KEY_CHECKS=0');
+        }
+        try {
+            \Illuminate\Support\Facades\DB::table('sms_auto_rules')
+                ->where('id', $rule->id)
+                ->update(['store_id' => 0]);
+        } finally {
+            if ($isMySql) {
+                $conn->statement('SET FOREIGN_KEY_CHECKS=1');
+            }
+        }
 
         $customer = DbCustomer::create([
             'store_id' => 1, 'customer_name' => 'X', 'customer_code' => 'C-X',

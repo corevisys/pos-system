@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class DbStore extends Model
 {
     use HasFactory;
+    use \App\Models\Concerns\PinsExplicitIdInTests;
 
     protected $table = 'db_store';
 

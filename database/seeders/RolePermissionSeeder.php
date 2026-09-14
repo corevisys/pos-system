@@ -93,18 +93,29 @@ class RolePermissionSeeder extends Seeder
             'multi_store_dashboard_view',
         ]));
 
+        // Ids are pinned so Super Admin always resolves to id 1. Tests and
+        // AdminUserSeeder reference role_id = 1 for Super Admin; on a shared MySQL
+        // test database the auto-increment counter is non-transactional and drifts
+        // upward across RefreshDatabase rollbacks, so an unpinned Super Admin would
+        // land on id 2, 3, ... and every role_id = 1 user insert would fail the
+        // users.role_id foreign key. The non-admin roles deliberately use high ids
+        // (10+) because AdminUserSeeder legitimately owns ids 1-3 for the three
+        // per-store Super Admin roles.
         $roles = [
             [
+                'id' => 1,
                 'name' => 'Super Admin',
                 'description' => 'Full access to all modules and settings',
                 'permissions' => $allPermissions
             ],
             [
+                'id' => 10,
                 'name' => 'Admin',
                 'description' => 'Administrative access to most features',
                 'permissions' => $adminPermissions
             ],
             [
+                'id' => 11,
                 'name' => 'Manager',
                 'description' => 'Can manage items, sales, purchases, and reports',
                 'permissions' => [
@@ -126,6 +137,7 @@ class RolePermissionSeeder extends Seeder
                 ]
             ],
             [
+                'id' => 12,
                 'name' => 'Salesman',
                 'description' => 'Limited access to POS and sales',
                 'permissions' => [
@@ -138,6 +150,7 @@ class RolePermissionSeeder extends Seeder
                 ]
             ],
             [
+                'id' => 13,
                 'name' => 'Cashier',
                 'description' => 'Handle sales and payments',
                 'permissions' => [
@@ -149,6 +162,28 @@ class RolePermissionSeeder extends Seeder
             ]
         ];
 
+        // Phase 2.2 — the Owner role. Sees across stores (all-store visibility and
+        // consolidated reporting) but is NOT a bypass-everything super admin. Its
+        // permission set is intentionally limited to report viewing: it must still
+        // pass normal permission checks for anything else.
+        $roles[] = [
+            'id' => 19,
+            'name' => 'Owner',
+            'description' => 'Business owner — cross-store visibility and consolidated reporting.',
+            'permissions' => ['dashboard_view', 'reports_view', 'store_settings_view'],
+        ];
+
+        // Phase 2.3 — the ONLY role that carries the global-privilege flag is the
+        // dedicated Developer/system role. It is deliberately not tied to a branch's
+        // day-to-day operations and exists for maintenance/support only.
+        $roles[] = [
+            'id' => 20,
+            'name' => 'Developer',
+            'description' => 'System maintenance account (unrestricted cross-store).',
+            'permissions' => $allPermissions,
+            'is_super_admin' => true,
+        ];
+
         foreach ($roles as $roleData) {
             $role = DbRole::updateOrCreate(
                 ['role_name' => $roleData['name']],
@@ -156,10 +191,19 @@ class RolePermissionSeeder extends Seeder
                     'description' => $roleData['description'],
                     'status' => 1,
                     'store_id' => 1,
-                    // Only the Super Admin role carries the global privilege flag.
-                    'is_super_admin' => $roleData['name'] === 'Super Admin',
+                    // Phase 2.1: the "Super Admin" role here is really the store's branch
+                    // admin — it is NOT globally privileged. The global-privilege flag is
+                    // reserved for the dedicated Developer/system role (seeded below).
+                    'is_super_admin' => false,
+                    // Phase 2.2: only the Owner role carries cross-store visibility.
+                    'is_owner' => ($roleData['name'] === 'Owner'),
                 ]
             );
+
+            // Pin the id only on first creation. DbRole's PinsExplicitIdInTests trait
+            // makes the explicit id honoured under the test runner (SQLite and MySQL);
+            // outside tests 'id' is not fillable, so this stays a no-op in production.
+            $role->forceFill(['id' => $roleData['id']])->save();
 
             $rolePermissions = $roleData['permissions'];
 
@@ -176,6 +220,14 @@ class RolePermissionSeeder extends Seeder
                     'permissions' => array_values(array_unique($rolePermissions)),
                 ]
             );
+
+            // The Developer role is the sole holder of the global-privilege flag; the
+            // Owner is the sole holder of the cross-store visibility flag.
+            $isSuper = $roleData['is_super_admin'] ?? false;
+            $isOwner = ($roleData['name'] === 'Owner');
+            if ((bool) $role->is_super_admin !== $isSuper || (bool) $role->is_owner !== $isOwner) {
+                $role->forceFill(['is_super_admin' => $isSuper, 'is_owner' => $isOwner])->save();
+            }
         }
     }
 }

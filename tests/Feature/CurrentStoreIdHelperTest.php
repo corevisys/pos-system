@@ -81,8 +81,10 @@ test('current_store_id falls back to store settings id when not authenticated', 
 // ─── Test 3: current_store_id() returns 1 as final fallback when no store record ─
 
 test('current_store_id returns 1 as final fallback when no store and no auth', function () {
-    // Wipe all stores so store_settings() returns null
-    DbStore::truncate();
+    // Wipe all stores so store_settings() returns null.
+    // delete() (not truncate()) because MySQL refuses TRUNCATE on a table that is
+    // referenced by a foreign key (db_tax.store_id -> db_store.id).
+    DbStore::query()->delete();
     store_settings(true); // clear memoization
 
     $resolved = current_store_id();

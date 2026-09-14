@@ -275,6 +275,7 @@ class SupplierRedesignAndRisksTest extends TestCase
 
     public function test_genuine_parallel_double_delete_exactly_one_succeeds()
     {
+        skipUnlessSqlite();
         $dbPath = sys_get_temp_dir() . '/supplier_del_race_' . uniqid() . '.sqlite';
         $barrierFile = sys_get_temp_dir() . '/supplier_del_barrier_' . uniqid() . '.txt';
         $workerScript = sys_get_temp_dir() . '/supplier_del_worker_' . uniqid() . '.php';
@@ -835,6 +836,7 @@ class SupplierRedesignAndRisksTest extends TestCase
 
     public function test_genuine_parallel_same_store_same_phone_exactly_one_succeeds()
     {
+        skipUnlessSqlite();
         $dbPath = sys_get_temp_dir() . '/supplier_phone_race_' . uniqid() . '.sqlite';
         $barrierFile = sys_get_temp_dir() . '/supplier_phone_barrier_' . uniqid() . '.txt';
         $workerScript = sys_get_temp_dir() . '/supplier_phone_worker_' . uniqid() . '.php';

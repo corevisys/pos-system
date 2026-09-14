@@ -270,41 +270,55 @@ class CodeGeneratorServiceTest extends TestCase
 
     public function test_sales_return_sequential_increments_with_row(): void
     {
-        DbSalesReturn::create([
+        // Seed a baseline row, then assert generate() returns the NEXT sequential code.
+        // Relative (not a hard-coded RTN-00002) because on a shared MySQL test DB the
+        // db_salesreturn auto-increment is non-transactional and drifts upward across
+        // RefreshDatabase rollbacks, so this test's baseline row is not necessarily id 1.
+        $baseline = DbSalesReturn::create([
             'store_id' => 1,
             'return_code' => 'RTN-00001',
             'grand_total' => 10,
             'subtotal' => 10,
             'status' => 1,
         ]);
+
+        $expectedNext = 'RTN-' . str_pad($baseline->id + 1, 5, '0', STR_PAD_LEFT);
         $code = CodeGeneratorService::generate('sales_return');
-        $this->assertEquals('RTN-00002', $code);
+        $this->assertSame($expectedNext, $code);
     }
 
-    // ─── 12. Purchase Return (uniqid-based) ──────────────────────────────────
+    // ─── 12. Purchase Return (Phase 4.3: sequential) ─────────────────────────
 
-    public function test_purchase_return_default_prefix_and_uniqid_format(): void
+    public function test_purchase_return_default_prefix_and_sequential_format(): void
     {
         $code = CodeGeneratorService::generate('purchase_return');
-        // Format: PR-UPPERCASE_HEX (uniqid is 13 hex chars)
+        // Phase 4.3: Format PR-XXXXX (5-digit sequential), not the old uniqid() hex.
         $this->assertStringStartsWith('PR-', $code);
-        $this->assertMatchesRegularExpression('/^PR-[0-9A-F]+$/', $code, "Expected PR-HEX, got: {$code}");
+        $this->assertMatchesRegularExpression('/^PR-\d{5}$/', $code, "Expected PR-XXXXX, got: {$code}");
     }
 
-    public function test_purchase_return_custom_prefix_preserves_uniqid_scheme(): void
+    public function test_purchase_return_custom_prefix(): void
     {
         $this->store->update(['purchase_return_init' => 'RTV']);
         store_settings(true);
         $code = CodeGeneratorService::generate('purchase_return');
         $this->assertStringStartsWith('RTV-', $code);
-        $this->assertMatchesRegularExpression('/^RTV-[0-9A-F]+$/', $code);
+        $this->assertMatchesRegularExpression('/^RTV-\d{5}$/', $code);
     }
 
-    public function test_purchase_return_two_consecutive_calls_are_unique(): void
+    public function test_purchase_return_sequential_increments_with_row(): void
     {
-        $code1 = CodeGeneratorService::generate('purchase_return');
-        $code2 = CodeGeneratorService::generate('purchase_return');
-        $this->assertNotEquals($code1, $code2);
+        // Mirror the sales_return sequential test: seed a baseline row, then assert
+        // generate() returns the NEXT sequential code (relative, not an absolute id).
+        $baseline = DbPurchaseReturn::create([
+            'store_id' => 1,
+            'return_code' => 'PR-00001',
+            'return_status' => 1,
+        ]);
+
+        $expectedNext = 'PR-' . str_pad($baseline->id + 1, 5, '0', STR_PAD_LEFT);
+        $code = CodeGeneratorService::generate('purchase_return');
+        $this->assertSame($expectedNext, $code);
     }
 
     // ─── Unknown type throws ─────────────────────────────────────────────────

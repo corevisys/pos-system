@@ -11,6 +11,7 @@ class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
+    use \App\Models\Concerns\PinsExplicitIdInTests;
 
     /**
      * @var list<string>
@@ -121,6 +122,28 @@ class User extends Authenticatable
     public function isSuperAdmin()
     {
         return (bool) optional($this->role)->is_super_admin;
+    }
+
+    /**
+     * Phase 2.2 — the Owner: sees across stores (all-store visibility + consolidated
+     * reporting) but is NOT a bypass-everything super admin. Unlike isSuperAdmin(),
+     * this flag does NOT short-circuit permission checks — the Owner still goes
+     * through the normal permission:/hasPermission() gates. It only widens READ
+     * scope (gated explicitly where consolidated data is exposed).
+     */
+    public function isOwner()
+    {
+        return (bool) optional($this->role)->is_owner;
+    }
+
+    /**
+     * Whether this user may view across stores (Owner or Developer/system account).
+     * Used to gate consolidated reporting; the Developer additionally bypasses
+     * permission checks via isSuperAdmin().
+     */
+    public function canViewAllStores()
+    {
+        return $this->isSuperAdmin() || $this->isOwner();
     }
 
     public function hasPermission($permission)

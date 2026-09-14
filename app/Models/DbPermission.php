@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class DbPermission extends Model
 {
     use StoreScoped;
+    use \App\Models\Concerns\PinsExplicitIdInTests;
 
     protected $table = 'db_permissions';
 

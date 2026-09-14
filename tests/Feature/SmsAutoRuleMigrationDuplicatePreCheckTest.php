@@ -21,6 +21,7 @@ class SmsAutoRuleMigrationDuplicatePreCheckTest extends TestCase
 
     public function test_gap1_phase5_migration_aborts_on_same_store_duplicate_event_type(): void
     {
+        skipUnlessSqlite();
         $dbPath = sys_get_temp_dir() . '/sms_rule_dupe_' . uniqid() . '.sqlite';
         file_put_contents($dbPath, '');
 

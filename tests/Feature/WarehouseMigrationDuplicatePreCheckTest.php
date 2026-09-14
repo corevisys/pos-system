@@ -20,6 +20,7 @@ class WarehouseMigrationDuplicatePreCheckTest extends TestCase
 
     public function test_gap3_phase5_migration_assert_no_duplicates_aborts_on_same_store_duplicate(): void
     {
+        skipUnlessSqlite();
         $dbPath = sys_get_temp_dir() . '/wh_dupe_' . uniqid() . '.sqlite';
         file_put_contents($dbPath, '');
 

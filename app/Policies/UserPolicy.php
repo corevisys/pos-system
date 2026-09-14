@@ -9,10 +9,15 @@ class UserPolicy
 {
     /**
      * Determine whether the user can view any models.
+     *
+     * Phase 2.1: branch admins are no longer global super-admins, so this honours the
+     * seeded users_view slug (as update()/delete() already do). The Developer/system
+     * account still bypasses via isSuperAdmin(). The controller scopes the listing to
+     * the acting store, so this does not widen cross-store visibility.
      */
     public function viewAny(User $user): bool
     {
-        return $user->isSuperAdmin();
+        return $user->isSuperAdmin() || $user->hasPermission('users_view');
     }
 
     /**
@@ -20,7 +25,9 @@ class UserPolicy
      */
     public function view(User $user, User $model): bool
     {
-        return $user->isSuperAdmin() || $user->id === $model->id;
+        return $user->isSuperAdmin()
+            || $user->id === $model->id
+            || $user->hasPermission('users_view');
     }
 
     /**
@@ -28,7 +35,7 @@ class UserPolicy
      */
     public function create(User $user): bool
     {
-        return $user->isSuperAdmin();
+        return $user->isSuperAdmin() || $user->hasPermission('users_add');
     }
 
     /**

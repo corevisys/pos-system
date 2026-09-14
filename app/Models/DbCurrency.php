@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class DbCurrency extends Model
 {
     use HasFactory;
+    use \App\Models\Concerns\PinsExplicitIdInTests;
 
     protected $table = 'db_currency';
 

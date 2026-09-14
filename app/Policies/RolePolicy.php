@@ -9,10 +9,15 @@ class RolePolicy
 {
     /**
      * Determine whether the user can view any models.
+     *
+     * Phase 2.1: branch admins are no longer global super-admins, so this honours the
+     * seeded roles_view slug (as update()/delete() already do). The Developer/system
+     * account still bypasses via isSuperAdmin(). Role listing is store-scoped by the
+     * controller, so this does not widen cross-store visibility.
      */
     public function viewAny(User $user): bool
     {
-        return $user->isSuperAdmin();
+        return $user->isSuperAdmin() || $user->hasPermission('roles_view');
     }
 
     /**
@@ -20,7 +25,7 @@ class RolePolicy
      */
     public function view(User $user, DbRole $role): bool
     {
-        return $user->isSuperAdmin();
+        return $user->isSuperAdmin() || $user->hasPermission('roles_view');
     }
 
     /**
@@ -28,7 +33,7 @@ class RolePolicy
      */
     public function create(User $user): bool
     {
-        return $user->isSuperAdmin();
+        return $user->isSuperAdmin() || $user->hasPermission('roles_add');
     }
 
     /**

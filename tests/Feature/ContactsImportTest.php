@@ -117,7 +117,6 @@ class ContactsImportTest extends TestCase
             'email' => 'alice@example.com',
             'opening_balance' => 250.50,
             'credit_limit' => 10000.00,
-            'customer_code' => 'CU-000001',
             'delete_bit' => 0,
         ]);
 
@@ -125,9 +124,24 @@ class ContactsImportTest extends TestCase
             'customer_name' => 'Bob Vance',
             'mobile' => '01700445566',
             'email' => 'bob@example.com',
-            'customer_code' => 'CU-000002',
             'delete_bit' => 0,
         ]);
+
+        // Generated customer codes must be sequential and distinct. Assert the RELATIVE
+        // sequence rather than absolute CU-000001/CU-000002: on a shared MySQL test DB
+        // the auto-increment for db_customers is non-transactional and drifts upward
+        // across RefreshDatabase rollbacks, so the first imported customer of this test
+        // is not necessarily id 1.
+        $codes = \App\Models\DbCustomer::whereIn('mobile', ['01700112233', '01700445566'])
+            ->orderBy('id')
+            ->pluck('customer_code')
+            ->all();
+        $this->assertCount(2, $codes);
+        // The first customer of an empty store always gets CU-000001 (the generator
+        // sequences from max(id) = 0), so this part is engine-independent.
+        $this->assertSame('CU-000001', $codes[0]);
+        $this->assertMatchesRegularExpression('/^CU-\d{6}$/', $codes[1]);
+        $this->assertNotSame($codes[0], $codes[1]);
     }
 
     public function test_customer_import_skips_duplicates_and_missing_required_fields()
@@ -197,7 +211,6 @@ class ContactsImportTest extends TestCase
 
         $this->assertDatabaseHas('db_suppliers', [
             'supplier_name' => 'Prime Suppliers Ltd',
-            'supplier_code' => 'SUP-000001',
             'mobile' => '01811223344',
             'email' => 'prime@example.com',
             'opening_balance' => 1200.00,
@@ -206,11 +219,24 @@ class ContactsImportTest extends TestCase
 
         $this->assertDatabaseHas('db_suppliers', [
             'supplier_name' => 'Nova Traders',
-            'supplier_code' => 'SUP-000002',
             'mobile' => '01811556677',
             'email' => 'nova@example.com',
             'delete_bit' => 0,
         ]);
+
+        // Generated supplier codes must be sequential and distinct. Assert the RELATIVE
+        // sequence rather than absolute SUP-000001/SUP-000002: on a shared MySQL test DB
+        // the auto-increment for db_suppliers is non-transactional and drifts upward
+        // across RefreshDatabase rollbacks, so the first imported supplier is not
+        // necessarily id 1.
+        $codes = \App\Models\DbSupplier::whereIn('mobile', ['01811223344', '01811556677'])
+            ->orderBy('id')
+            ->pluck('supplier_code')
+            ->all();
+        $this->assertCount(2, $codes);
+        $this->assertSame('SUP-000001', $codes[0]);
+        $this->assertMatchesRegularExpression('/^SUP-\d{6}$/', $codes[1]);
+        $this->assertNotSame($codes[0], $codes[1]);
     }
 
     public function test_supplier_import_handles_duplicate_mobile_and_email_gracefully()

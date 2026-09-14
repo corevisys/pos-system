@@ -234,6 +234,7 @@ test('EMI checkout path also validates serials (sold serial rejected via storeEm
 });
 
 test('genuine parallel checkouts of the same serial: exactly one succeeds, the other is cleanly rejected', function () {
+    skipUnlessSqlite();
     $dbPath = sys_get_temp_dir() . '/serial_checkout_race_' . uniqid() . '.sqlite';
     $barrierFile = sys_get_temp_dir() . '/serial_checkout_barrier_' . uniqid() . '.txt';
     $workerScript = sys_get_temp_dir() . '/serial_checkout_worker_' . uniqid() . '.php';

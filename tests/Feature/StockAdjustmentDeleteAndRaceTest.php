@@ -165,6 +165,7 @@ class StockAdjustmentDeleteAndRaceTest extends TestCase
      */
     public function test_concurrent_adjustments_same_new_item_warehouse_final_qty_correct()
     {
+        skipUnlessSqlite();
         // Build a file-backed SQLite DB with the real db_warehouseitems schema incl.
         // the uq_warehouse_item unique index.
         $dbPath = sys_get_temp_dir() . '/adj_race_' . uniqid() . '.sqlite';

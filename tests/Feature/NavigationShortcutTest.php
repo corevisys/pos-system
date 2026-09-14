@@ -66,10 +66,17 @@ class NavigationShortcutTest extends TestCase
 
     public function test_super_admin_has_full_permission_for_all_90_shortcuts()
     {
-        $superAdmin = User::where('role_id', 1)->first();
-        if (!$superAdmin) {
-            $superAdmin = User::factory()->create(['role_id' => 1, 'role_name' => 'Super Admin']);
-        }
+        // Phase 2.1: the branch admin (role_id 1, "Super Admin") is no longer a global
+        // super-admin — it is bound to its own store and holds the seeded permission
+        // set. The identity that bypasses every permission check (and therefore has
+        // all 90 shortcuts) is now the dedicated Developer/system account.
+        $superAdmin = User::where('email', 'developer@corevisys.com')->first()
+            ?? User::factory()->create([
+                'role_id' => DbRole::where('is_super_admin', true)->value('id') ?? 1,
+                'role_name' => 'Developer',
+            ]);
+
+        $this->assertTrue($superAdmin->isSuperAdmin(), 'The Developer account must hold the global-privilege flag.');
 
         $shortcuts = NavigationShortcutService::getShortcutsForUser($superAdmin);
 

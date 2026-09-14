@@ -22,6 +22,7 @@ class EntityCodeMigrationDuplicatePreCheckTest extends TestCase
 
     public function test_migration_aborts_loudly_on_same_store_duplicate(): void
     {
+        skipUnlessSqlite();
         $dbPath = sys_get_temp_dir() . '/code_dupe_' . uniqid() . '.sqlite';
         file_put_contents($dbPath, '');
 
@@ -95,6 +96,7 @@ class EntityCodeMigrationDuplicatePreCheckTest extends TestCase
 
     public function test_migration_succeeds_and_enforces_per_store_uniqueness(): void
     {
+        skipUnlessSqlite();
         $dbPath = sys_get_temp_dir() . '/code_clean_' . uniqid() . '.sqlite';
         file_put_contents($dbPath, '');
 

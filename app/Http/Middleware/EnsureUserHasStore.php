@@ -26,8 +26,16 @@ class EnsureUserHasStore
             return $next($request);
         }
 
-        // Super Admin bypasses all store restrictions
+        // Super Admin (Developer/system account) bypasses all store restrictions
         if ($user->isSuperAdmin()) {
+            return $next($request);
+        }
+
+        // The Owner has no fixed store: its acting store (or the all-stores
+        // aggregate) is chosen at runtime via StoreContext, so it must not be
+        // rejected for an empty users.store_id. Cross-store visibility is enforced
+        // elsewhere (Owner-gated reporting), not here.
+        if (method_exists($user, 'isOwner') && $user->isOwner()) {
             return $next($request);
         }
 

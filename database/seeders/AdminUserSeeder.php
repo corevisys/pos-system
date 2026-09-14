@@ -60,14 +60,21 @@ class AdminUserSeeder extends Seeder
                 ['id' => $adminData['role_id']],
                 [
                     'role_name'   => $adminData['role_name'],
-                    'description' => 'Super Admin Role for Store ' . $adminData['store_id'],
+                    'description' => 'Branch Admin Role for Store ' . $adminData['store_id'],
                     'status'      => 1,
                     'store_id'    => $adminData['store_id'],
-                    // Explicit global-privilege flag (the role NAME no longer grants
-                    // super-admin bypass on its own).
-                    'is_super_admin' => true,
+                    // Phase 2.1: branch admins are NOT globally privileged. Access is
+                    // binary (one store only); the global-privilege flag is reserved for
+                    // the dedicated Developer/system account, seeded separately.
+                    'is_super_admin' => false,
                 ]
             );
+
+            // Keep existing installs consistent too (firstOrCreate won't update an
+            // already-present row).
+            if ($role->is_super_admin) {
+                $role->forceFill(['is_super_admin' => false])->save();
+            }
 
             // Admin User তৈরি — ইতিমধ্যে থাকলে skip করা হবে
             if (!User::where('email', $adminData['email'])->exists()) {

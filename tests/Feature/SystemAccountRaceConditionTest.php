@@ -44,6 +44,7 @@ class SystemAccountRaceConditionTest extends TestCase
      */
     public function test_concurrent_external_deposits_create_exactly_one_clearing_account()
     {
+        skipUnlessSqlite();
         $dbPath = sys_get_temp_dir() . '/sysacc_clearing_' . uniqid() . '.sqlite';
         $barrierFile = sys_get_temp_dir() . '/sysacc_barrier_' . uniqid() . '.txt';
         $workerScript = sys_get_temp_dir() . '/sysacc_worker_' . uniqid() . '.php';
@@ -150,6 +151,7 @@ class SystemAccountRaceConditionTest extends TestCase
      */
     public function test_concurrent_account_creation_with_opening_balance_creates_exactly_one_equity_account()
     {
+        skipUnlessSqlite();
         $dbPath = sys_get_temp_dir() . '/sysacc_equity_' . uniqid() . '.sqlite';
         $barrierFile = sys_get_temp_dir() . '/sysacc_barrier_eq_' . uniqid() . '.txt';
         $workerScript = sys_get_temp_dir() . '/sysacc_worker_eq_' . uniqid() . '.php';

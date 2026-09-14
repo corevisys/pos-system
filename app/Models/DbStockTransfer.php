@@ -14,7 +14,6 @@ class DbStockTransfer extends Model
 
     protected $fillable = [
         'store_id',
-        'to_store_id',
         'reference_no',
         'warehouse_from',
         'warehouse_to',

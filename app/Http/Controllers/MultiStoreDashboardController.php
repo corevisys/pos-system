@@ -22,8 +22,11 @@ class MultiStoreDashboardController extends Controller
      */
     public function index(Request $request)
     {
-        // Double-gate defense-in-depth: must be Super Admin AND have the permission slug
-        if (!auth()->user()->isSuperAdmin() || !auth()->user()->hasPermission('multi_store_dashboard_view')) {
+        // Phase 3.1 — consolidated cross-store views are gated to the cross-store
+        // identities (Owner and Developer), NOT to the global super-admin flag alone.
+        // The Owner is deliberately NOT a bypass-everything account, so it is granted
+        // access here by role, while branch admins are rejected (403).
+        if (!auth()->user()->canViewAllStores()) {
             abort(403, 'You do not have permission to view the Multi-Store Dashboard.');
         }
 

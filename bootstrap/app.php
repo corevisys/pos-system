@@ -15,7 +15,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'ensure.store' => \App\Http\Middleware\EnsureUserHasStore::class,
             'permission' => \App\Http\Middleware\EnsureUserHasPermission::class,
             'report.export' => \App\Http\Middleware\EnsureReportExport::class,
+            'store.context' => \App\Http\Middleware\SetCurrentStore::class,
         ]);
+
+        // Resolve the acting store for every web request, before any controller or
+        // StoreScoped query runs. Runs after StartSession (so the session value is
+        // readable) and no-ops for guests / unauthenticated requests, which lets
+        // current_store_id() fall back to its legacy behaviour.
+        $middleware->appendToGroup('web', \App\Http\Middleware\SetCurrentStore::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

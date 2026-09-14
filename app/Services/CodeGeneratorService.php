@@ -165,18 +165,17 @@ class CodeGeneratorService
                     );
 
                 case 'purchase_return':
+                    // Phase 4.3: route through the same store-scoped lock+sequence
+                    // pattern as sales_return so purchase-return numbers are
+                    // sequential and auditable (previously uniqid(), i.e. random).
                     $prefix = !empty($store->purchase_return_init) ? $store->purchase_return_init : 'PR';
-                    for ($attempt = 0; $attempt < 10; $attempt++) {
-                        $code = rtrim($prefix, '-') . '-' . strtoupper(uniqid());
-                        $exists = DbPurchaseReturn::withoutGlobalScopes()
-                            ->where('store_id', $storeId)
-                            ->where('return_code', $code)
-                            ->exists();
-                        if (!$exists) {
-                            return $code;
-                        }
-                    }
-                    return $code;
+                    return self::generateSequential(
+                        DbPurchaseReturn::class,
+                        'return_code',
+                        $storeId,
+                        $customOffset,
+                        fn($nextId) => rtrim($prefix, '-') . '-' . str_pad($nextId, 5, '0', STR_PAD_LEFT)
+                    );
 
                 case 'reconciliation':
                 case 'cash_reconciliation':

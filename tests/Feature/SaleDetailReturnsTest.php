@@ -858,7 +858,9 @@ test('8. Server-side over-return validation rejects quantities exceeding remaini
     // Assert complete rollback: no return records created, no stock changes
     expect(DbSalesReturn::count())->toBe($initialReturnCount);
     expect(DbSalesItemReturn::count())->toBe($initialItemReturnCount);
-    expect($item->fresh()->stock)->toBe($initialStock);
+    // Cast both sides to float: MySQL returns decimal columns as numeric strings
+    // ("10.00") while SQLite returned native numbers (10).
+    expect((float) $item->fresh()->stock)->toBe((float) $initialStock);
 });
 
 test('9. Multi-item sale with one item fully returned allows partial return for remaining items only', function () {

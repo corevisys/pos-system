@@ -142,15 +142,30 @@ if (!function_exists('current_store_id')) {
      * Resolves the current active store ID.
      *
      * Hierarchy:
-     * 1. Authenticated user's store_id: auth()->user()->store_id (if logged in)
-     * 2. Memoized default store id (first db_store row)
-     * 3. Fallback default ID: 1
+     * 1. Explicit acting-store context (App\Services\StoreContext), bound by the
+     *    SetCurrentStore middleware from the session (falling back to the user's own
+     *    store). This is what lets a cross-store role act as a chosen store.
+     * 2. Authenticated user's store_id (legacy behaviour; also the fallback when the
+     *    context is unresolved — e.g. console/queue contexts or guest requests where
+     *    middleware does not run).
+     * 3. Memoized default store id (first db_store row)
+     * 4. Fallback default ID: 1
      *
      * @param bool $fresh Force reload from database
      * @return int
      */
     function current_store_id(bool $fresh = false): int
     {
+        try {
+            $context = app(\App\Services\StoreContext::class);
+            if ($context->isResolved() && $context->storeId() !== null) {
+                return (int) $context->storeId();
+            }
+        } catch (\Throwable $e) {
+            // Container not available this early (or context not bound) — fall
+            // through to the legacy resolution below.
+        }
+
         if (auth()->check() && !empty(auth()->user()->store_id)) {
             return (int) auth()->user()->store_id;
         }

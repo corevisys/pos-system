@@ -25,10 +25,18 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['au
 Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->middleware(['auth', 'verified', 'ensure.store'])->name('dashboard.chart-data');
 Route::get('/dashboard/data', [DashboardController::class, 'getDashboardData'])->middleware(['auth', 'verified', 'ensure.store'])->name('dashboard.data');
 
-// Super-Admin only: Multi-Store Network Dashboard
+// Cross-store (Owner / Developer) only: Multi-Store Network Dashboard
 Route::get('/multi-store-dashboard', [App\Http\Controllers\MultiStoreDashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('multi-store-dashboard');
+
+// Phase 3.2 — Owner-gated consolidated reporting (ledger/P&L + stock across stores).
+// Each controller method hard-gates on canViewAllStores(); a branch admin is 403
+// regardless of any ?store_id= / ?all_stores= parameter.
+Route::middleware(['auth', 'verified', 'ensure.store'])->group(function () {
+    Route::get('/consolidated/ledger', [App\Http\Controllers\ConsolidatedReportController::class, 'ledger'])->name('consolidated.ledger');
+    Route::get('/consolidated/stock', [App\Http\Controllers\ConsolidatedReportController::class, 'stock'])->name('consolidated.stock');
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -47,6 +55,11 @@ Route::get('/terms', [App\Http\Controllers\LegalController::class, 'terms'])->na
 require __DIR__.'/auth.php';
 
 Route::middleware(['auth', 'verified', 'ensure.store'])->group(function () {
+    // Phase 2.4 — Owner store selector (cross-store identities only; branch admins
+    // are rejected with 403 inside the controller).
+    Route::post('/store-context', [App\Http\Controllers\StoreSelectorController::class, 'update'])->name('store.context.update');
+    Route::delete('/store-context', [App\Http\Controllers\StoreSelectorController::class, 'clear'])->name('store.context.clear');
+
     // Global Search
     Route::get('/global-search', [App\Http\Controllers\GlobalSearchController::class, 'search'])->name('global.search');
 

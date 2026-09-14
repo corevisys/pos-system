@@ -41,7 +41,56 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+/**
+ * Resolve the absolute path to the `node` binary.
+ *
+ * The inline-JS syntax checks run `node --check` in a subprocess. In a long full
+ * suite run the inherited PATH seen by exec() is not always reliable, which produced
+ * spurious "'node' is not recognized" failures even though node is installed.
+ * Resolving an absolute path (and caching it) makes those checks deterministic.
+ */
+function node_binary(): string
 {
-    // ..
+    static $node = null;
+    if ($node !== null) {
+        return $node;
+    }
+
+    foreach ([
+        'C:/Program Files/nodejs/node.exe',
+        'C:/Program Files (x86)/nodejs/node.exe',
+    ] as $candidate) {
+        if (is_file($candidate)) {
+            return $node = $candidate;
+        }
+    }
+
+    $out = [];
+    @exec('where node 2>NUL', $out);
+    if (!empty($out[0]) && is_file(trim($out[0]))) {
+        return $node = trim($out[0]);
+    }
+
+    return $node = 'node';
+}
+
+/**
+ * Skip the current test unless it is running on SQLite.
+ *
+ * A handful of tests are SELF-CONTAINED SQLite harnesses: they construct their own
+ * SQLite database file, create their own schema, and drive it from parallel `php`
+ * worker processes via proc_open (a genuine cross-process concurrency probe). They
+ * do NOT touch the application's connection, so they cannot be "run against MySQL"
+ * without being rewritten as MySQL worker harnesses (which would need MySQL
+ * credentials, a throwaway schema and cleanup).
+ *
+ * When the suite is run on MySQL (phpunit.mysql.xml) these are skipped and reported
+ * as such, so the MySQL gate reflects the tests that actually exercise the app.
+ * They continue to run in full whenever the suite runs on SQLite (the default).
+ */
+function skipUnlessSqlite(string $reason = 'SQLite-only concurrency/migration harness; not applicable to the MySQL gate.'): void
+{
+    if (\Illuminate\Support\Facades\DB::connection()->getDriverName() !== 'sqlite') {
+        \PHPUnit\Framework\Assert::markTestSkipped($reason);
+    }
 }

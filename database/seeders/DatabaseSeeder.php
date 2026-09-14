@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
         $this->call(StoreSeeder::class);
         $this->call(AdminUserSeeder::class);
         $this->call(RolePermissionSeeder::class);
+        $this->call(OwnerDeveloperSeeder::class);
         $this->call(SmsTemplateSeeder::class);
         $this->call(SmsAutoRuleSeeder::class);
         $this->call(StateSeeder::class);

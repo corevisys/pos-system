@@ -415,6 +415,7 @@ class SerialUniquenessAcrossEntryPointsTest extends TestCase
      */
     public function test_concurrent_race_same_item_serial_exactly_one_succeeds()
     {
+        skipUnlessSqlite();
         $dbPath = sys_get_temp_dir() . '/serial_race_' . uniqid() . '.sqlite';
         $barrierFile = sys_get_temp_dir() . '/serial_barrier_' . uniqid() . '.txt';
         $workerScript = sys_get_temp_dir() . '/serial_worker_' . uniqid() . '.php';

@@ -103,6 +103,7 @@ class MoneyTransferFixesTest extends TestCase
      */
     public function test_transfer_creation_genuine_parallel_concurrency_blocks_overdraft()
     {
+        skipUnlessSqlite();
         $dbPath = sys_get_temp_dir() . '/transfer_race_' . uniqid() . '.sqlite';
         $barrierFile = sys_get_temp_dir() . '/transfer_barrier_' . uniqid() . '.txt';
         $workerScript = sys_get_temp_dir() . '/transfer_worker_' . uniqid() . '.php';
@@ -772,6 +773,7 @@ class MoneyTransferFixesTest extends TestCase
      */
     public function test_delete_reversal_genuine_parallel_concurrency_with_concurrent_destination_spend()
     {
+        skipUnlessSqlite();
         $dbPath = sys_get_temp_dir() . '/tr_del_concur_' . uniqid() . '.sqlite';
         $barrierFile = sys_get_temp_dir() . '/tr_del_barrier_' . uniqid() . '.txt';
         $workerDelScript = sys_get_temp_dir() . '/tr_del_worker_' . uniqid() . '.php';
@@ -953,6 +955,7 @@ class MoneyTransferFixesTest extends TestCase
      */
     public function test_same_transfer_concurrent_double_delete_race_prevented_direct_destroy()
     {
+        skipUnlessSqlite();
         $dbPath = sys_get_temp_dir() . '/tr_race_del_direct_' . uniqid() . '.sqlite';
         $barrierFile = sys_get_temp_dir() . '/tr_race_barrier_direct_' . uniqid() . '.txt';
         $workerScript = sys_get_temp_dir() . '/tr_worker_del_direct_' . uniqid() . '.php';
@@ -1052,6 +1055,7 @@ class MoneyTransferFixesTest extends TestCase
      */
     public function test_same_transfer_concurrent_double_delete_race_prevented_destroy_and_bulk_destroy()
     {
+        skipUnlessSqlite();
         $dbPath = sys_get_temp_dir() . '/tr_race_del_bulk_' . uniqid() . '.sqlite';
         $barrierFile = sys_get_temp_dir() . '/tr_race_barrier_bulk_' . uniqid() . '.txt';
         $workerDestroyScript = sys_get_temp_dir() . '/tr_worker_destroy_' . uniqid() . '.php';

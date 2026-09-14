@@ -139,7 +139,7 @@ test('items list page inline Alpine script passes node --check (browser-level JS
         // (Node 24 rejects unknown extensions like .tmp)
         $tmp = tempnam(sys_get_temp_dir(), 'items_list_js_') . '.js';
         file_put_contents($tmp, $js);
-        exec('node --check ' . escapeshellarg($tmp) . ' 2>&1', $out, $code);
+        exec(escapeshellarg(node_binary()) . ' --check ' . escapeshellarg($tmp) . ' 2>&1', $out, $code);
         unlink($tmp);
 
         expect($code)->toBe(0, "Inline script #{$idx} failed node --check:\n" . implode("\n", $out));

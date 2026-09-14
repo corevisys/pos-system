@@ -468,11 +468,17 @@ test('A3: resume (index with hold_id) exposes the persisted discount/coupon/note
     // The JSON injected into window.holdData must carry every A3 field the
     // Alpine restore block reads back.
     expect($html)->toContain('"sales_note":"Keep this note"');
-    expect($html)->toContain('"discount_on_all":10');
+    // MySQL returns DECIMAL columns as numeric strings, so JSON-encoded values may
+    // carry trailing zeros ("10.00" vs "10"); SQLite returned bare numbers. Accept an
+    // optional zero-decimal suffix so the assertion holds on both engines.
+    // MySQL returns DECIMAL columns as numeric strings, so JSON-encoded values may
+    // carry trailing zeros AND be quoted ("discount_on_all":"10.00" vs 10); SQLite
+    // returned bare numbers. Accept an optional quote and optional zero-decimal suffix.
+    expect($html)->toMatch('/"discount_on_all":"?10(?:\.0+)?"?/');
     expect($html)->toContain('"discount_type":"fixed"');
     expect($html)->toContain('"coupon_code":"HOLD5"');
-    expect($html)->toContain('"coupon_amount":5');
-    expect($html)->toContain('"tax_percent":15');
+    expect($html)->toMatch('/"coupon_amount":"?5(?:\.0+)?"?/');
+    expect($html)->toMatch('/"tax_percent":"?15(?:\.0+)?"?/');
 });
 
 // ──────────────────────────────────────────────────────────────── A4 ────

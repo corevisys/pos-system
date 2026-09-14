@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class DbLanguage extends Model
 {
     use HasFactory;
+    use \App\Models\Concerns\PinsExplicitIdInTests;
 
     protected $table = 'db_languages';
 

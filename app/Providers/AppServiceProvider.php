@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Schema;
 use App\Models\DbStore;
 use App\Models\DbCurrency;
+use App\Services\StoreContext;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -16,6 +17,12 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         require_once app_path('Helpers/helpers.php');
+
+        // One StoreContext per request/process: SetCurrentStore binds the acting
+        // store into it and current_store_id() reads it back. A singleton (not a
+        // fresh instance) is required so the binding made by middleware is visible
+        // to every later current_store_id() call in the same request.
+        $this->app->singleton(StoreContext::class);
 
         if (PHP_OS_FAMILY === 'Windows') {
             $mysqlPath = env('DUMP_BINARY_PATH', 'C:\\xampp\\mysql\\bin');

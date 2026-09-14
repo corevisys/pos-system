@@ -149,8 +149,17 @@
                         </a>
                     @endif
 
-                    {{-- Multi-Store Dashboard (Super Admin only) --}}
-                    @if(auth()->user()->isSuperAdmin() && auth()->user()->hasPermission('multi_store_dashboard_view'))
+                    {{-- Consolidated reporting + Multi-Store Dashboard (cross-store identities: Owner / Developer) --}}
+                    @if(auth()->user()->canViewAllStores())
+                        <a href="{{ route('consolidated.ledger') }}"
+                            class="relative flex items-center w-full gap-2 px-3 py-2 rounded-lg transition-all duration-200 group text-sm font-medium {{ request()->routeIs('consolidated.*') ? 'bg-primary text-white' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/5' }}">
+                            <svg class="w-4 h-4 transition-transform group-hover:scale-110" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 17v-6h13M9 17H4a1 1 0 01-1-1V5a1 1 0 011-1h9M9 17a3 3 0 11-6 0" />
+                            </svg>
+                            <span class="truncate">Consolidated Reports</span>
+                        </a>
                         <a href="{{ route('multi-store-dashboard') }}"
                             class="relative flex items-center w-full gap-2 px-3 py-2 rounded-lg transition-all duration-200 group text-sm font-medium {{ request()->routeIs('multi-store-dashboard') ? 'bg-primary text-white' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/5' }}">
                             <svg class="w-4 h-4 transition-transform group-hover:scale-110" fill="none"

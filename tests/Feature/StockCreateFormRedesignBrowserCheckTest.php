@@ -68,7 +68,7 @@ class StockCreateFormRedesignBrowserCheckTest extends TestCase
         foreach ($inlineScripts as $idx => $js) {
             $tmp = tempnam(sys_get_temp_dir(), 'stock_form_js_') . '.js';
             file_put_contents($tmp, $js);
-            exec('node --check ' . escapeshellarg($tmp) . ' 2>&1', $out, $code);
+            exec(escapeshellarg(node_binary()) . ' --check ' . escapeshellarg($tmp) . ' 2>&1', $out, $code);
             unlink($tmp);
             $this->assertSame(0, $code, "{$label}: inline script #{$idx} failed node --check:\n" . implode("\n", $out));
         }

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class DbRole extends Model
 {
     use StoreScoped;
+    use \App\Models\Concerns\PinsExplicitIdInTests;
 
     protected $table = 'db_roles';
 
@@ -20,10 +21,15 @@ class DbRole extends Model
         // the admin Roles UI can set it, but RoleController strips it from any
         // request made by a non-super-admin (privilege-escalation guard).
         'is_super_admin',
+        // Phase 2.2 — cross-store visibility flag (Owner). Independent of
+        // is_super_admin: the Owner SEES across stores but does NOT bypass
+        // authorization the way the Developer/system account does.
+        'is_owner',
     ];
 
     protected $casts = [
         'is_super_admin' => 'boolean',
+        'is_owner' => 'boolean',
         'status' => 'integer',
     ];
 

@@ -341,7 +341,7 @@ class Phase2SettingsTogglesTest extends TestCase
             'mobile' => '01799999999',
             'email' => 'admin@corevisys.com',
             'city' => 'Chittagong',
-            'currency_id' => 1,
+            'currency_id' => $this->currency->id,
             'round_off' => 1,
             'number_to_words' => 0,
             'change_return' => 1,

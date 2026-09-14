@@ -514,6 +514,7 @@ class ItemImportTest extends TestCase
 
     public function test_genuine_parallel_import_category_race_creates_exactly_one()
     {
+        skipUnlessSqlite();
         $dbPath = sys_get_temp_dir() . '/imp_race_' . uniqid() . '.sqlite';
         $barrierFile = sys_get_temp_dir() . '/imp_race_barrier_' . uniqid() . '.txt';
         $workerScript = sys_get_temp_dir() . '/imp_race_worker_' . uniqid() . '.php';

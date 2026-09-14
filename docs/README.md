@@ -81,7 +81,7 @@ Two layers, both server-side:
 1. `permission:<slug>` route middleware ([`EnsureUserHasPermission.php`](app/Http/Middleware/EnsureUserHasPermission.php:28), alias in [`bootstrap/app.php`](bootstrap/app.php:16)) — used for the whole `reports/*` group and select purchase routes ([`routes/web.php`](routes/web.php:351), [`routes/web.php`](routes/web.php:179)).
 2. Inline `if (auth()->check() && !auth()->user()->hasPermission('slug')) abort(403)` in controllers, plus `Gate::authorize` policies for Users/Roles ([`UserPolicy.php`](app/Policies/UserPolicy.php:46), [`RolePolicy.php`](app/Policies/RolePolicy.php:43)).
 
-Super-admin is the explicit **`db_roles.is_super_admin`** flag ([`User.php`](app/Models/User.php:121)), not a role name or id. **Caveat:** the flag was backfilled true for all three per-store "Super Admin" roles ([`2026_09_12_000002`](database/migrations/2026_09_12_000002_add_is_super_admin_to_db_roles_table.php:36)) — see ISSUE-8.
+Super-admin is the explicit **`db_roles.is_super_admin`** flag ([`User.php`](app/Models/User.php:121)), not a role name or id. **Caveat:** the flag was backfilled true for all three per-store "Super Admin" roles ([`2026_09_12_000002`](database/migrations/2026_09_12_000002_add_is_super_admin_to_db_roles_table.php:36)) — see ISSUE-8. The agreed target model is three roles: **Branch Admin** (own branch only — the flag is to be cleared), **Owner** (all stores + consolidated reports, a normal named role, not a bypass-everything super-admin) and **Developer** (separate system/maintenance account, never used as the Owner login). Details in [`MULTISTORE_GAP_ANALYSIS.md`](docs/MULTISTORE_GAP_ANALYSIS.md).
 
 ### 6.3 Document numbering
 `CodeGeneratorService::generate(type, offset, storeId)` produces store-scoped, sequential codes with `lockForUpdate()` and a bounded retry, inside a transaction ([`CodeGeneratorService.php`](app/Services/CodeGeneratorService.php:33), [`…:207`](app/Services/CodeGeneratorService.php:207)). Prefixes come from `db_store.*_init`. Exception: `purchase_return` still uses `uniqid()` (ISSUE-10).
@@ -105,10 +105,10 @@ Sales/POS (incl. hold/resume, EMI, serial tracking), Sales returns, Quotations (
 ## 8. Known limitations (see gap analysis for detail)
 
 - **No store switcher / acting-store context** — the single biggest multi-store blocker ([`helpers.php`](app/Helpers/helpers.php:152)).
-- Three per-store admins are globally privileged via the `is_super_admin` backfill (ISSUE-8).
+- Three per-store admins are globally privileged via the `is_super_admin` backfill (ISSUE-8) — to be replaced by the Branch Admin / Owner / Developer role model.
 - Dual stock source of truth persists (ISSUE-1).
 - Invalid inline JS on items-list / transfer-create / adjustment-create views (ISSUE-2).
-- Orphan view `module/items/import_services.blade.php`; dormant `to_store_id` columns (ISSUE-3, ISSUE-4).
+- Orphan view `module/items/import_services.blade.php` (ISSUE-3); `to_store_id` columns are **confirmed dead code** and safe to remove (ISSUE-4).
 - 12 concurrency tests fail in this environment (harness suspected); 3 deterministic JS failures.
 - Windows-hardcoded MySQL dump path (ISSUE-6); public layout omits `app.js` (ISSUE-7); app layout loads no Font Awesome though `app.js` builds FA spinner markup (ISSUE-9).
 
