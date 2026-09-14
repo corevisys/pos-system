@@ -40,6 +40,48 @@ availability.
 legacy items — both require enforcing a warehouse on every create path (a launch-time
 behaviour change) and are out of scope per the gap analysis.
 
+### Stock-source contract (authoritative statement)
+
+```text
+db_items.stock is intentionally retained.
+
+For items with warehouse rows:
+    db_items.stock = denormalized aggregate of warehouse available_qty.
+
+For items without warehouse rows:
+    db_items.stock = authoritative stock figure.
+
+Full removal requires a separate migration project:
+    legacy warehouse assignment/backfill
+    + enforcing warehouse creation
+    + migrating all reads/writes
+    + verification
+    + only then dropping the column.
+```
+
+### Remaining-work audit (2026-09-14)
+
+Every remaining production read/write of `db_items.stock` was re-audited after the
+pragmatic implementation, and each was confirmed to preserve the contract above:
+
+- **Reads (all correct, no further change needed):** POS availability gate
+  ([`PosController`](../app/Http/Controllers/PosController.php:1353)) → `availableStock()`;
+  SMS low-stock decision + payload → `availableStock()`; items-list screen/print/export
+  → `availableStock()`; item edit screens and `ItemController` build the form value from
+  the warehouse row *with an explicit `db_items.stock` fallback* for warehouse-less
+  items; dashboard low-stock widget and `ReportController` use a stock figure that is
+  provably equal to `availableStock()` (aggregate for warehouse-backed items, the
+  authoritative column for warehouse-less ones); `CompareItemStockSources` is
+  diagnostic-only.
+- **Writes (all correct, all paired):** every operational stock mutation
+  (purchase, sale, sale deletion, sales return, adjustment create/edit/revert,
+  quotation) mutates `db_items.stock` **and** the matching
+  `db_warehouseitems.available_qty` in the same transaction, preserving equality via a
+  symmetric delta; `ItemController::syncGlobalStock()` and `DbItem::syncGlobalStock()`
+  set the aggregate only when warehouse rows exist and never zero warehouse-less items.
+- **No divergence found** on the seeded dataset (0 mismatches where warehouse rows
+  exist), and the invariant is maintained by the symmetric deltas above.
+
 ## 2. Phase 4.5 — Per-store invoice templates
 
 Not built. The gap analysis marks this optional and only worth doing if document

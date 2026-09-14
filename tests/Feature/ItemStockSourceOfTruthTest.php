@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\AcAccount;
+use App\Models\DbCustomer;
 use App\Models\DbItem;
 use App\Models\DbPermission;
 use App\Models\DbRole;
@@ -112,4 +114,60 @@ test('pos checkout availability uses the summed warehouse qty across two warehou
     // selected for the sale — confirming multi-warehouse stock is not hidden.
     $fresh = DbItem::find($item->id);
     expect($fresh->availableStock())->toBe(10.0);
+});
+
+// ── 5. POS availability works end-to-end for a WAREHOUSE-LESS item ───────────
+//
+// This is the exact scenario the old single-column model could hide: an item with
+// db_items.stock but no db_warehouseitems row must still be sellable (its global
+// stock is authoritative), and must be rejected when the requested qty exceeds it.
+
+test('pos availability honours db_items.stock for a warehouse-less item', function () {
+    stockTruthEnv();
+
+    $warehouse = DbWarehouse::first();
+    $customer = DbCustomer::create([
+        'store_id' => 1, 'customer_name' => 'POS Customer', 'mobile' => '01811220011',
+        'status' => 1,
+    ]);
+    $account = AcAccount::create([
+        'store_id' => 1, 'account_name' => 'POS Cash', 'balance' => 10000, 'status' => 1,
+    ]);
+
+    // Stock 5, and deliberately NO db_warehouseitems row.
+    $item = DbItem::create([
+        'store_id' => 1, 'item_name' => 'Warehouse-less POS Item', 'item_code' => 'NOWH-POS',
+        'stock' => 5, 'sales_price' => 100, 'purchase_price' => 60, 'status' => 1,
+    ]);
+    expect(DbWarehouseItem::where('item_id', $item->id)->exists())->toBeFalse();
+
+    $user = User::factory()->create(['store_id' => 1, 'role_id' => 1, 'email_verified_at' => now()]);
+
+    $payload = function (int $qty) use ($warehouse, $customer, $account, $item) {
+        return [
+            'customer_id' => $customer->id,
+            'warehouse_id' => $warehouse->id,
+            'payment_type' => 'Cash',
+            'account_id' => $account->id,
+            'cart' => [[
+                'id' => $item->id, 'name' => $item->item_name, 'price' => 100,
+                'qty' => $qty, 'total' => 100 * $qty, 'discount' => 0, 'tax' => 0, 'taxAmount' => 0,
+            ]],
+            'subtotal' => 100 * $qty,
+            'grand_total' => 100 * $qty,
+            'paid_amount' => 100 * $qty,
+        ];
+    };
+
+    // qty 3 <= 5 → allowed (the stock gate reads db_items.stock for this item).
+    $this->actingAs($user)->postJson(route('sales.pos.store'), $payload(3))
+        ->assertOk()->assertJson(['success' => true]);
+
+    // After the sale the item is still warehouse-less; db_items.stock decremented to 2.
+    expect(DbWarehouseItem::where('item_id', $item->id)->exists())->toBeFalse()
+        ->and((float) DbItem::find($item->id)->stock)->toBe(2.0);
+
+    // qty 10 > remaining 2 → rejected as insufficient stock (not silently allowed).
+    $this->actingAs($user)->postJson(route('sales.pos.store'), $payload(10))
+        ->assertStatus(422);
 });
