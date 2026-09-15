@@ -82,6 +82,33 @@ pragmatic implementation, and each was confirmed to preserve the contract above:
 - **No divergence found** on the seeded dataset (0 mismatches where warehouse rows
   exist), and the invariant is maintained by the symmetric deltas above.
 
+### Correction — a read site MISSED by the original 4.2.2 audit (fixed 2026-09-14)
+
+The original 4.2.2 pass routed the **checkout** availability gate
+([`PosController`](../app/Http/Controllers/PosController.php:1353)) through
+`availableStock()`, but missed **`PosController::searchItems`** — the item
+search/autocomplete endpoint. It is important to note it is a **POS/Sale-shared**
+endpoint (both [`pos.blade.php`](../resources/views/module/sales/pos.blade.php:1279)
+and [`add.blade.php`](../resources/views/module/sales/add.blade.php:1131) call
+`sales.pos.search.items`), and it computed `stock` with raw SQL
+(`COALESCE(db_warehouseitems.available_qty, 0)` / raw `db_items.stock`). Consequence:
+**warehouse-less items showed stock 0** in the search list and that 0 was carried into
+the cart line, while checkout actually sold from the `db_items.stock` fallback.
+
+Fix: `searchItems` now resolves `stock` via `DbItem::availableStock($warehouseId)` — the
+same single canonical rule as checkout (no second implementation of the fallback) — with
+`db_items.stock` still selected solely as that rule's fallback input. Regression coverage:
+[`PosItemSearchStockTest`](../tests/Feature/PosItemSearchStockTest.php:1) asserts the
+endpoint response `stock` **equals** `availableStock()` for all four cases (warehouse-less
+± warehouse_id, tracked ± warehouse_id) plus a search/checkout parity guard.
+
+**Audit lesson for future passes:** the stock-source read sites are not only the obvious
+availability gates — the item **search/list** endpoints (POS/Sale, plus the parallel
+`searchItems` in Purchase / Quotation / StockAdjustment / StockTransfer / Item) must be
+audited too. The POS/Sale one is fixed here; the others return per-warehouse
+`available_qty` and were verified to be internally consistent, but any future stock-source
+change must re-check every `searchItems` variant.
+
 ## 2. Phase 4.5 — Per-store invoice templates
 
 Not built. The gap analysis marks this optional and only worth doing if document

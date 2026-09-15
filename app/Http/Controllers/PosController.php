@@ -144,8 +144,14 @@ class PosController extends Controller
         $brand_id = $request->get('brand_id');
         $warehouse_id = $request->get('warehouse_id');
 
-        $query = DbItem::with('tax')
-            ->select('db_items.id', 'db_items.item_name', 'db_items.item_code', 'db_items.custom_barcode', 'db_items.sales_price', 'db_items.item_image', 'db_items.is_serialized', 'db_items.tax_id')
+        // Phase 4.2.2 fix — `stock` is NO LONGER computed with raw SQL here. The
+        // previous implementation joined db_warehouseitems and read its available_qty
+        // (or the raw db_items.stock) directly, which bypassed the canonical rule and
+        // showed 0 for warehouse-less items. `db_items.stock` is still SELECTED so
+        // DbItem::availableStock() can use it as the fallback; the value is resolved
+        // below via the single canonical rule (same one used at checkout:1353).
+        $query = DbItem::with(['tax', 'warehouseItems'])
+            ->select('db_items.id', 'db_items.item_name', 'db_items.item_code', 'db_items.custom_barcode', 'db_items.sales_price', 'db_items.item_image', 'db_items.is_serialized', 'db_items.tax_id', 'db_items.stock')
             ->where('db_items.status', 1)
             // A12 (added item, stated explicitly): close the pre-existing cross-store
             // leak — POS search previously returned items from every store. Scoped to
@@ -153,18 +159,7 @@ class PosController extends Controller
             ->where('db_items.store_id', current_store_id())
             ->leftJoin('db_salesitems', 'db_items.id', '=', 'db_salesitems.item_id')
             ->selectRaw('SUM(COALESCE(db_salesitems.sales_qty, 0)) as total_sold')
-            ->groupBy('db_items.id', 'db_items.item_name', 'db_items.item_code', 'db_items.custom_barcode', 'db_items.sales_price', 'db_items.item_image', 'db_items.is_serialized', 'db_items.tax_id');
-
-        if ($warehouse_id) {
-            $query->leftJoin('db_warehouseitems', function($join) use ($warehouse_id) {
-                $join->on('db_items.id', '=', 'db_warehouseitems.item_id')
-                     ->where('db_warehouseitems.warehouse_id', '=', $warehouse_id);
-            })->addSelect(DB::raw('COALESCE(db_warehouseitems.available_qty, 0) as stock'))
-              ->groupBy('db_warehouseitems.available_qty');
-        } else {
-            $query->addSelect('db_items.stock')
-                  ->groupBy('db_items.stock');
-        }
+            ->groupBy('db_items.id', 'db_items.item_name', 'db_items.item_code', 'db_items.custom_barcode', 'db_items.sales_price', 'db_items.item_image', 'db_items.is_serialized', 'db_items.tax_id', 'db_items.stock');
 
         if (!empty($search)) {
             $searchLower = strtolower($search);
@@ -211,8 +206,8 @@ class PosController extends Controller
                 ->first();
 
             if ($serialMatch) {
-                $items = DbItem::with('tax')
-                    ->select('db_items.id', 'db_items.item_name', 'db_items.item_code', 'db_items.custom_barcode', 'db_items.sales_price', 'db_items.item_image', 'db_items.is_serialized', 'db_items.tax_id')
+                $items = DbItem::with(['tax', 'warehouseItems'])
+                    ->select('db_items.id', 'db_items.item_name', 'db_items.item_code', 'db_items.custom_barcode', 'db_items.sales_price', 'db_items.item_image', 'db_items.is_serialized', 'db_items.tax_id', 'db_items.stock')
                     ->where('db_items.id', $serialMatch->item_id)
                     ->where('db_items.status', 1)
                     ->where('db_items.store_id', current_store_id())
@@ -224,6 +219,16 @@ class PosController extends Controller
                     });
             }
         }
+
+        // Phase 4.2.2 fix — resolve `stock` through the SINGLE canonical rule
+        // (DbItem::availableStock), the exact same rule the checkout gate uses at
+        // PosController:1353. Warehouse rows are eager-loaded on both paths above, so
+        // this is one resolved query, not N+1. Replaces the previous raw-SQL branches
+        // that read db_warehouseitems/raw db_items.stock directly (which showed 0 for
+        // warehouse-less items and diverged from checkout).
+        $items->each(function ($item) use ($warehouse_id) {
+            $item->stock = $item->availableStock($warehouse_id ?: null);
+        });
 
         return response()->json($items);
     }
