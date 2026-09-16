@@ -626,7 +626,8 @@ class StockAdjustmentController extends Controller
         $storeId = current_store_id();
         
         // C1: store-scoped item search — a Store-2 user never sees Store-1 items.
-        $items = DbItem::where('store_id', $storeId)
+        $items = DbItem::with('warehouseItems')
+                    ->where('store_id', $storeId)
                     ->where(function($q) use ($query) {
                         $q->where('item_name', 'LIKE', "%{$query}%")
                           ->orWhere('item_code', 'LIKE', "%{$query}%")
@@ -636,15 +637,16 @@ class StockAdjustmentController extends Controller
                     ->limit(10)
                     ->get();
                     
-        foreach($items as $item) {
-            if($warehouse_id) {
-                $whItem = DbWarehouseItem::where('warehouse_id', $warehouse_id)
-                            ->where('item_id', $item->id)
-                            ->where('store_id', $storeId)
-                            ->first();
-                $item->stock = $whItem ? $whItem->available_qty : 0;
-            }
-        }
+        // Phase 4.2.2 fix — resolve `stock` through the SINGLE canonical rule
+        // (DbItem::availableStock), the same rule used at POS/Sale search and at the
+        // checkout gate. The previous `$whItem ? $whItem->available_qty : 0` fallback
+        // showed 0 for warehouse-less items (should be db_items.stock) and bypassed the
+        // canonical method. When no warehouse_id is passed, availableStock(null) returns
+        // the store-wide aggregate — identical to the raw db_items.stock already shown,
+        // so the no-warehouse path is unchanged.
+        $items->each(function ($item) use ($warehouse_id) {
+            $item->stock = $item->availableStock($warehouse_id ?: null);
+        });
                     
         return response()->json($items);
     }

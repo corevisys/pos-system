@@ -103,11 +103,23 @@ endpoint response `stock` **equals** `availableStock()` for all four cases (ware
 ± warehouse_id, tracked ± warehouse_id) plus a search/checkout parity guard.
 
 **Audit lesson for future passes:** the stock-source read sites are not only the obvious
-availability gates — the item **search/list** endpoints (POS/Sale, plus the parallel
-`searchItems` in Purchase / Quotation / StockAdjustment / StockTransfer / Item) must be
-audited too. The POS/Sale one is fixed here; the others return per-warehouse
-`available_qty` and were verified to be internally consistent, but any future stock-source
-change must re-check every `searchItems` variant.
+availability gates — the item **search/list** endpoints must be audited too.
+
+**Full `searchItems` audit (2026-09-15) — this line item is now CLOSED (no unaudited search endpoints):**
+
+| Module | Endpoint | Stock read | Status |
+|---|---|---|---|
+| POS / Sale (shared) | `PosController::searchItems` | was raw SQL (warehouse join / raw column) | **FIXED** (commit `fe71520`) |
+| Stock Adjustment | [`StockAdjustmentController::searchItems`](../app/Http/Controllers/StockAdjustmentController.php:639) | was `$whItem ? $whItem->available_qty : 0` | **FIXED** — now `availableStock($warehouse_id ?: null)` |
+| Stock Transfer | [`StockTransferController::searchItems`](../app/Http/Controllers/StockTransferController.php:652) | same `… : 0` pattern | **FIXED** — now `availableStock($warehouse_id ?: null)` |
+| Purchase | `PurchaseController::searchItems` | raw `db_items.stock`, no `warehouse_id` | audited — equals `availableStock(null)` (clean) |
+| Quotation | `QuotationController::searchItems` | raw `db_items.stock`, no `warehouse_id` | audited — equals `availableStock(null)` (clean) |
+| Items (label picker) | `ItemController::searchItems` → `formatItemForLabel` | raw `db_items.stock`, no `warehouse_id` | audited — equals `availableStock(null)` (clean) |
+
+The two stock endpoints were reproduced pre-fix (warehouse-less item returned **0**,
+should be `db_items.stock` = 15) and post-fix (warehouse-less **15**, tracked unchanged
+**7** for a selected warehouse, no-warehouse path unchanged **10**). Regression coverage:
+[`StockSearchStockTest`](../tests/Feature/StockSearchStockTest.php:1).
 
 ## 2. Phase 4.5 — Per-store invoice templates
 
