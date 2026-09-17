@@ -390,110 +390,81 @@
         
 
         <!-- HOLD INVOICE MODAL -->
-        <div x-show="holdModalOpen"
-             class="fixed inset-0 z-50 flex items-center justify-center bg-navy/60 backdrop-blur-sm p-4"
-             x-cloak
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-200"
-             x-transition:leave-start="opacity-100"
-             x-transition:leave-end="opacity-0">
+        <x-modal name="pos-hold-invoice" state="holdModalOpen" maxWidth="md" focusable>
             
-            <div class="bg-card dark:bg-dark-card rounded-xl shadow-modal w-full max-w-md p-6 border border-border dark:border-dark-border transform transition-all"
-                 @click.away="holdModalOpen = false"
-                 x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-                 x-transition:leave="transition ease-in duration-200"
-                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
+            <div class="p-6">
                  
                 <div class="text-center">
-                    <div class="w-16 h-16 bg-warning-light dark:bg-warning/15 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-warning/20">
-                        <span class="text-3xl font-black text-warning">!</span>
+                    <div class="w-14 h-14 bg-warning-light dark:bg-warning/15 rounded-full flex items-center justify-center mx-auto mb-3 border-4 border-warning/20">
+                        <span class="text-2xl font-black text-warning">!</span>
                     </div>
                     
                     <h2 class="text-lg font-black text-text-primary dark:text-dark-text mb-2">Hold Invoice ?</h2>
                     <!-- A7: holding is now explicit — a duplicate reference is rejected,
                          not a silent replace. The server returns a clear error if the
                          reference already exists. -->
-                    <p class="text-xs font-bold text-text-secondary dark:text-slate-400 mb-6 uppercase tracking-wide">Use a unique reference number. A duplicate reference will be rejected.</p>
+                    <p class="text-[11px] font-bold text-text-secondary dark:text-slate-400 mb-5 uppercase tracking-wide">Use a unique reference number. A duplicate reference will be rejected.</p>
                     
                     <input type="text" x-model="holdReference" placeholder="Please Enter Reference Number!"
-                           class="input-base mb-6 placeholder:text-xs">
+                           class="input-base text-center placeholder:text-xs mb-5">
                     
                     <div class="flex gap-3 justify-end">
-                        <button @click="holdModalOpen = false" class="btn-secondary px-5 py-3 text-xs font-black uppercase tracking-wider">
+                        <button type="button" @click="holdModalOpen = false" class="btn-ghost">
                             Cancel
                         </button>
-                        <button @click="submitHold()" :disabled="submitting" class="btn-danger px-5 py-3 text-xs font-black uppercase tracking-wider shadow-lg shadow-danger/30 dark:shadow-none transform active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-1.5">
-                            <span x-show="submitting" class="w-3.5 h-3.5 animate-spin rounded-full border-2 border-white border-t-transparent inline-block align-middle" x-cloak></span>
+                        <button type="button" @click="submitHold()" :disabled="submitting" class="btn-danger">
+                            <span x-show="submitting" class="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent inline-block" x-cloak></span>
                             <span x-text="submitting ? 'Holding...' : 'OK'">OK</span>
                         </button>
                     </div>
                 </div>
             </div>
-        </div>
+        </x-modal>
 
 
         <!-- MULTIPLE PAYMENT MODAL -->
-        <div x-show="multipleModalOpen"
-             class="fixed inset-0 z-50 flex items-center justify-center bg-navy/60 backdrop-blur-sm p-4"
-             x-cloak
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-200"
-             x-transition:leave-start="opacity-100"
-             x-transition:leave-end="opacity-0">
-            
-            <div class="bg-card dark:bg-dark-card w-full max-w-4xl rounded-xl shadow-modal flex flex-col overflow-hidden border border-border dark:border-dark-border max-h-[90vh]"
-                 x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="opacity-0 scale-95 translate-y-10"
-                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                 x-transition:leave="transition ease-in duration-200"
-                 x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-                 x-transition:leave-end="opacity-0 scale-95 translate-y-10">
-                 
+        <x-modal name="pos-multiple-payment" state="multipleModalOpen" maxWidth="4xl" focusable>
+            <div class="flex flex-col max-h-[85vh]">
+
                 <!-- Modal Header -->
-                <div class="px-6 py-5 border-b border-border-light dark:border-dark-border flex items-center justify-between">
+                <div class="px-5 py-4 border-b border-border dark:border-dark-border flex items-center justify-between shrink-0">
                     <div>
-                        <h2 class="text-2xl font-black tracking-tight text-text-primary dark:text-dark-text">Multiple Payments</h2>
+                        <h2 class="text-xl font-black tracking-tight text-text-primary dark:text-dark-text">Multiple Payments</h2>
                         <p class="text-[10px] font-bold text-text-muted uppercase tracking-widest mt-0.5">Split payments across different methods</p>
                     </div>
-                    <button @click="multipleModalOpen = false" class="w-11 h-11 rounded-full bg-background dark:bg-slate-800 text-text-muted hover:bg-danger-light hover:text-danger transition-colors flex items-center justify-center">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <button type="button" @click="multipleModalOpen = false" aria-label="Close"
+                            class="w-9 h-9 rounded-button bg-background dark:bg-slate-800 text-text-muted hover:bg-danger-light hover:text-danger transition-colors flex items-center justify-center">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 </div>
 
                 <!-- Modal Body -->
-                <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="flex-1 overflow-y-auto p-5 custom-scrollbar">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
                         
                         <!-- Left Column: Payment Inputs -->
-                        <div class="lg:col-span-8 space-y-5">
+                        <div class="lg:col-span-7 space-y-5">
                             
                             <!-- Top Card: Advance & Coupon -->
-                            <div class="bg-slate-50 dark:bg-slate-800/30 rounded-2xl p-4 border border-slate-100 dark:border-dark-border">
+                            <div class="bg-background dark:bg-slate-800/30 rounded-card p-4 border border-border dark:border-dark-border">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <div class="flex items-center justify-between mb-2">
                                             <span class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Advance Payment</span>
                                             <span class="text-[11px] font-black tabular-nums text-slate-700 dark:text-white" x-text="'{{ $currencySymbol }}' + (parseFloat(advanceAmount) || 0).toFixed(2)">0.00</span>
                                         </div>
-                                        <label class="flex items-center gap-3 cursor-pointer p-3 bg-white dark:bg-dark-card rounded-xl border border-slate-200 dark:border-dark-border shadow-sm hover:border-primary-200 transition-colors">
-                                            <div class="w-5 h-5 rounded-md border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center text-white" :class="{ 'bg-primary-500 border-primary-500': advancePayment }">
+                                        <label class="flex items-center gap-3 cursor-pointer p-3 bg-card dark:bg-dark-card rounded-input border border-border dark:border-dark-border shadow-sm hover:border-primary/40 transition-colors">
+                                            <div class="w-5 h-5 rounded-md border-2 border-border dark:border-dark-border flex items-center justify-center text-white" :class="{ 'bg-primary-500 border-primary-500': advancePayment }">
                                                 <input type="checkbox" x-model="advancePayment" class="hidden">
                                                 <svg x-show="advancePayment" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                                             </div>
-                                            <span class="text-[10px] font-bold uppercase tracking-wide text-slate-600 dark:text-gray-400">Adjust Advance Payment</span>
+                                            <span class="text-[10px] font-bold uppercase tracking-wide text-text-secondary dark:text-slate-400">Adjust Advance Payment</span>
                                         </label>
                                     </div>
                                     <div>
-                                        <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest block mb-2">Discount Coupon Code</label>
+                                        <label class="text-[9px] font-black uppercase text-text-muted tracking-widest block mb-2">Discount Coupon Code</label>
                                         <div class="relative" x-show="!appliedCoupon">
-                                            <input type="text" x-model="couponCode" placeholder="Enter Code" @keydown.enter.prevent="applyCoupon()" class="w-full bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border rounded-xl py-2.5 pl-4 pr-10 text-[11px] font-bold focus:ring-2 focus:ring-primary-500 outline-none transition-all uppercase placeholder:normal-case">
+                                            <input type="text" x-model="couponCode" placeholder="Enter Code" @keydown.enter.prevent="applyCoupon()" class="input-base pr-10 uppercase placeholder:normal-case">
                                             <button type="button" @click="applyCoupon()" :disabled="couponLoading" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center">
                                                 <svg x-show="!couponLoading" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                                                 <svg x-show="couponLoading" class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -509,8 +480,8 @@
                                             </button>
                                         </div>
                                         <div class="flex justify-between mt-1.5 px-1">
-                                            <span class="text-[9px] font-bold text-slate-400">Coupon Value</span>
-                                            <span class="text-[9px] font-black text-slate-600 dark:text-slate-300" x-text="'{{ $currencySymbol }}' + couponAmount.toFixed(2)"></span>
+                                            <span class="text-[9px] font-bold text-text-muted">Coupon Value</span>
+                                            <span class="text-[9px] font-black text-text-secondary dark:text-slate-300" x-text="'{{ $currencySymbol }}' + couponAmount.toFixed(2)"></span>
                                         </div>
                                     </div>
                                 </div>
@@ -518,7 +489,7 @@
 
                             <!-- Payment Rows Header -->
                             <div class="flex items-center justify-between">
-                                <h3 class="text-[11px] font-black uppercase text-slate-800 dark:text-white tracking-widest flex items-center gap-2">
+                                <h3 class="text-[11px] font-black uppercase text-text-primary dark:text-dark-text tracking-widest flex items-center gap-2">
                                     <span class="w-1.5 h-1.5 rounded-full bg-primary-500"></span>
                                     Payment Methods
                                 </h3>
@@ -531,7 +502,7 @@
                             <!-- Payment Rows -->
                             <div class="space-y-3">
                                 <template x-for="(row, index) in paymentRows" :key="index">
-                                    <div class="card p-4 rounded-xl shadow-card relative group hover:border-primary/40 transition-all">
+                                    <div class="card p-4 relative group hover:border-primary/40 transition-all">
                                         <button @click="removePaymentRow(index)" x-show="paymentRows.length > 1" class="absolute -top-2 -right-2 bg-danger text-white rounded-full p-1.5 shadow-md opacity-0 group-hover:opacity-100 transition-all hover:scale-110 z-10">
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
                                         </button>
@@ -573,15 +544,10 @@
                         </div>
 
                         <!-- Right Column: Summary -->
-                        <div class="lg:col-span-4">
-                            <div class="bg-slate-900 rounded-[2rem] overflow-hidden shadow-2xl text-white h-full relative p-6 flex flex-col justify-between">
-                                
-                                <!-- Decorative Elements -->
-                                <div class="absolute top-0 right-0 w-32 h-32 bg-primary-500/20 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-                                <div class="absolute bottom-0 left-0 w-32 h-32 bg-rose-500/20 rounded-full blur-3xl -ml-16 -mb-16 pointer-events-none"></div>
-
-                                <div class="relative space-y-4">
-                                    <h3 class="text-xs font-black uppercase tracking-widest text-slate-400 mb-6 border-b border-white/10 pb-4">Payment Summary</h3>
+                        <div class="lg:col-span-5">
+                            <div class="bg-navy rounded-card overflow-hidden shadow-card text-white h-full p-5 flex flex-col justify-between">
+                                <div class="space-y-4">
+                                    <h3 class="text-xs font-black uppercase tracking-widest text-slate-400 mb-5 border-b border-white/10 pb-3">Payment Summary</h3>
                                     
                                     <div class="space-y-3">
                                         <div class="flex justify-between items-center">
@@ -603,7 +569,7 @@
                                         
                                         <div class="my-4 border-t border-dashed border-white/20"></div>
                                         
-                                        <div class="flex justify-between items-end">
+                                        <div class="flex flex-wrap justify-between items-end gap-y-1">
                                             <span class="text-[11px] font-black uppercase tracking-widest text-slate-300">Net Payable</span>
                                             <span class="text-2xl font-black text-white" x-text="'{{ $currencySymbol }}' + totalPayable.toFixed(2)"></span>
                                         </div>
@@ -617,16 +583,12 @@
                                                  <span class="text-[10px] font-bold uppercase tracking-wider text-orange-300">Balance Due</span>
                                                 <span class="text-sm font-black text-orange-300" x-text="'{{ $currencySymbol }}' + balance.toFixed(2)"></span>
                                             </div>
-                                             <div x-show="changeReturnEnabled" class="flex justify-between items-center border-t border-white/10 pt-2">
+                                             <div x-show="changeReturnEnabled" class="flex flex-wrap justify-between items-center gap-y-1 border-t border-white/10 pt-2">
                                                 <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-300">Change Return</span>
                                                 <span class="text-lg font-black text-emerald-300" x-text="'{{ $currencySymbol }}' + changeReturn.toFixed(2)"></span>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                
-                                <div class="relative mt-8">
-                                    <div class="text-[9px] text-slate-500 font-medium text-center mb-2">Secure Payment Gateway</div>
                                 </div>
                             </div>
                         </div>
@@ -635,89 +597,74 @@
                 </div>
 
                 <!-- Modal Footer -->
-                <div class="px-6 py-5 border-t border-border-light dark:border-dark-border flex justify-end gap-3 bg-background/50 dark:bg-slate-800/10">
-                    <button @click="multipleModalOpen = false" class="btn-secondary px-6 py-3 text-[10px] font-black uppercase tracking-widest">
+                <div class="px-5 py-4 border-t border-border dark:border-dark-border flex justify-end gap-3 bg-background/50 dark:bg-slate-800/10 shrink-0">
+                    <button type="button" @click="multipleModalOpen = false" class="btn-ghost">
                         Close
                     </button>
-                    <button @click="submitSale()" :disabled="submitting" class="px-8 py-3 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/30 dark:shadow-none flex items-center gap-2 hover:bg-primary-hover disabled:opacity-60 disabled:cursor-not-allowed">
+                    <button type="button" @click="submitSale()" :disabled="submitting" class="btn-secondary">
+                        <svg x-show="!submitting" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                        <span x-text="submitting ? 'Saving...' : 'Save & Print'">Save & Print</span>
+                    </button>
+                    <button type="button" @click="submitSale()" :disabled="submitting" class="btn-primary">
                         <svg x-show="!submitting" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
                         <svg x-show="submitting" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" x-cloak><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
                         <span x-text="submitting ? 'Saving...' : 'Save'">Save</span>
                     </button>
-                    <button @click="submitSale()" :disabled="submitting" class="px-8 py-3 bg-success text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-success/30 dark:shadow-none flex items-center gap-2 hover:bg-success/90 disabled:opacity-60 disabled:cursor-not-allowed">
-                        <svg x-show="!submitting" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                        <svg x-show="submitting" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" x-cloak><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-                        <span x-text="submitting ? 'Saving...' : 'Save & Print'">Save & Print</span>
-                    </button>
                 </div>
             </div>
-        </div>
+        </x-modal>
 
         <!-- QUICK ADD CUSTOMER MODAL -->
-        <div x-show="customerModalOpen"
-             class="fixed inset-0 z-[100] flex items-center justify-center bg-navy/60 backdrop-blur-sm p-6"
-             x-cloak
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-200"
-             x-transition:leave-start="opacity-100"
-             x-transition:leave-end="opacity-0">
-            
-            <div class="bg-card dark:bg-dark-card w-full max-w-6xl rounded-xl shadow-modal p-8 border border-border dark:border-dark-border overflow-hidden relative"
-                 @click.away="customerModalOpen = false"
-                 x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="scale-95 translate-y-10"
-                 x-transition:enter-end="scale-100 translate-y-0">
-                 
-                <div class="mb-6 text-center">
-                    <h2 class="text-2xl font-black tracking-tight text-text-primary dark:text-dark-text">Create New Customer</h2>
-                    <p class="text-text-muted text-sm font-medium mt-1">Instantly add a customer with a compact and efficient workflow.</p>
+        <x-modal name="pos-quick-customer" state="customerModalOpen" maxWidth="2xl" focusable>
+            <div class="p-6">
+
+                <div class="mb-5 text-center">
+                    <h2 class="text-xl font-black tracking-tight text-text-primary dark:text-dark-text">Create New Customer</h2>
+                    <p class="text-text-muted text-xs font-medium mt-1">Quickly add a customer without leaving the POS.</p>
                 </div>
 
-                <form @submit.prevent="submitQuickCustomer()" class="space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div class="lg:col-span-2">
-                            <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest block mb-1.5 px-1">Full Name *</label>
+                <form @submit.prevent="submitQuickCustomer()" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="text-[9px] font-black uppercase text-text-muted tracking-widest block mb-1.5 px-1">Full Name *</label>
                             <input type="text" x-model="newCustomer.customer_name" required placeholder="e.g. John Doe"
-                                   class="input-base border-none shadow-inner">
+                                   class="input-base">
                         </div>
 
                         <div>
-                            <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest block mb-1.5 px-1">Mobile Number *</label>
+                            <label class="text-[9px] font-black uppercase text-text-muted tracking-widest block mb-1.5 px-1">Mobile Number *</label>
                             <input type="text" x-model="newCustomer.mobile" required placeholder="017xxxxxxxx"
-                                   class="input-base border-none shadow-inner">
+                                   class="input-base">
                         </div>
 
                         <div>
-                            <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest block mb-1.5 px-1">Category</label>
+                            <label class="text-[9px] font-black uppercase text-text-muted tracking-widest block mb-1.5 px-1">Category</label>
                             <div class="relative">
-                                <select x-model="newCustomer.customer_type" class="input-base border-none appearance-none cursor-pointer shadow-inner">
+                                <select x-model="newCustomer.customer_type" class="input-base appearance-none cursor-pointer pr-9">
                                     <option value="regular">Regular</option>
                                 </select>
-                                <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-text-muted">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg>
                                 </div>
                             </div>
-                            <p class="text-[8px] font-bold uppercase tracking-widest text-slate-400 mt-1 px-1">EMI customers must be created via Customers → New Customer (full KYC wizard).</p>
                         </div>
 
-                        <div class="lg:col-span-2">
-                            <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest block mb-1.5 px-1">Email (Optional)</label>
+                        <div class="md:col-span-2">
+                            <label class="text-[9px] font-black uppercase text-text-muted tracking-widest block mb-1.5 px-1">Email (Optional)</label>
                             <input type="email" x-model="newCustomer.email" placeholder="customer@example.com"
-                                   class="input-base border-none shadow-inner">
+                                   class="input-base">
                         </div>
                     </div>
 
-                    <div class="pt-4 flex gap-4 max-w-md mx-auto">
-                        <button type="button" @click="customerModalOpen = false"
-                                class="btn-secondary flex-1 py-3 text-[10px] font-black uppercase tracking-widest">
+                    <p class="text-[8px] font-bold uppercase tracking-widest text-text-muted px-1">EMI customers must be created via Customers → New Customer (full KYC wizard).</p>
+
+                    <div class="pt-2 flex gap-3 justify-end">
+                        <button type="button" @click="customerModalOpen = false" class="btn-ghost">
                             Cancel
                         </button>
-                        <button type="submit" :disabled="customerSubmitting"
-                                class="btn-primary flex-1 py-3 text-[10px] font-black uppercase tracking-widest shadow-xl shadow-primary/30 dark:shadow-none flex justify-center items-center gap-2">
+                        <button type="submit" :disabled="customerSubmitting" class="btn-primary">
                             <span x-show="!customerSubmitting">Register</span>
-                            <svg x-show="customerSubmitting" class="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24">
+                            <svg x-show="customerSubmitting" class="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24" x-cloak>
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
@@ -725,65 +672,51 @@
                     </div>
                 </form>
             </div>
-        </div>
+        </x-modal>
 
         <!-- CASH PAYMENT MODAL -->
-        <div x-show="cashModalOpen"
-             class="fixed inset-0 z-50 flex items-center justify-center bg-navy/60 backdrop-blur-sm p-4"
-             x-cloak
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-200"
-             x-transition:leave-start="opacity-100"
-             x-transition:leave-end="opacity-0">
-            
-            <div class="bg-card dark:bg-dark-card w-full max-w-4xl rounded-xl shadow-modal flex flex-col overflow-hidden border border-border dark:border-dark-border max-h-[90vh]"
-                 x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="opacity-0 scale-95 translate-y-10"
-                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                 x-transition:leave="transition ease-in duration-200"
-                 x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-                 x-transition:leave-end="opacity-0 scale-95 translate-y-10">
-                 
+        <x-modal name="pos-cash-payment" state="cashModalOpen" maxWidth="4xl" focusable>
+            <div class="flex flex-col max-h-[85vh]">
+
                 <!-- Modal Header -->
-                <div class="px-6 py-5 border-b border-border-light dark:border-dark-border flex items-center justify-between">
+                <div class="px-5 py-4 border-b border-border dark:border-dark-border flex items-center justify-between shrink-0">
                     <div>
-                        <h2 class="text-2xl font-black tracking-tight text-text-primary dark:text-dark-text">Cash Payment</h2>
+                        <h2 class="text-xl font-black tracking-tight text-text-primary dark:text-dark-text">Cash Payment</h2>
                         <p class="text-[10px] font-bold text-text-muted uppercase tracking-widest mt-0.5">Single transaction cash payment</p>
                     </div>
-                    <button @click="cashModalOpen = false" class="w-11 h-11 rounded-full bg-background dark:bg-slate-800 text-text-muted hover:bg-danger-light hover:text-danger transition-colors flex items-center justify-center">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <button type="button" @click="cashModalOpen = false" aria-label="Close"
+                            class="w-9 h-9 rounded-button bg-background dark:bg-slate-800 text-text-muted hover:bg-danger-light hover:text-danger transition-colors flex items-center justify-center">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 </div>
 
                 <!-- Modal Body -->
-                <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="flex-1 overflow-y-auto p-5 custom-scrollbar">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
                         
                         <!-- Left Column: Payment Inputs -->
-                        <div class="lg:col-span-8 space-y-5">
+                        <div class="lg:col-span-7 space-y-5">
                             
                             <!-- Top Card: Advance & Coupon -->
-                            <div class="bg-slate-50 dark:bg-slate-800/30 rounded-2xl p-4 border border-slate-100 dark:border-dark-border">
+                            <div class="bg-background dark:bg-slate-800/30 rounded-card p-4 border border-border dark:border-dark-border">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                          <div class="flex items-center justify-between mb-2">
                                             <span class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Advance Payment</span>
                                             <span class="text-[11px] font-black tabular-nums text-slate-700 dark:text-white" x-text="'{{ $currencySymbol }}' + (parseFloat(advanceAmount) || 0).toFixed(2)">0.00</span>
                                         </div>
-                                        <label class="flex items-center gap-3 cursor-pointer p-3 bg-white dark:bg-dark-card rounded-xl border border-slate-200 dark:border-dark-border shadow-sm hover:border-primary-200 transition-colors">
-                                            <div class="w-5 h-5 rounded-md border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center text-white" :class="{ 'bg-primary-500 border-primary-500': advancePayment }">
+                                        <label class="flex items-center gap-3 cursor-pointer p-3 bg-card dark:bg-dark-card rounded-input border border-border dark:border-dark-border shadow-sm hover:border-primary/40 transition-colors">
+                                            <div class="w-5 h-5 rounded-md border-2 border-border dark:border-dark-border flex items-center justify-center text-white" :class="{ 'bg-primary-500 border-primary-500': advancePayment }">
                                                 <input type="checkbox" x-model="advancePayment" class="hidden">
                                                 <svg x-show="advancePayment" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                                             </div>
-                                            <span class="text-[10px] font-bold uppercase tracking-wide text-slate-600 dark:text-gray-400">Adjust Advance Payment</span>
+                                            <span class="text-[10px] font-bold uppercase tracking-wide text-text-secondary dark:text-slate-400">Adjust Advance Payment</span>
                                         </label>
                                     </div>
                                     <div>
-                                        <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest block mb-2">Discount Coupon Code</label>
+                                        <label class="text-[9px] font-black uppercase text-text-muted tracking-widest block mb-2">Discount Coupon Code</label>
                                         <div class="relative" x-show="!appliedCoupon">
-                                            <input type="text" x-model="couponCode" placeholder="Enter Code" @keydown.enter.prevent="applyCoupon()" class="w-full bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border rounded-xl py-2.5 pl-4 pr-10 text-[11px] font-bold focus:ring-2 focus:ring-primary-500 outline-none transition-all uppercase placeholder:normal-case">
+                                            <input type="text" x-model="couponCode" placeholder="Enter Code" @keydown.enter.prevent="applyCoupon()" class="input-base pr-10 uppercase placeholder:normal-case">
                                             <button type="button" @click="applyCoupon()" :disabled="couponLoading" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center">
                                                 <svg x-show="!couponLoading" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                                                 <svg x-show="couponLoading" class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -799,15 +732,15 @@
                                             </button>
                                         </div>
                                         <div class="flex justify-between mt-1.5 px-1">
-                                            <span class="text-[9px] font-bold text-slate-400">Coupon Value</span>
-                                            <span class="text-[9px] font-black text-slate-600 dark:text-slate-300" x-text="'{{ $currencySymbol }}' + couponAmount.toFixed(2)"></span>
+                                            <span class="text-[9px] font-bold text-text-muted">Coupon Value</span>
+                                            <span class="text-[9px] font-black text-text-secondary dark:text-slate-300" x-text="'{{ $currencySymbol }}' + couponAmount.toFixed(2)"></span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Single Cash Payment Input -->
-                            <div class="card p-5 rounded-xl shadow-card">
+                            <div class="card p-4">
                                 <h3 class="text-[11px] font-black uppercase text-text-primary dark:text-dark-text tracking-widest flex items-center gap-2 mb-4">
                                     <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
                                     Payment Details
@@ -835,15 +768,10 @@
                         </div>
 
                         <!-- Right Column: Summary -->
-                        <div class="lg:col-span-4">
-                            <div class="bg-slate-900 rounded-[2rem] overflow-hidden shadow-2xl text-white h-full relative p-6 flex flex-col justify-between">
-                                
-                                <!-- Decorative Elements -->
-                                <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/20 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-                                <div class="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/20 rounded-full blur-3xl -ml-16 -mb-16 pointer-events-none"></div>
-
-                                <div class="relative space-y-4">
-                                    <h3 class="text-xs font-black uppercase tracking-widest text-slate-400 mb-6 border-b border-white/10 pb-4">Payment Summary</h3>
+                        <div class="lg:col-span-5">
+                            <div class="bg-navy rounded-card overflow-hidden shadow-card text-white h-full p-5 flex flex-col justify-between">
+                                <div class="space-y-4">
+                                    <h3 class="text-xs font-black uppercase tracking-widest text-slate-400 mb-5 border-b border-white/10 pb-3">Payment Summary</h3>
                                     
                                     <div class="space-y-3">
                                         <div class="flex justify-between items-center">
@@ -865,7 +793,7 @@
                                         
                                         <div class="my-4 border-t border-dashed border-white/20"></div>
                                         
-                                         <div class="flex justify-between items-end">
+                                         <div class="flex flex-wrap justify-between items-end gap-y-1">
                                             <span class="text-[11px] font-black uppercase tracking-widest text-slate-300">Net Payable</span>
                                             <span class="text-2xl font-black text-white" x-text="'{{ $currencySymbol }}' + totalPayable.toFixed(2)"></span>
                                         </div>
@@ -879,16 +807,12 @@
                                                   <span class="text-[10px] font-bold uppercase tracking-wider text-orange-300">Balance Due</span>
                                                  <span class="text-sm font-black text-orange-300" x-text="'{{ $currencySymbol }}' + cashBalance.toFixed(2)"></span>
                                              </div>
-                                             <div x-show="changeReturnEnabled" class="flex justify-between items-center border-t border-white/10 pt-2">
+                                             <div x-show="changeReturnEnabled" class="flex flex-wrap justify-between items-center gap-y-1 border-t border-white/10 pt-2">
                                                 <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-300">Change Return</span>
                                                 <span class="text-lg font-black text-emerald-300" x-text="'{{ $currencySymbol }}' + cashChangeReturn.toFixed(2)"></span>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                
-                                <div class="relative mt-8">
-                                    <div class="text-[9px] text-slate-500 font-medium text-center mb-2">Secure Cash Transaction</div>
                                 </div>
                             </div>
                         </div>
@@ -897,55 +821,39 @@
                 </div>
 
                 <!-- Modal Footer -->
-                <div class="px-6 py-5 border-t border-border-light dark:border-dark-border flex justify-end gap-3 bg-background/50 dark:bg-slate-800/10">
-                    <button @click="cashModalOpen = false" class="btn-secondary px-6 py-3 text-[10px] font-black uppercase tracking-widest">
+                <div class="px-5 py-4 border-t border-border dark:border-dark-border flex justify-end gap-3 bg-background/50 dark:bg-slate-800/10 shrink-0">
+                    <button type="button" @click="cashModalOpen = false" class="btn-ghost">
                         Close
                     </button>
-                    <button @click="submitSale()" :disabled="submitting" class="px-8 py-3 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/30 dark:shadow-none flex items-center gap-2 hover:bg-primary-hover disabled:opacity-60 disabled:cursor-not-allowed">
+                    <button type="button" @click="submitSale()" :disabled="submitting" class="btn-secondary">
+                        <svg x-show="!submitting" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                        <span x-text="submitting ? 'Saving...' : 'Save & Print'">Save & Print</span>
+                    </button>
+                    <button type="button" @click="submitSale()" :disabled="submitting" class="btn-primary">
                         <svg x-show="!submitting" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
                         <svg x-show="submitting" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" x-cloak><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
                         <span x-text="submitting ? 'Saving...' : 'Save'">Save</span>
                     </button>
-                    <button @click="submitSale()" :disabled="submitting" class="px-8 py-3 bg-success text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-success/30 dark:shadow-none flex items-center gap-2 hover:bg-success/90 disabled:opacity-60 disabled:cursor-not-allowed">
-                        <svg x-show="!submitting" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                        <svg x-show="submitting" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" x-cloak><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-                        <span x-text="submitting ? 'Saving...' : 'Save & Print'">Save & Print</span>
-                    </button>
                 </div>
             </div>
-
-        </div>
+        </x-modal>
 
         <!-- EMI PAYMENT MODAL -->
-        <div x-show="emiModalOpen"
-             class="fixed inset-0 z-50 flex items-center justify-center bg-navy/60 backdrop-blur-sm p-4"
-             x-cloak
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-200"
-             x-transition:leave-start="opacity-100"
-             x-transition:leave-end="opacity-0">
-            
-            <div class="bg-card dark:bg-dark-card w-full max-w-3xl rounded-xl shadow-modal flex flex-col overflow-hidden border border-border dark:border-dark-border max-h-[90vh]"
-                 x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="opacity-0 scale-95 translate-y-10"
-                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                 x-transition:leave="transition ease-in duration-200"
-                 x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-                 x-transition:leave-end="opacity-0 scale-95 translate-y-10">
-                 
+        <x-modal name="pos-emi-details" state="emiModalOpen" maxWidth="2xl" focusable>
+            <div class="flex flex-col max-h-[85vh]">
+
                 <!-- Modal Header -->
-                <div class="px-6 py-4 flex items-center justify-between bg-card dark:bg-dark-card border-b border-border-light dark:border-dark-border">
-                    <h2 class="text-xl font-black tracking-tight text-text-primary dark:text-dark-text">EMI Details</h2>
-                    <button @click="emiModalOpen = false" class="w-11 h-11 rounded-full bg-background dark:bg-slate-800 text-text-muted hover:bg-danger-light hover:text-danger transition-colors flex items-center justify-center">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                <div class="px-4 py-3.5 flex items-center justify-between border-b border-border dark:border-dark-border shrink-0">
+                    <h2 class="text-lg font-black tracking-tight text-text-primary dark:text-dark-text">EMI Details</h2>
+                    <button type="button" @click="emiModalOpen = false" aria-label="Close"
+                            class="w-9 h-9 rounded-button bg-background dark:bg-slate-800 text-text-muted hover:bg-danger-light hover:text-danger transition-colors flex items-center justify-center">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 </div>
 
                 <!-- Modal Body -->
                 <div class="flex-1 overflow-y-auto p-5 custom-scrollbar">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         
                         <!-- Left Column: Inputs (EMI DETAILS) -->
                         <div class="space-y-4">
@@ -1024,22 +932,22 @@
                                 </div>
                             </div>
 
-                             <!-- Footer Actions -->
-                             <div class="flex items-center gap-3 pt-2">
-                                <button @click="emiModalOpen = false" class="btn-secondary px-6 py-3 text-[10px] font-black uppercase tracking-widest w-28">
+                            <!-- Footer Actions -->
+                            <div class="flex items-center gap-3 pt-1">
+                                <button type="button" @click="emiModalOpen = false" class="btn-ghost">
                                     Cancel
                                 </button>
-                                <button @click="submitEmi()" :disabled="submitting" class="btn-primary px-6 py-3 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/30 flex-1 disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2">
-                                    <span x-show="submitting" class="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent inline-block align-middle" x-cloak></span>
+                                <button type="button" @click="submitEmi()" :disabled="submitting" class="btn-primary flex-1">
+                                    <span x-show="submitting" class="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent inline-block" x-cloak></span>
                                     <span x-text="submitting ? 'Saving...' : 'Create EMI'">Create EMI</span>
                                 </button>
-                             </div>
+                            </div>
 
                         </div>
 
                         <!-- Right Column: EMI Summary (Dark Card) -->
-                        <div class="bg-slate-900 rounded-[1.5rem] p-5 text-white flex flex-col h-full relative overflow-hidden">
-                            <h3 class="text-sm font-bold mb-4 border-b border-white/10 pb-3">EMI Summary</h3>
+                        <div class="bg-navy rounded-card p-4 text-white flex flex-col h-full overflow-hidden">
+                            <h3 class="text-sm font-bold mb-3 border-b border-white/10 pb-2.5">EMI Summary</h3>
                             
                             <div class="space-y-3 mb-4">
                                 <div class="flex justify-between items-center text-xs">
@@ -1066,7 +974,7 @@
                             
                             <div class="my-3 border-t border-dashed border-white/20"></div>
 
-                            <div class="flex items-baseline justify-between mb-4">
+                            <div class="flex flex-wrap items-baseline justify-between gap-y-1 mb-4">
                                 <span class="text-sm font-bold text-white">Monthly EMI</span>
                                 <div class="text-right">
                                     <span class="text-lg font-black text-teal-400" x-text="'{{ $currencySymbol }}' + emiMonthly.toFixed(0)"></span>
@@ -1075,7 +983,7 @@
                             </div>
 
                             <!-- Schedule Table -->
-                            <div class="bg-slate-800/50 rounded-xl overflow-hidden mb-4 flex-1 max-h-48 overflow-y-auto custom-scrollbar">
+                            <div class="bg-slate-800/50 rounded-card overflow-hidden mb-4 flex-1 max-h-48 overflow-y-auto custom-scrollbar">
                                 <table class="w-full text-left text-xs">
                                     <thead class="bg-slate-800 text-slate-400 sticky top-0">
                                         <tr>
@@ -1103,32 +1011,16 @@
                     </div>
                 </div>
             </div>
-        </div>
-        
+        </x-modal>
+
         <!-- SERIAL SELECTION MODAL -->
-        <div x-show="serialModalOpen"
-             class="fixed inset-0 z-50 flex items-center justify-center bg-navy/60 backdrop-blur-sm p-4"
-             x-cloak
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-200"
-             x-transition:leave-start="opacity-100"
-             x-transition:leave-end="opacity-0">
-            
-            <div class="bg-card dark:bg-dark-card rounded-xl shadow-modal w-full max-w-xl flex flex-col overflow-hidden border border-border dark:border-dark-border max-h-[80vh]"
-                 @click.away="serialModalOpen = false"
-                 x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="opacity-0 scale-95 translate-y-4"
-                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                 x-transition:leave="transition ease-in duration-200"
-                 x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-                 x-transition:leave-end="opacity-0 scale-95 translate-y-4">
-                 
+        <x-modal name="pos-serial-selection" state="serialModalOpen" maxWidth="xl" focusable>
+            <div class="flex flex-col max-h-[80vh]">
+
                 <!-- Modal Header -->
-                <div class="px-6 py-4 border-b border-border-light dark:border-dark-border flex items-center justify-between bg-background/50 dark:bg-slate-800/20">
+                <div class="px-5 py-3.5 border-b border-border dark:border-dark-border flex items-center justify-between bg-background/50 dark:bg-slate-800/20 shrink-0">
                     <div>
-                        <h2 class="text-lg font-black text-text-primary dark:text-dark-text flex items-center gap-2">
+                        <h2 class="text-base font-black text-text-primary dark:text-dark-text flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-primary"></span>
                             Select Serial Numbers
                         </h2>
@@ -1136,13 +1028,13 @@
                             <p class="text-[10px] font-bold text-text-muted uppercase tracking-widest mt-0.5" x-text="currentSerialItem.item_name"></p>
                         </template>
                     </div>
-                    <button @click="serialModalOpen = false" class="w-11 h-11 rounded-full bg-background dark:bg-slate-800 text-text-muted hover:bg-danger-light hover:text-danger transition-colors flex items-center justify-center">
+                    <button type="button" @click="serialModalOpen = false" aria-label="Close" class="w-9 h-9 rounded-button bg-background dark:bg-slate-800 text-text-muted hover:bg-danger-light hover:text-danger transition-colors flex items-center justify-center">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 </div>
 
                 <!-- Modal Body -->
-                <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                <div class="flex-1 overflow-y-auto p-5 custom-scrollbar">
                     <!-- Loading State -->
                     <div x-show="loading" class="flex flex-col items-center justify-center py-12 text-text-muted">
                         <svg class="animate-spin h-8 w-8 mb-3" viewBox="0 0 24 24">
@@ -1183,23 +1075,23 @@
                 </div>
 
                 <!-- Modal Footer -->
-                <div class="px-6 py-4 border-t border-border-light dark:border-dark-border bg-background/50 dark:bg-slate-800/20 flex flex-wrap items-center justify-between gap-4">
+                <div class="px-5 py-3.5 border-t border-border dark:border-dark-border bg-background/50 dark:bg-slate-800/20 flex flex-wrap items-center justify-between gap-4 shrink-0">
                     <div class="flex items-center gap-2">
-                        <div class="bg-primary-light dark:bg-primary/15 px-3 py-2 rounded-xl border border-primary/20 dark:border-primary/30">
+                        <div class="bg-primary-light dark:bg-primary/15 px-3 py-2 rounded-input border border-primary/20 dark:border-primary/30">
                              <span class="text-[10px] font-black text-primary dark:text-primary-300 uppercase tracking-widest">Selected: <span x-text="tempSelectedSerials.length"></span></span>
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <button @click="serialModalOpen = false" class="btn-secondary px-5 py-3 text-[10px] font-black uppercase tracking-widest">
+                        <button type="button" @click="serialModalOpen = false" class="btn-ghost">
                             Cancel
                         </button>
-                        <button @click="confirmSerials()" class="btn-primary px-8 py-3 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/30 dark:shadow-none transform active:scale-95">
+                        <button type="button" @click="confirmSerials()" class="btn-primary">
                             Confirm
                         </button>
                     </div>
                 </div>
             </div>
-        </div>
+        </x-modal>
     </div>
     
     <script>

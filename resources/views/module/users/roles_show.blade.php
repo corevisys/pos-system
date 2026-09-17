@@ -19,7 +19,7 @@
                     <h1 class="text-xl font-black tracking-tight text-slate-800 dark:text-white leading-tight mb-0.5">{{ $role->role_name }}</h1>
                     <div class="flex items-center gap-2">
                         <span class="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 rounded-lg text-[8px] font-black uppercase tracking-widest border border-indigo-100 dark:border-indigo-500/20">
-                            {{ count($role->permissions->permissions ?? []) }} Permissions
+                            {{ count($visiblePermissions) }} Permissions
                         </span>
                         <span class="text-slate-400 text-[10px] font-bold flex items-center gap-1">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
@@ -100,9 +100,9 @@
                          <h3 class="text-sm font-black tracking-tight italic uppercase text-slate-800 dark:text-white">Authorized Permissions</h3>
                     </div>
 
-                    @if($role->permissions && count($role->permissions->permissions ?? []) > 0)
+                    @if(count($visiblePermissions) > 0)
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                            @foreach($role->permissions->permissions as $perm)
+                            @foreach($visiblePermissions as $perm)
                                 <div class="flex items-center gap-3 p-3 bg-slate-50/50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-dark-border group hover:bg-white dark:hover:bg-dark-card transition-all duration-300">
                                     <div class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-500 shadow-sm">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>

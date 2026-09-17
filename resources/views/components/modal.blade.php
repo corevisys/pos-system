@@ -1,7 +1,10 @@
 @props([
     'name',
     'show' => false,
-    'maxWidth' => '2xl'
+    'maxWidth' => '2xl',
+    // Optional: name of a parent-scope Alpine boolean to two-way sync with.
+    // Backward compatible — existing call sites that omit it behave exactly as before.
+    'state' => null,
 ])
 
 @php
@@ -11,6 +14,11 @@ $maxWidth = [
     'lg' => 'sm:max-w-lg',
     'xl' => 'sm:max-w-xl',
     '2xl' => 'sm:max-w-2xl',
+    // Added for data-heavy dual-column layouts (POS payment modals).
+    // Purely additive: no existing call site uses these keys, so the
+    // behaviour of the 21 current consumers is unchanged.
+    '3xl' => 'sm:max-w-3xl',
+    '4xl' => 'sm:max-w-4xl',
 ][$maxWidth];
 @endphp
 
@@ -38,7 +46,9 @@ $maxWidth = [
         } else {
             document.body.classList.remove('overflow-y-hidden');
         }
+        {{ $state ? $state.' = value' : '' }}
     })"
+    @if($state)x-effect="show = {{ $state }}"@endif
     x-on:open-modal.window="$event.detail == '{{ $name }}' ? show = true : null"
     x-on:close-modal.window="$event.detail == '{{ $name }}' ? show = false : null"
     x-on:close.stop="show = false"
@@ -76,6 +86,8 @@ $maxWidth = [
 
     <div
         x-show="show"
+        role="dialog"
+        aria-modal="true"
         class="relative z-10 mb-6 bg-card dark:bg-dark-card border border-border dark:border-dark-border rounded-xl shadow-modal overflow-hidden transform transition-all sm:w-full {{ $maxWidth }} sm:mx-auto"
         x-transition:enter="ease-out duration-300"
         x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"

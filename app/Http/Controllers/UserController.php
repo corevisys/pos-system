@@ -17,11 +17,48 @@ class UserController extends Controller
     /**
      * Display a listing of the users.
      */
+    /**
+     * Base User query limited to the ACTING store for non-cross-store actors.
+     *
+     * User deliberately does NOT use the StoreScoped trait: its role relation backs
+     * isSuperAdmin()/hasPermission(), which drive authentication and must never be
+     * filtered by current_store_id() (circular, and would strip a cross-store
+     * account of all privileges). The sanctioned pattern is therefore the explicit
+     * controller-level filter used everywhere else that lists Users
+     * (ReportController/TransactionController) — applied here through the acting
+     * store so an Owner acting as Store B sees Store B's users, not their nominal
+     * store's.
+     *
+     * canViewAllStores() (Owner/Developer) keeps unrestricted visibility, matching
+     * ConsolidatedReportController's sanctioned cross-store read.
+     */
+    private function scopedUserQuery()
+    {
+        $query = User::query();
+
+        if (!auth()->user()->canViewAllStores()) {
+            $query->where('store_id', current_store_id());
+        }
+
+        return $query;
+    }
+
+    /**
+     * Resolve a user id strictly within the acting store (IDOR guard).
+     *
+     * Mirrors RoleController::findActingStoreRole(): a cross-store id yields a clean
+     * 404 instead of leaking or mutating another store's user record.
+     */
+    private function findActingStoreUser($id): User
+    {
+        return $this->scopedUserQuery()->findOrFail($id);
+    }
+
     public function index(Request $request)
     {
         Gate::authorize('viewAny', User::class);
 
-        $query = User::with('role');
+        $query = $this->scopedUserQuery()->with('role');
 
         // Search
         $query->when($request->search, fn($q) => $q->search($request->search));
@@ -43,11 +80,13 @@ class UserController extends Controller
         $perPage = $request->get('per_page', 10);
         $users = $query->paginate($perPage)->withQueryString();
 
-        // Stats for cards
+        // Stats for cards — scoped identically to the list so the totals can never
+        // count another store's users (they previously did, store-wide).
+        $statsBase = $this->scopedUserQuery();
         $stats = [
-            'total' => User::count(),
-            'active' => User::where('status', 1)->count(),
-            'inactive' => User::where('status', 0)->count(),
+            'total' => (clone $statsBase)->count(),
+            'active' => (clone $statsBase)->where('status', 1)->count(),
+            'inactive' => (clone $statsBase)->where('status', 0)->count(),
         ];
 
         $roles = DbRole::all();
@@ -65,7 +104,8 @@ class UserController extends Controller
 
     public function show($id)
     {
-        $user = User::with(['role', 'store'])->findOrFail($id);
+        $user = $this->findActingStoreUser($id);
+        $user->load(['role', 'store']);
         Gate::authorize('view', $user);
 
         return view('module.users.show', compact('user'));
@@ -73,7 +113,7 @@ class UserController extends Controller
 
     public function edit($id)
     {
-        $user = User::findOrFail($id);
+        $user = $this->findActingStoreUser($id);
         Gate::authorize('update', $user);
 
         $roles = DbRole::all();
@@ -150,7 +190,7 @@ class UserController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $user = User::findOrFail($id);
+        $user = $this->findActingStoreUser($id);
         Gate::authorize('update', $user);
 
         $validated = $request->validate([
@@ -219,7 +259,7 @@ class UserController extends Controller
      */
     public function destroy($id)
     {
-        $user = User::findOrFail($id);
+        $user = $this->findActingStoreUser($id);
         Gate::authorize('delete', $user);
 
         try {
@@ -238,7 +278,7 @@ class UserController extends Controller
      */
     public function toggleStatus($id)
     {
-        $user = User::findOrFail($id);
+        $user = $this->findActingStoreUser($id);
         Gate::authorize('update', $user);
 
         try {

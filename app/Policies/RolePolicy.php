@@ -42,9 +42,20 @@ class RolePolicy
      * Aligned to the app-wide inline hasPermission() convention (was
      * isSuperAdmin()-only, which made the seeded roles_edit slug decorative).
      * isSuperAdmin() continues to bypass the slug check.
+     *
+     * PROTECTED-RECORD GUARD (mirrors delete()): a super-admin ROLE record — the
+     * Developer/system tier that carries the authoritative is_super_admin flag —
+     * is immutable to everyone below the super-admin tier. Without this a Branch
+     * Admin holding roles_edit could rename the system role or rewrite its
+     * permissions (escalation / de-privileging the Developer account). The
+     * Developer/super-admin himself continues to manage it.
      */
     public function update(User $user, DbRole $role): bool
     {
+        if ($role->is_super_admin && !$user->isSuperAdmin()) {
+            return false;
+        }
+
         return $user->isSuperAdmin() || $user->hasPermission('roles_edit');
     }
 

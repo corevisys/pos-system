@@ -146,18 +146,35 @@ class User extends Authenticatable
         return $this->isSuperAdmin() || $this->isOwner();
     }
 
-    public function hasPermission($permission)
+    /**
+     * The acting user's own effective permission-slug set — the single source of
+     * truth for "which slugs may this user hold, grant, or see".
+     *
+     * Returns NULL for a genuine super admin (is_super_admin = true), meaning
+     * UNRESTRICTED. Every other user returns the flat slug array stored on their
+     * own role. The Role Management permission-grant guard (RoleController) and
+     * the permissions-matrix display filter both read this one method, so the
+     * server-side guard and the UI filter can never drift apart.
+     */
+    public function effectivePermissions(): ?array
     {
         if ($this->isSuperAdmin()) {
+            return null;
+        }
+
+        return array_values((array) data_get($this->role, 'permissions.permissions', []));
+    }
+
+    public function hasPermission($permission)
+    {
+        $effective = $this->effectivePermissions();
+
+        // null = super admin (unrestricted).
+        if ($effective === null) {
             return true;
         }
 
-        if (!$this->role || !$this->role->permissions) {
-            return false;
-        }
-
-        $permissions = $this->role->permissions->permissions ?? [];
-        return in_array($permission, $permissions);
+        return in_array($permission, $effective, true);
     }
 
     public function store()

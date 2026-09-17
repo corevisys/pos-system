@@ -50,7 +50,12 @@ class RoleController extends Controller
     public function create()
     {
         Gate::authorize('create', DbRole::class);
-        return view('module.users.roles_add');
+
+        // Display filter: only render permissions the actor themselves holds.
+        // null = unrestricted (genuine super admin) -> full matrix as before.
+        $visiblePermissionSlugs = auth()->user()->effectivePermissions();
+
+        return view('module.users.roles_add', compact('visiblePermissionSlugs'));
     }
 
     /**
@@ -66,12 +71,49 @@ class RoleController extends Controller
         return DbRole::where('store_id', auth()->user()->store_id)->findOrFail($id);
     }
 
+    /**
+     * Privilege-escalation guard for permission assignment.
+     *
+     * A non-super-admin may only assign permission slugs that they themselves
+     * hold — otherwise a regular Admin could grant a role capabilities above
+     * their own authority via the permissions matrix. The Developer/super-admin
+     * is unrestricted. Enforced server-side (never relies on the Blade form),
+     * and applies to both store() and update().
+     */
+    private function guardPermissionGrant(Request $request): void
+    {
+        $grantable = auth()->user()->effectivePermissions();
+
+        // null = genuine super admin (unrestricted) -> nothing to reject.
+        if ($grantable === null) {
+            return;
+        }
+
+        $submitted = collect($request->input('permissions', []))->filter()->values();
+
+        $forbidden = $submitted->diff(collect($grantable));
+
+        if ($forbidden->isNotEmpty()) {
+            abort(403, 'You cannot grant permissions you do not hold: ' . $forbidden->implode(', '));
+        }
+    }
+
     public function show($id)
     {
         $role = $this->findActingStoreRole($id);
         Gate::authorize('view', $role);
         $role->load('permissions', 'users');
-        return view('module.users.roles_show', compact('role'));
+
+        // Display filter: an actor may only see permission items they themselves
+        // hold. When viewing a role with MORE permissions than the actor, only the
+        // overlapping subset renders. null = unrestricted super admin -> full list.
+        $rolePermissions = $role->permissions->permissions ?? [];
+        $effective = auth()->user()->effectivePermissions();
+        $visiblePermissions = $effective === null
+            ? $rolePermissions
+            : array_values(array_intersect($rolePermissions, $effective));
+
+        return view('module.users.roles_show', compact('role', 'visiblePermissions'));
     }
 
     public function edit($id)
@@ -79,7 +121,12 @@ class RoleController extends Controller
         $role = $this->findActingStoreRole($id);
         Gate::authorize('update', $role);
         $role->load('permissions');
-        return view('module.users.roles_edit', compact('role'));
+
+        // Display filter: only render permissions the actor themselves holds.
+        // null = unrestricted (genuine super admin) -> full matrix as before.
+        $visiblePermissionSlugs = auth()->user()->effectivePermissions();
+
+        return view('module.users.roles_edit', compact('role', 'visiblePermissionSlugs'));
     }
 
     public function store(Request $request)
@@ -96,6 +143,10 @@ class RoleController extends Controller
             'description' => 'nullable|string',
             'permissions' => 'nullable|array',
         ]);
+
+        // No privilege escalation via the permissions matrix: a non-super-admin
+        // may only assign slugs they themselves hold.
+        $this->guardPermissionGrant($request);
 
         $role = DbRole::create([
             'role_name' => $request->role_name,
@@ -135,6 +186,10 @@ class RoleController extends Controller
             'description' => 'nullable|string',
             'permissions' => 'nullable|array',
         ]);
+
+        // No privilege escalation via the permissions matrix: a non-super-admin
+        // may only assign slugs they themselves hold.
+        $this->guardPermissionGrant($request);
 
         $updateData = [
             'role_name' => $request->role_name,

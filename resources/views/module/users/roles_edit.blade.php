@@ -140,7 +140,12 @@
                                     <td class="py-2.5 px-4">
                                         <div class="flex flex-wrap gap-x-4 gap-y-2">
                                             @foreach($m['perms'] as $p)
-                                                @php $p_slug = ($m['perms_map'][$p] ?? \Illuminate\Support\Str::slug($m['name'] . ' ' . $p, '_')); @endphp
+                                                @php
+                                                    $p_slug = ($m['perms_map'][$p] ?? \Illuminate\Support\Str::slug($m['name'] . ' ' . $p, '_'));
+                                                    // Display filter: omit any permission item the actor does not
+                                                    // themselves hold (null = unrestricted super admin -> show all).
+                                                    if ($visiblePermissionSlugs !== null && !in_array($p_slug, $visiblePermissionSlugs, true)) { continue; }
+                                                @endphp
                                                 <label class="flex items-center gap-1.5 cursor-pointer group">
                                                     <input type="checkbox" 
                                                            name="permissions[]" 
