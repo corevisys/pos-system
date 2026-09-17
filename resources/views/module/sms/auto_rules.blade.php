@@ -76,7 +76,9 @@
             };
             this.formData.event_source = sourceMap[this.formData.event_type] || 'manual';
         },
-    }">
+    }"
+        x-effect="document.body.classList.toggle('overflow-y-hidden', isModalOpen)"
+        @keydown.escape.window="isModalOpen = false">
         <!-- HEADER -->
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
@@ -189,7 +191,11 @@
 
         <!-- MODAL -->
         <div x-show="isModalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 text-left">
-            <div x-show="isModalOpen" x-transition.opacity @click="closeModal()" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+            {{-- Backdrop must sit at an explicit z-0 so it stays strictly below the
+                 (positioned) dialog panel; a positioned z-index:auto blur layer is
+                 painted after the panel in CSS 2.1 Appendix E and would wash out
+                 the dialog plus swallow its clicks. --}}
+            <div x-show="isModalOpen" x-transition.opacity @click="closeModal()" class="absolute inset-0 z-0 bg-slate-900/60 backdrop-blur-sm"></div>
             
             <div x-show="isModalOpen" 
                  x-transition:enter="transition ease-out duration-300"
@@ -198,7 +204,7 @@
                  x-transition:leave="transition ease-in duration-200"
                  x-transition:leave-start="opacity-100 translate-y-0 scale-100"
                  x-transition:leave-end="opacity-0 translate-y-8 scale-95"
-                 class="relative w-full max-w-2xl bg-white dark:bg-dark-bg rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                 class="relative z-10 w-full max-w-2xl bg-white dark:bg-dark-bg rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
                 
                 <div class="p-6 border-b border-slate-100 dark:border-dark-border flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50 flex-shrink-0">
                     <div>

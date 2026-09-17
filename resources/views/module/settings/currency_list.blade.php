@@ -19,8 +19,15 @@
             this.targetCurrencyName = name;
             this.targetCurrencyCode = code;
             this.showConfirmModal = true;
+        },
+
+        closeActivateConfirm() {
+            this.showConfirmModal = false;
+            this.targetCurrencyId = null;
         }
-    }">
+    }"
+        x-effect="document.body.classList.toggle('overflow-y-hidden', showAddModal || showEditModal || showConfirmModal)"
+        @keydown.escape.window="showAddModal = false; showEditModal = false; showConfirmModal = false">
         
         <!-- HEADER & BREADCRUMBS -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-6">
@@ -196,13 +203,22 @@
         </div>
 
         <!-- ACTIVATE CONFIRMATION MODAL -->
+        {{-- x-teleport is REQUIRED: the app shell has overflow-hidden/overflow-y-auto
+             ancestors, so a fixed overlay left in place is clipped (backdrop shows,
+             dialog invisible, page unusable). Teleporting to <body> fixes positioning
+             while keeping the Alpine scope intact. --}}
+        <template x-teleport="body">
         <div x-show="showConfirmModal" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
             <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                <div x-show="showConfirmModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="fixed inset-0 transition-opacity" aria-hidden="true">
+                {{-- Backdrop z-0 + panel relative z-10. The positioned, z-index:auto
+                     blurred layer paints in CSS 2.1 Appendix E step 6 — above the
+                     static inline-block panel (step 5) — which blurred the dialog
+                     itself and stole every click inside it. --}}
+                <div x-show="showConfirmModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" @click="closeActivateConfirm()" class="fixed inset-0 z-0 transition-opacity" aria-hidden="true">
                     <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
                 </div>
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                <div x-show="showConfirmModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="inline-block align-bottom card rounded-2xl text-left overflow-hidden shadow-modal transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
+                <div x-show="showConfirmModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" @click.stop class="relative z-10 inline-block align-bottom card rounded-2xl text-left overflow-hidden shadow-modal transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
                     <div class="px-6 py-5 border-b border-slate-50 dark:border-dark-border flex items-center gap-3">
                         <div class="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
@@ -235,15 +251,17 @@
                 </div>
             </div>
         </div>
+        </template>
 
         <!-- ADD MODAL -->
+        <template x-teleport="body">
         <div x-show="showAddModal" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
             <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                <div x-show="showAddModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div x-show="showAddModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" @click="showAddModal = false" class="fixed inset-0 z-0 transition-opacity" aria-hidden="true">
                     <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
                 </div>
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                <div x-show="showAddModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="inline-block align-bottom card rounded-2xl text-left overflow-hidden shadow-modal transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div x-show="showAddModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" @click.stop class="relative z-10 inline-block align-bottom card rounded-2xl text-left overflow-hidden shadow-modal transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                     <form action="{{ route('settings.currency.store') }}" method="POST">
                         @csrf
                         <div class="px-6 py-4 border-b border-border dark:border-dark-border flex justify-between items-center">
@@ -284,15 +302,17 @@
                 </div>
             </div>
         </div>
+        </template>
 
         <!-- EDIT MODAL -->
+        <template x-teleport="body">
         <div x-show="showEditModal" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
             <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                <div x-show="showEditModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div x-show="showEditModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" @click="showEditModal = false" class="fixed inset-0 z-0 transition-opacity" aria-hidden="true">
                     <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
                 </div>
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                <div x-show="showEditModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="inline-block align-bottom card rounded-2xl text-left overflow-hidden shadow-modal transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div x-show="showEditModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" @click.stop class="relative z-10 inline-block align-bottom card rounded-2xl text-left overflow-hidden shadow-modal transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                     <form :action="'/settings/currency/' + editId" method="POST">
                         @csrf
                         <div class="px-6 py-4 border-b border-border dark:border-dark-border flex justify-between items-center">
@@ -347,5 +367,6 @@
                 </div>
             </div>
         </div>
+        </template>
     </div>
 </x-app-layout>

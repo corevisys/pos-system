@@ -1,26 +1,27 @@
 # THEME REFERENCE — Corevisys POS (LaravelPOS)
 
-**Last verified:** 2026-09-13
-**Method:** every value read directly from source; citations use `path:line`. Uncertain items are marked `[UNVERIFIED]`/`[INFERENCE]`. Prior audit history has been superseded and is no longer preserved in this document.
+**Last verified:** 2026-09-16
+**Method:** every value below was read directly from source this pass; citations use `path:line`. Uncertain items are marked `[UNVERIFIED]`/`[INFERENCE]`.
 **Related docs:** [`PROJECT_KNOWLEDGE_BASE.md`](docs/PROJECT_KNOWLEDGE_BASE.md), [`MULTISTORE_GAP_ANALYSIS.md`](docs/MULTISTORE_GAP_ANALYSIS.md), [`README.md`](docs/README.md).
 
-> To re-verify the design system, check the token table in §2 against [`resources/css/app.css`](resources/css/app.css:7).
+> To re-verify the design system, check the token table in §2 against [`resources/css/app.css`](resources/css/app.css:7) and the component classes in §5 against [`app.css`](resources/css/app.css:188).
 
 ---
 
 ## 1. Design philosophy (as visible in code)
 
-- **Single indigo accent on neutral slate surfaces** — one brand ramp (`--color-primary*`) plus a small semantic status set ([`app.css`](resources/css/app.css:10), [`app.css`](resources/css/app.css:40)).
-- **Tailwind v4, CSS-first** — there is no `tailwind.config.js`; all tokens are declared in the `@theme` block and there is no JS config to keep in sync ([`app.css`](resources/css/app.css:7)).
+- **Single indigo accent on neutral slate surfaces** — one brand ramp (`--color-primary*`, [`app.css`](resources/css/app.css:11)) plus a small semantic status set ([`app.css`](resources/css/app.css:41)).
+- **Tailwind v4, CSS-first** — there is **no `tailwind.config.js`** in the repo; all tokens are declared in the `@theme` block ([`app.css`](resources/css/app.css:7)) and the Tailwind Vite plugin is wired directly ([`vite.config.js`](vite.config.js:7)).
 - **Class-based dark mode** — `.dark` on `<html>`, persisted in `localStorage`, toggled in the layout ([`app.css`](resources/css/app.css:5), [`app.blade.php`](resources/views/layouts/app.blade.php:3)).
-- **Component-ish but not a formal design system** — a set of Blade components exists for primitives, but feature modules frequently use raw utility classes inline. Both patterns coexist; neither is enforced ([`PROJECT_KNOWLEDGE_BASE.md`](docs/PROJECT_KNOWLEDGE_BASE.md) §A.2).
-- **Two visual identities** — the authenticated app uses the "Plus Jakarta Sans / indigo" system; the public and guest/auth pages use a Hind Siliguri + Inter system with a "premium" rounded aesthetic ([`app.blade.php`](resources/views/layouts/app.blade.php:21), [`guest.blade.php`](resources/views/layouts/guest.blade.php:14), [`public.blade.php`](resources/views/layouts/public.blade.php:13)).
+- **A real component layer exists now** — semantic classes (`.card`, `.btn-primary`, `.input-base`, …) live in `@layer components` ([`app.css`](resources/css/app.css:188)), in addition to the Blade component library. Feature modules still frequently use raw utility classes inline; both patterns coexist.
+- **Two visual identities** — the authenticated app uses "Plus Jakarta Sans / indigo"; the public and guest/auth pages use a Hind Siliguri + Inter "premium" rounded aesthetic ([`app.blade.php`](resources/views/layouts/app.blade.php:21), [`public.blade.php`](resources/views/layouts/public.blade.php:13)).
 
 ## 2. Design tokens (authoritative — `@theme` in `resources/css/app.css`)
 
-All values below are read from [`resources/css/app.css`](resources/css/app.css:7) (the Tailwind v4 `@theme` block). Changing a token here propagates to every `--color-*`/`--shadow-*`/`--radius-*` utility automatically.
+All values below are read from the Tailwind v4 `@theme` block ([`app.css`](resources/css/app.css:7), closed at [`app.css`](resources/css/app.css:64)). Changing a token here propagates to every `--color-*`/`--shadow-*`/`--radius-*` utility automatically.
 
-### 2.1 Brand / primary (indigo) — [app.css:10](resources/css/app.css:10)
+### 2.1 Brand / primary (indigo) — [app.css:11](resources/css/app.css:11)
+
 | Token | Value |
 |---|---|
 | `--color-primary` | `#4f46e5` |
@@ -36,14 +37,15 @@ All values below are read from [`resources/css/app.css`](resources/css/app.css:7
 | `--color-primary-700` | `#4338ca` |
 | `--color-primary-800` | `#3730a3` |
 | `--color-primary-900` | `#312e81` |
-| `--primary-rgb` | `99 102 241` (RGB triplet of primary-500) |
+| `--primary-rgb` | `99 102 241` (RGB triplet of primary-500, [`app.css`](resources/css/app.css:27)) |
 
-`--primary-rgb` exists so custom CSS can do `rgba(var(--primary-rgb), <alpha>)` — used by the `custom-scrollbar` utility ([`app.css`](resources/css/app.css:95)).
+`--primary-rgb` exists so custom CSS can do `rgba(var(--primary-rgb), <alpha>)` — used by `custom-scrollbar` ([`app.css`](resources/css/app.css:95)).
 
-### 2.2 Surfaces & text — [app.css:29](resources/css/app.css:29)
+### 2.2 Surfaces & text — [app.css:30](resources/css/app.css:30)
+
 | Token | Value | Role |
 |---|---|---|
-| `--color-navy` | `#0f172a` | dark base / headings |
+| `--color-navy` | `#0f172a` | dark base / sidebar dark surface |
 | `--color-card` | `#ffffff` | card surface |
 | `--color-background` | `#f8fafc` | page background |
 | `--color-border` | `#e2e8f0` | default border |
@@ -52,7 +54,8 @@ All values below are read from [`resources/css/app.css`](resources/css/app.css:7
 | `--color-text-secondary` | `#475569` | secondary text |
 | `--color-text-muted` | `#94a3b8` | muted/labels |
 
-### 2.3 Status — [app.css:40](resources/css/app.css:40)
+### 2.3 Status — [app.css:41](resources/css/app.css:41)
+
 | Token | Value |
 |---|---|
 | `--color-danger` | `#dc2626` |
@@ -63,15 +66,17 @@ All values below are read from [`resources/css/app.css`](resources/css/app.css:7
 | `--color-success` | `#059669` |
 | `--color-success-light` | `#ecfdf5` |
 
-### 2.4 Shadows — [app.css:49](resources/css/app.css:49)
+### 2.4 Shadows — [app.css:50](resources/css/app.css:50)
+
 | Token | Value | Use |
 |---|---|---|
-| `--shadow-card` | `0 1px 2px 0 rgba(15,23,42,0.04)` | resting card |
-| `--shadow-card-hover` | `0 4px 12px -2px rgba(15,23,42,0.08)` | card hover |
-| `--shadow-dropdown` | `0 8px 24px -4px rgba(15,23,42,0.12)` | menus/popovers |
-| `--shadow-modal` | `0 24px 48px -12px rgba(15,23,42,0.24)` | modals |
+| `--shadow-card` | `0 1px 2px 0 rgba(15, 23, 42, 0.04)` | resting card |
+| `--shadow-card-hover` | `0 4px 12px -2px rgba(15, 23, 42, 0.08)` | card hover |
+| `--shadow-dropdown` | `0 8px 24px -4px rgba(15, 23, 42, 0.12)` | menus/popovers |
+| `--shadow-modal` | `0 24px 48px -12px rgba(15, 23, 42, 0.24)` | modals |
 
-### 2.5 Radius — [app.css:55](resources/css/app.css:55)
+### 2.5 Radius — [app.css:56](resources/css/app.css:56)
+
 | Token | Value |
 |---|---|
 | `--radius-card` | `0.75rem` |
@@ -79,6 +84,7 @@ All values below are read from [`resources/css/app.css`](resources/css/app.css:7
 | `--radius-button` | `0.5rem` |
 
 ### 2.6 Dark-mode palette — [app.css:60](resources/css/app.css:60)
+
 | Token | Value |
 |---|---|
 | `--color-dark-bg` | `#0f172a` |
@@ -87,15 +93,16 @@ All values below are read from [`resources/css/app.css`](resources/css/app.css:7
 | `--color-dark-text` | `#f8fafc` |
 
 ### 2.7 Typography — [app.css:8](resources/css/app.css:8)
-- `--font-sans`: `"Plus Jakarta Sans", "Hind Siliguri", "Figtree", sans-serif` (app layout loads Plus Jakarta Sans from Google Fonts, [`app.blade.php`](resources/views/layouts/app.blade.php:21)).
-- Guest/login pages override the body font to `'Hind Siliguri', 'Inter'` ([`guest.blade.php`](resources/views/layouts/guest.blade.php:23)).
-- Public page loads `Plus Jakarta Sans` + `Hind Siliguri` ([`public.blade.php`](resources/views/layouts/public.blade.php:13)); welcome page loads `Hind Siliguri` + `Inter` ([`welcome.blade.php`](resources/views/welcome.blade.php:9)).
 
-## 3. Theme variants & base rules — [app.css:5](resources/css/app.css:5)
+- `--font-sans`: `"Plus Jakarta Sans", "Hind Siliguri", "Figtree", sans-serif`.
+- App layout loads `Plus Jakarta Sans` from Google Fonts ([`app.blade.php`](resources/views/layouts/app.blade.php:21)).
+- Public layout loads `Plus Jakarta Sans` + `Hind Siliguri` ([`public.blade.php`](resources/views/layouts/public.blade.php:13)).
 
-- Dark variant: `@custom-variant dark (&:where(.dark, .dark *))` — so `dark:` utilities apply within any `.dark` ancestor ([`app.css`](resources/css/app.css:5)).
+## 3. Theme variants & base rules
+
+- Dark variant: `@custom-variant dark (&:where(.dark, .dark *))` — `dark:` utilities apply within any `.dark` ancestor ([`app.css`](resources/css/app.css:5)).
 - Alpine loading guard: `[x-cloak] { display: none !important; }` in `@layer base` ([`app.css`](resources/css/app.css:68)).
-- Tailwind plugins: `@plugin "@tailwindcss/forms"`, `@plugin "@tailwindcss/typography"` ([`app.css`](resources/css/app.css:2), [`app.css`](resources/css/app.css:3)).
+- Tailwind plugins: `@plugin "@tailwindcss/forms"` and `@plugin "@tailwindcss/typography"` ([`app.css`](resources/css/app.css:2), [`app.css`](resources/css/app.css:3)).
 
 ## 4. Custom utilities (project-defined, `@utility`)
 
@@ -104,70 +111,97 @@ All values below are read from [`resources/css/app.css`](resources/css/app.css:7
 | `scrollbar-hide` | Hides scrollbars (webkit + Firefox) | [`app.css`](resources/css/app.css:74) |
 | `custom-scrollbar` | 4px themed scrollbar using `--primary-rgb` | [`app.css`](resources/css/app.css:84) |
 | `anime-fade-in` | 0.3s fade + translateY entrance animation | [`app.css`](resources/css/app.css:105) |
+| `gradient-bg` | Animated 4-stop gradient background for guest/landing pages | [`app.css`](resources/css/app.css:122) |
+| `hero-gradient` | Radial highlight for marketing hero sections | [`app.css`](resources/css/app.css:142) |
+| `shadow-premium` | Soft large shadow | [`app.css`](resources/css/app.css:146) |
+| `shadow-premium-lg` | Larger premium shadow | [`app.css`](resources/css/app.css:150) |
+| `pulse-orange` | Infinite orange pulse ring | [`app.css`](resources/css/app.css:154) |
 
-Keyframes: `fade-in` ([`app.css`](resources/css/app.css:109)). These utilities were moved out of inline `<style>` blocks in Blade views into the central stylesheet (comments reference the origin: [`app.css`](resources/css/app.css:66), [`…:83`](resources/css/app.css:83), [`…:104`](resources/css/app.css:104)).
+Keyframes: `fade-in` ([`app.css`](resources/css/app.css:109)), `gradient-bg` ([`app.css`](resources/css/app.css:128)), `pulse-orange` ([`app.css`](resources/css/app.css:158)).
 
-## 5. Interaction patterns
+Unlayered rule: `.pos-screen:fullscreen` fills the viewport when the POS page enters browser fullscreen ([`app.css`](resources/css/app.css:174)), with a dark variant ([`app.css`](resources/css/app.css:183)).
 
-### 5.1 Button loading state (global)
-[`resources/js/app.js`](resources/js/app.js:34) exposes `setButtonLoading(button, label)` and `resetButtonLoading(button)`:
-- Disables the button, adds `opacity-75`/`cursor-not-allowed`, stashes original `innerHTML`, and swaps in a spinner + label ([`app.js`](resources/js/app.js:34), [`app.js`](resources/js/app.js:24)).
-- A single global `submit` listener auto-wires **plain** form submissions (those that do not `preventDefault()` and do not opt out via `data-no-loading`); AJAX/Swal flows opt out by calling `preventDefault()` ([`app.js`](resources/js/app.js:17)).
-- **Caveat (ISSUE-9):** the spinner markup uses a Font Awesome icon (`<i class="fas fa-circle-notch fa-spin">`) but the authenticated app layout does **not** load Font Awesome, so the icon may not render ([`app.js`](resources/js/app.js:50) vs [`app.blade.php`](resources/views/layouts/app.blade.php:1)).
+These all carry "formerly inline in <view>" comments — the project has been actively migrating per-view `<style>` blocks into this central stylesheet.
 
-### 5.2 Alpine.js
-Alpine is imported and started globally in [`app.js`](resources/js/app.js:2); collapse plugin is a dependency ([`package.json`](package.json:23)). The app layout uses Alpine for the sidebar, dropdowns, notification panel and dark-mode toggle ([`app.blade.php`](resources/views/layouts/app.blade.php:28)). **Note:** the public layout loads only CSS, not `app.js`, so Alpine directives on public pages rely on per-page scripts (ISSUE-7).
+## 5. Design-system component classes (`@layer components`) — [app.css:188](resources/css/app.css:188)
 
-## 6. Blade component library (inventory)
+| Class | Definition |
+|---|---|
+| `.card` | `bg-card dark:bg-dark-card border border-border dark:border-dark-border rounded-card shadow-card` ([`app.css`](resources/css/app.css:189)) |
+| `.card-hover` | hover shadow transition ([`app.css`](resources/css/app.css:193)) |
+| `.page-padding` | responsive page padding (`px-6 pb-6 pt-2 lg:px-10 lg:pb-10 lg:pt-3`) ([`app.css`](resources/css/app.css:197)) |
+| `.input-base` | standard form input ([`app.css`](resources/css/app.css:201)) |
+| `.btn-primary` | indigo filled button ([`app.css`](resources/css/app.css:205)) |
+| `.btn-secondary` | bordered surface button ([`app.css`](resources/css/app.css:209)) |
+| `.btn-danger` | red filled button ([`app.css`](resources/css/app.css:213)) |
+| `.btn-ghost` | text/ghost button ([`app.css`](resources/css/app.css:217)) |
 
-All under `resources/views/components/` (27 files):
+**Sidebar theming** is centralised (unlayered so it beats utility hover states): collapsed-rail rules on `aside.sidebar-collapsed` ([`app.css`](resources/css/app.css:224)), sidebar tooltips ([`app.css`](resources/css/app.css:279)), and app-sidebar surfaces — light `var(--color-card)` / dark `var(--color-navy)` ([`app.css`](resources/css/app.css:296), [`app.css`](resources/css/app.css:301)), plus dark submenu link colours ([`app.css`](resources/css/app.css:315)).
+
+## 6. Interaction patterns
+
+### 6.1 Button loading state (global)
+
+[`resources/js/app.js`](resources/js/app.js:34) exposes `setButtonLoading(button, label)` ([`app.js`](resources/js/app.js:34)) and `resetButtonLoading(button)` ([`app.js`](resources/js/app.js:60)):
+
+- Disables the button, adds `opacity-75`/`cursor-not-allowed` ([`app.js`](resources/js/app.js:24), [`app.js`](resources/js/app.js:44)), stashes the original `innerHTML` on `data-original-html` ([`app.js`](resources/js/app.js:40)).
+- A single global `submit` listener auto-wires **plain** form submissions — it skips anything that already called `preventDefault()` ([`app.js`](resources/js/app.js:83)) or opted out via `data-no-loading` ([`app.js`](resources/js/app.js:93)).
+- Both functions are exposed on `window` for manual AJAX opt-in ([`app.js`](resources/js/app.js:75)).
+- **Caveat (ISSUE-9):** the spinner markup uses a Font Awesome icon (`<i class="fas fa-circle-notch fa-spin">`, [`app.js`](resources/js/app.js:50)) but the authenticated app layout loads **no Font Awesome** ([`app.blade.php`](resources/views/layouts/app.blade.php:21)), so the glyph may not render.
+
+### 6.2 Alpine.js
+
+Alpine is imported and started globally in [`app.js`](resources/js/app.js:2) and [`app.js`](resources/js/app.js:6); the collapse plugin is a dependency ([`package.json`](package.json:23)). The app layout uses Alpine for the sidebar, dropdowns, notification panel and dark-mode toggle ([`app.blade.php`](resources/views/layouts/app.blade.php:28)). **Note:** the public layout loads only CSS, not `app.js` ([`public.blade.php`](resources/views/layouts/public.blade.php:19)), so Alpine directives on public pages rely on per-page scripts (ISSUE-7).
+
+## 7. Blade component library (inventory)
+
+All under `resources/views/components/` — **27 files** (enumerated from the directory listing):
 
 | Group | Components |
 |---|---|
 | Branding / SEO | `application-logo`, `seo-meta` |
 | Layout primitives | `card`, `stat-card`, `badge`, `table` |
-| Buttons | `primary-button`, `secondary-button`, `danger-button`, `icon-button`, **`report-export-buttons`** |
+| Buttons | `primary-button`, `secondary-button`, `danger-button`, `icon-button`, `report-export-buttons` |
 | Form controls | `text-input`, `textarea`, `select`, `input-label`, `input-error`, `searchable-select` |
 | Navigation / overlays | `modal`, `dropdown`, `dropdown-link`, `nav-link`, `responsive-nav-link` |
 | UX helpers | `notification-toast`, `sidebar-tooltip`, `keyboard-shortcuts`, `keyboard-shortcuts-modal` |
 | Auth | `auth-session-status` |
 
-**Naming convention:** components are referenced via `<x-component-name>`; class-based components `AppLayout`/`GuestLayout` live under [`app/View/Components/`](app/View/Components/AppLayout.php:1). `[UNVERIFIED]` per-component `@props` tables were not exhaustively extracted in this pass — read each component's `@props` before relying on its API.
+**Naming convention:** components are referenced via `<x-component-name>`; class-based components `AppLayout`/`GuestLayout`/`PublicLayout` live under `app/View/Components/`. `[UNVERIFIED]` per-component `@props` tables were not exhaustively extracted in this pass — read each component's `@props` before relying on its API.
 
-## 7. Layouts
+## 8. Layouts
 
 | Layout | Fonts | CSS/JS | Icons |
 |---|---|---|---|
 | [`layouts/app.blade.php`](resources/views/layouts/app.blade.php:1) (authenticated) | Plus Jakarta Sans | `@vite(css+js)` + `asset('vendor/chart.umd.min.js')` | inline SVG; **no Font Awesome** |
-| [`layouts/guest.blade.php`](resources/views/layouts/guest.blade.php:1) (login/register) | Hind Siliguri + Inter | `@vite(css+js)` | Font Awesome 6 (cdnjs) |
 | [`layouts/public.blade.php`](resources/views/layouts/public.blade.php:1) (marketing) | Plus Jakarta Sans + Hind Siliguri | `@vite(css)` only | Font Awesome 6 (cdnjs) |
-| [`welcome.blade.php`](resources/views/welcome.blade.php:1) (landing) | Hind Siliguri + Inter | `@vite(css)` | Font Awesome 6 (cdnjs) |
+| [`resources/views/welcome.blade.php`](resources/views/welcome.blade.php:1) (landing) | — | uses the public layout | Font Awesome via the public layout |
 
-The app layout also derives the browser tab title from the page name + store name ([`app.blade.php`](resources/views/layouts/app.blade.php:10)).
+The app layout derives the browser tab title from the page name + store name ([`app.blade.php`](resources/views/layouts/app.blade.php:10)) and renders the notification toast component.
 
-## 8. Tailwind class conventions seen in feature views
+## 9. Tailwind class conventions seen in feature views
 
-- Spacing/type scale is driven by small explicit utilities rather than a spacing token layer; label/meta text commonly uses `text-[10px] font-bold uppercase tracking-widest` (e.g. [`multi-store-dashboard.blade.php`](resources/views/multi-store-dashboard.blade.php:17)).
-- Buttons in newer screens use semantic helper classes (`btn-primary`, `btn-secondary`) defined where needed, e.g. [`multi-store-dashboard.blade.php`](resources/views/multi-store-dashboard.blade.php:24).
-- Cards use the `card` component or `bg-white dark:bg-dark-card border border-border rounded-[--radius-card]`-style utilities.
+- Spacing/type scale is driven by small explicit utilities; label/meta text commonly uses `text-[10px] font-bold uppercase tracking-widest`.
+- Newer screens prefer the semantic component classes (`.card`, `.btn-primary`, `.input-base`) from §5.
+- Card surfaces commonly use `bg-white dark:bg-dark-card border border-border rounded-card`-style utilities or the `x-card` component.
 - Dark mode is applied with `dark:` variants throughout (e.g. `text-text-primary dark:text-dark-text`).
-- **Legacy looseness:** many views still use long inline utility strings and occasional `!important`-style escapes; this is convention-by-history, not a token violation ([`PROJECT_KNOWLEDGE_BASE.md`](docs/PROJECT_KNOWLEDGE_BASE.md) §A.2).
+- **Legacy looseness:** some views still use long inline utility strings; this is convention-by-history, not a token violation.
 
-## 9. Assets & build
+## 10. Assets & build
 
-- Entry points: `resources/css/app.css` and `resources/js/app.js`, wired via `@vite(...)`.
+- Entry points: `resources/css/app.css` and `resources/js/app.js`, wired via `@vite(...)` ([`vite.config.js`](vite.config.js:9)).
 - Build output: [`public/build/manifest.json`](public/build/manifest.json:1) → `app-EY2auKIM.css`, `app-vZIy2K19.js`.
-- Vendored third-party libs (served as-is, not bundled): `public/vendor/chart.umd.min.js`, `public/vendor/moment.min.js`.
-- Uploaded media served from `public/uploads/...` (e.g. item images under `public/uploads/items/`).
+- Vendored third-party libs (served as-is, not bundled): `public/vendor/chart.umd.min.js` ([`app.blade.php`](resources/views/layouts/app.blade.php:19)). `ReportPhase7RedesignTest` asserts external CDN scripts were vendored locally and the vendored assets exist on disk.
+- Uploaded media served from `public/uploads/...` (item images under `public/uploads/items/`).
 - Build with `npm run build`; dev with `npm run dev` ([`package.json`](package.json:6), [`package.json`](package.json:7)).
 
-## 10. Contribution rules (derived, not stated upstream)
+## 11. Contribution rules (derived, not stated upstream)
 
-`[INFERENCE]` These are conclusions from the code, not an existing written policy:
+`[INFERENCE]` These follow from the code, not from an existing written policy:
 
-1. **Change tokens in `app.css` `@theme`, never inline a new brand hex.** Brand colour is centralised at [`app.css`](resources/css/app.css:7); a stray hex breaks the single-accent rule.
-2. **Prefer an existing component** (`x-primary-button`, `x-card`, `x-badge`, …) over re-styling a raw element.
+1. **Change tokens in the `app.css` `@theme` block**, never inline a new brand hex — brand colour is centralised at [`app.css`](resources/css/app.css:7).
+2. **Prefer a semantic class or an existing component** (`.btn-primary`, `x-card`, `x-badge`, …) over re-styling a raw element.
 3. **Use `dark:` variants** for anything on a themed surface; the app ships dark mode.
-4. **Put new cross-page utilities in `@utility`**, not in per-view `<style>` blocks (the project has been actively migrating in this direction — see the "formerly inline" comments in [`app.css`](resources/css/app.css:66)).
+4. **Put new cross-page utilities in `@utility`**, not in per-view `<style>` blocks — the project has visibly been migrating in this direction.
 5. **Do not add a `tailwind.config.js`** — v4 CSS-first is intentional.
 6. **If you rely on Font Awesome inside the authenticated app**, verify the icon source, because the app layout does not load it (ISSUE-9).

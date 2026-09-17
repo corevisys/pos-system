@@ -40,7 +40,9 @@
                 editRate: '',
                 editStatus: 1,
                 isSubmitting: false
-            }">
+            }"
+                x-effect="document.body.classList.toggle('overflow-y-hidden', showAddModal || showEditModal)"
+                @keydown.escape.window="showAddModal = false; showEditModal = false">
                 <div class="flex justify-between items-center px-1">
                     <h2 class="text-[10px] font-black uppercase text-text-muted tracking-[0.2em]">Tax List</h2>
                     <button @click="showAddModal = true" class="btn-primary !py-1.5 !px-3 !text-[10px] tracking-widest">
@@ -119,13 +121,22 @@
                 </x-card>
 
                 <!-- ADD TAX MODAL -->
+                {{-- x-teleport is REQUIRED: the app shell has overflow-hidden/overflow-y-auto
+                     ancestors, so a fixed overlay left in place is clipped (backdrop shows,
+                     dialog invisible, page unusable). Teleporting to <body> fixes positioning
+                     while keeping the Alpine scope intact. --}}
+                <template x-teleport="body">
                 <div x-show="showAddModal" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
                     <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                        <div x-show="showAddModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="fixed inset-0 transition-opacity" aria-hidden="true">
+                        {{-- Backdrop z-0 + panel relative z-10. The positioned, z-index:auto
+                             blurred layer is painted in CSS 2.1 Appendix E step 6, which
+                             beat the static inline-block panel (step 5) — blurring the
+                             dialog itself and swallowing its clicks. --}}
+                        <div x-show="showAddModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" @click="showAddModal = false" class="fixed inset-0 z-0 transition-opacity" aria-hidden="true">
                             <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
                         </div>
                         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                        <div x-show="showAddModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="inline-block align-bottom card rounded-2xl text-left overflow-hidden shadow-modal transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                        <div x-show="showAddModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" @click.stop class="relative z-10 inline-block align-bottom card rounded-2xl text-left overflow-hidden shadow-modal transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                             <form action="/settings/tax" method="POST" @submit="isSubmitting = true">
                                 @csrf
                                 <input type="hidden" name="group_bit" value="0">
@@ -160,15 +171,17 @@
                         </div>
                     </div>
                 </div>
+                </template>
 
                 <!-- EDIT TAX MODAL -->
+                <template x-teleport="body">
                 <div x-show="showEditModal" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
                     <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                        <div x-show="showEditModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="fixed inset-0 transition-opacity" aria-hidden="true">
+                        <div x-show="showEditModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" @click="showEditModal = false" class="fixed inset-0 z-0 transition-opacity" aria-hidden="true">
                             <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
                         </div>
                         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                        <div x-show="showEditModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="inline-block align-bottom card rounded-2xl text-left overflow-hidden shadow-modal transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                        <div x-show="showEditModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" @click.stop class="relative z-10 inline-block align-bottom card rounded-2xl text-left overflow-hidden shadow-modal transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                             <form :action="'/settings/tax/' + editId" method="POST" @submit="isSubmitting = true">
                                 @csrf
                                 <div class="px-6 py-4 border-b border-border dark:border-dark-border flex justify-between items-center">
@@ -202,6 +215,7 @@
                         </div>
                     </div>
                 </div>
+                </template>
             </div>
 
             <!-- SECTION 2: TAX GROUPS -->
@@ -213,7 +227,9 @@
                 editGroupSubtaxes: [],
                 editGroupStatus: 1,
                 isSubmitting: false
-            }">
+            }"
+                x-effect="document.body.classList.toggle('overflow-y-hidden', showAddGroupModal || showEditGroupModal)"
+                @keydown.escape.window="showAddGroupModal = false; showEditGroupModal = false">
                 <div class="flex justify-between items-center px-1">
                     <h2 class="text-[10px] font-black uppercase text-text-muted tracking-[0.2em]">Tax Groups</h2>
                     <button @click="showAddGroupModal = true" class="btn-primary !py-1.5 !px-3 !text-[10px] tracking-widest">
@@ -306,13 +322,14 @@
                 </x-card>
 
                 <!-- ADD TAX GROUP MODAL -->
+                <template x-teleport="body">
                 <div x-show="showAddGroupModal" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
                     <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                        <div x-show="showAddGroupModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="fixed inset-0 transition-opacity" aria-hidden="true">
+                        <div x-show="showAddGroupModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" @click="showAddGroupModal = false" class="fixed inset-0 z-0 transition-opacity" aria-hidden="true">
                             <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
                         </div>
                         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                        <div x-show="showAddGroupModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="inline-block align-bottom card rounded-2xl text-left overflow-hidden shadow-modal transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                        <div x-show="showAddGroupModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" @click.stop class="relative z-10 inline-block align-bottom card rounded-2xl text-left overflow-hidden shadow-modal transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                             <form action="{{ route('settings.tax.store') }}" method="POST" @submit="isSubmitting = true">
                                 @csrf
                                 <input type="hidden" name="group_bit" value="1">
@@ -355,15 +372,17 @@
                         </div>
                     </div>
                 </div>
+                </template>
 
                 <!-- EDIT TAX GROUP MODAL -->
+                <template x-teleport="body">
                 <div x-show="showEditGroupModal" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
                     <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                        <div x-show="showEditGroupModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="fixed inset-0 transition-opacity" aria-hidden="true">
+                        <div x-show="showEditGroupModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" @click="showEditGroupModal = false" class="fixed inset-0 z-0 transition-opacity" aria-hidden="true">
                             <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
                         </div>
                         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                        <div x-show="showEditGroupModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="inline-block align-bottom card rounded-2xl text-left overflow-hidden shadow-modal transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                        <div x-show="showEditGroupModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" @click.stop class="relative z-10 inline-block align-bottom card rounded-2xl text-left overflow-hidden shadow-modal transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                             <form :action="'/settings/tax/' + editGroupId" method="POST" @submit="isSubmitting = true">
                                 @csrf
                                 <div class="px-6 py-4 border-b border-border dark:border-dark-border flex justify-between items-center">
@@ -404,6 +423,7 @@
                         </div>
                     </div>
                 </div>
+                </template>
             </div>
 
         </div>

@@ -1,158 +1,100 @@
-# Multi-Store Follow-ups (post Phase 0–4)
+# Multi-Store Follow-ups (deferred / not-yet-done work)
 
-**Status:** Phases 0–3 and 4.1/4.3/4.4 are implemented and verified green on both
-SQLite (1325 passed) and MySQL (1309 passed / 16 skipped SQLite-only harnesses).
+**Last verified:** 2026-09-16
+**Status:** the multi-store programme is implemented and green. This file tracks only the items that remain **genuinely deferred or unwired** after the 2026-09-16 audit. Every entry below was re-verified against source in this pass; items that have since shipped were removed rather than left as stale history.
 
-This file tracks the items that were **deliberately deferred** and are not yet done.
+> **Why this file still exists:** the audit found real, verified, still-open work (notably the Owner store-selector UI, which has a controller and routes but no view). See §1.
+> Items previously tracked here and now **CLOSED** are listed in §5 so the removal is explicit.
 
-## 1. Phase 4.2 — Stock source of truth — IMPLEMENTED (2026-09-14, pragmatic form)
+---
 
-**Finding (from the mandated 4.2.0/4.2.1 pre-work):** the plan's "drop the column"
-premise was unsafe. `db_items.stock` is NOT vestigial: it is the ONLY stock figure for
-a large, supported class of items that have **no `db_warehouseitems` rows at all**
-(opening-stock items created without a warehouse; seeded items). The new read-only
-`items:compare-stock-sources` command reported **45 warehouse-less items** and **0
-mismatches** where warehouse rows exist.
+## 1. OPEN — Owner store-selector has no UI (ISSUE-14)
 
-**Chosen model (implemented):**
-- A single canonical rule lives on the model:
-  `DbItem::availableStock(?int $warehouseId = null)` — the requested warehouse's
-  `available_qty` when a row exists, otherwise `SUM(available_qty)` across the item's
-  warehouses, otherwise falls back to `db_items.stock` for warehouse-less items. It
-  uses the eager-loaded relation when present (no N+1).
-- `DbItem::syncGlobalStock($itemId)` is the single aggregation that keeps
-  `db_items.stock == SUM(available_qty)` for items WITH warehouse rows, and leaves
-  warehouse-less items untouched (never zeroes them).
-- Read sites routed through the helper: POS availability check
-  (`PosController`), SMS LowStock decision + payload (`SmsTriggerService`), items-list
-  screen/print/export and `ItemController::syncGlobalStock`. The dashboard low-stock
-  query keeps using the (provably equal) `db_items.stock` aggregate for its SQL
-  ordering.
-- **`db_items.stock` is kept, not dropped** — it is the documented authoritative figure
-  for warehouse-less items and a safe denormalised aggregate otherwise.
+**What exists:** `StoreSelectorController::update()` / `clear()` correctly gate on `canViewAllStores()` and persist the acting store to the session under `SetCurrentStore::SESSION_KEY` ([`StoreSelectorController.php`](app/Http/Controllers/StoreSelectorController.php:21), [`…:35`](app/Http/Controllers/StoreSelectorController.php:35), [`…:40`](app/Http/Controllers/StoreSelectorController.php:40)). Both routes are registered inside the authenticated + `ensure.store` group ([`routes/web.php`](routes/web.php:60), [`routes/web.php`](routes/web.php:61)). The middleware that *reads* the session value is wired globally ([`bootstrap/app.php`](bootstrap/app.php:25)).
 
-**Verification:** SQLite 1334 passed; MySQL 1319 passed / 16 skipped. New tests in
-`tests/Feature/ItemStockSourceOfTruthTest.php` cover warehouse-less fallback,
-multi-warehouse summing, `syncGlobalStock` equality (and non-zeroing), and summed POS
-availability.
+**What is missing:** **no Blade view posts to either route.** A content search across all of `resources/views` for `store-context`, `store_context`, `Acting store`, `acting store`, `switch store` returned **0 results**. The sidebar only renders links for `canViewAllStores()` ([`app.blade.php`](resources/views/layouts/app.blade.php:153)).
 
-**Not done (deliberate):** dropping the column, and backfilling warehouse rows for
-legacy items — both require enforcing a warehouse on every create path (a launch-time
-behaviour change) and are out of scope per the gap analysis.
+**Consequence:** the Owner cannot actually switch the acting store from the UI. The plumbing underneath is complete and tested ([`SetCurrentStoreMiddlewareTest.php`](tests/Feature/SetCurrentStoreMiddlewareTest.php:1), [`ThreeRoleModelTest.php`](tests/Feature/ThreeRoleModelTest.php:1)), so this is a UI-wiring task only.
 
-### Stock-source contract (authoritative statement)
+**Suggested approach:** add a store `<select>` to the app layout header (or the consolidated report pages) rendered only when `auth()->user()->canViewAllStores()`, POSTing to `store.context.update`; optionally a "revert to my store" control POSTing/DELETEing `store.context.clear`. Display the currently acting store (readable from `app(StoreContext::class)`).
 
-```text
-db_items.stock is intentionally retained.
+---
 
-For items with warehouse rows:
-    db_items.stock = denormalized aggregate of warehouse available_qty.
+## 2. OPEN — Store settings ignore the acting store (ISSUE-15)
 
-For items without warehouse rows:
-    db_items.stock = authoritative stock figure.
+`StoreSettingsController::resolveActingStore()` reads `auth()->user()->store_id` **directly** ([`StoreSettingsController.php`](app/Http/Controllers/StoreSettingsController.php:25)) instead of going through `current_store_id()` ([`helpers.php`](app/Helpers/helpers.php:157)).
 
-Full removal requires a separate migration project:
-    legacy warehouse assignment/backfill
-    + enforcing warehouse creation
-    + migrating all reads/writes
-    + verification
-    + only then dropping the column.
-```
+**Consequence:** even after switching (once §1 is done), an Owner — whose `users.store_id` is only nominal ([`OwnerDeveloperSeeder.php`](database/seeders/OwnerDeveloperSeeder.php:33)) — would still be served their own nominal store's settings, not the chosen branch's. `EnsureUserHasStore` already exempts the Owner ([`EnsureUserHasStore.php`](app/Http/Middleware/EnsureUserHasStore.php:38)), so the guard is not the obstacle.
 
-### Remaining-work audit (2026-09-14)
+**Suggested approach:** resolve via `current_store_id()` while keeping the existing "store must exist" guard, and keep the `store_settings_view` permission gate ([`StoreSettingsController.php`](app/Http/Controllers/StoreSettingsController.php:45)).
 
-Every remaining production read/write of `db_items.stock` was re-audited after the
-pragmatic implementation, and each was confirmed to preserve the contract above:
+---
 
-- **Reads (all correct, no further change needed):** POS availability gate
-  ([`PosController`](../app/Http/Controllers/PosController.php:1353)) → `availableStock()`;
-  SMS low-stock decision + payload → `availableStock()`; items-list screen/print/export
-  → `availableStock()`; item edit screens and `ItemController` build the form value from
-  the warehouse row *with an explicit `db_items.stock` fallback* for warehouse-less
-  items; dashboard low-stock widget and `ReportController` use a stock figure that is
-  provably equal to `availableStock()` (aggregate for warehouse-backed items, the
-  authoritative column for warehouse-less ones); `CompareItemStockSources` is
-  diagnostic-only.
-- **Writes (all correct, all paired):** every operational stock mutation
-  (purchase, sale, sale deletion, sales return, adjustment create/edit/revert,
-  quotation) mutates `db_items.stock` **and** the matching
-  `db_warehouseitems.available_qty` in the same transaction, preserving equality via a
-  symmetric delta; `ItemController::syncGlobalStock()` and `DbItem::syncGlobalStock()`
-  set the aggregate only when warehouse rows exist and never zero warehouse-less items.
-- **No divergence found** on the seeded dataset (0 mismatches where warehouse rows
-  exist), and the invariant is maintained by the symmetric deltas above.
+## 3. OPEN — `config/sms.php` does not exist (ISSUE-12)
 
-### Correction — a read site MISSED by the original 4.2.2 audit (fixed 2026-09-14)
+Two runtime reads have no configuration backing:
 
-The original 4.2.2 pass routed the **checkout** availability gate
-([`PosController`](../app/Http/Controllers/PosController.php:1353)) through
-`availableStock()`, but missed **`PosController::searchItems`** — the item
-search/autocomplete endpoint. It is important to note it is a **POS/Sale-shared**
-endpoint (both [`pos.blade.php`](../resources/views/module/sales/pos.blade.php:1279)
-and [`add.blade.php`](../resources/views/module/sales/add.blade.php:1131) call
-`sales.pos.search.items`), and it computed `stock` with raw SQL
-(`COALESCE(db_warehouseitems.available_qty, 0)` / raw `db_items.stock`). Consequence:
-**warehouse-less items showed stock 0** in the search list and that 0 was carried into
-the cart line, while checkout actually sold from the `db_items.stock` fallback.
+- `config('sms.sandbox', false)` — the sandbox-provider override ([`SmsService.php`](app/SMS/Services/SmsService.php:24)).
+- `config("sms.throttle.{$provider}", 5)` — the per-provider rate limit ([`SendSingleSmsJob.php`](app/Jobs/SendSingleSmsJob.php:39)).
 
-Fix: `searchItems` now resolves `stock` via `DbItem::availableStock($warehouseId)` — the
-same single canonical rule as checkout (no second implementation of the fallback) — with
-`db_items.stock` still selected solely as that rule's fallback input. Regression coverage:
-[`PosItemSearchStockTest`](../tests/Feature/PosItemSearchStockTest.php:1) asserts the
-endpoint response `stock` **equals** `availableStock()` for all four cases (warehouse-less
-± warehouse_id, tracked ± warehouse_id) plus a search/checkout parity guard.
+Because `config/` contains no `sms.php` (files present: app, auth, backup, cache, database, filesystems, logging, mail, queue, sales, services, session), both always fall back to their inline defaults and cannot be tuned from `.env` or config. A test asserts the sandbox branch *works when the key is present* ([`SmsProviderSelectorTest.php`](tests/Feature/SmsProviderSelectorTest.php:1)), so only the production-config surface is missing.
 
-**Audit lesson for future passes:** the stock-source read sites are not only the obvious
-availability gates — the item **search/list** endpoints must be audited too.
+**Suggested approach:** add `config/sms.php` exposing `sandbox` and a `throttle` array keyed by provider name.
 
-**Full `searchItems` audit (2026-09-15) — this line item is now CLOSED (no unaudited search endpoints):**
+---
 
-| Module | Endpoint | Stock read | Status |
+## 4. OPEN (low priority)
+
+| # | Item | Evidence | Note |
 |---|---|---|---|
-| POS / Sale (shared) | `PosController::searchItems` | was raw SQL (warehouse join / raw column) | **FIXED** (commit `fe71520`) |
-| Stock Adjustment | [`StockAdjustmentController::searchItems`](../app/Http/Controllers/StockAdjustmentController.php:639) | was `$whItem ? $whItem->available_qty : 0` | **FIXED** — now `availableStock($warehouse_id ?: null)` |
-| Stock Transfer | [`StockTransferController::searchItems`](../app/Http/Controllers/StockTransferController.php:652) | same `… : 0` pattern | **FIXED** — now `availableStock($warehouse_id ?: null)` |
-| Purchase | `PurchaseController::searchItems` | raw `db_items.stock`, no `warehouse_id` | audited — equals `availableStock(null)` (clean) |
-| Quotation | `QuotationController::searchItems` | raw `db_items.stock`, no `warehouse_id` | audited — equals `availableStock(null)` (clean) |
-| Items (label picker) | `ItemController::searchItems` → `formatItemForLabel` | raw `db_items.stock`, no `warehouse_id` | audited — equals `availableStock(null)` (clean) |
+| 4.1 | **Duplicate migration timestamp** `2026_09_13_000003` shared by two migrations. | [`…clear_is_super_admin…`](database/migrations/2026_09_13_000003_clear_is_super_admin_from_branch_admin_roles.php:1), [`…grant_database_backup…`](database/migrations/2026_09_13_000003_grant_database_backup_permission_to_existing_roles.php:1) | Both run (Laravel orders by filename) but the tie is a latent ordering hazard. Rename one to `000007` or similar. |
+| 4.2 | **EMI tables carry no `store_id`.** `db_emi_sales` / `db_emi_schedule` rely on transitive isolation via `db_sales.store_id`. | [`create_db_emi_tables.php`](database/migrations/2026_02_18_052015_create_db_emi_tables.php:14), [`DbEmiSale.php`](app/Models/DbEmiSale.php:8) | Correct today; adding an explicit `store_id` would remove reliance on the join. |
+| 4.3 | **No DB-level per-store unique on `db_customers.mobile`.** Uniqueness is validation-only. | [`create_db_customers_table.php`](database/migrations/2026_02_07_085626_create_db_customers_table.php:62) vs [`CustomerController.php`](app/Http/Controllers/CustomerController.php:141) | `db_suppliers` does have the composite index; symmetric hardening would be a migration. |
+| 4.4 | **Font Awesome not loaded in the app layout** though `app.js` builds an FA spinner. | [`app.js`](resources/js/app.js:50) vs [`app.blade.php`](resources/views/layouts/app.blade.php:21) | Load FA in the app layout, or swap the spinner for an inline SVG. |
+| 4.5 | **Per-store invoice templates** not implemented. | gap analysis §7 | Optional — only if document branding becomes a requirement. |
+| 4.6 | **Consolidated Owner customer/due rollup** deliberately not built. Customer sharing is shared-identity-only, so a cross-store customer view was explicitly excluded. | [`ConsolidatedReportController.php`](app/Http/Controllers/ConsolidatedReportController.php:20) | Deferred by decision, not by omission. |
+| 4.7 | **Identity merge tooling** for corrected phone numbers is not built. | [`CustomerIdentityResolver.php`](app/Services/CustomerIdentityResolver.php:29) | A phone correction creates a new identity today; no merge/relink tool exists. |
+| 4.8 | **Windows-hardcoded MySQL dump path** `C:/xampp/mysql/bin/`. | [`config/database.php`](config/database.php:65) | Non-portable; env-overridable via `DUMP_BINARY_PATH` ([`AppServiceProvider.php`](app/Providers/AppServiceProvider.php:28)). |
 
-The two stock endpoints were reproduced pre-fix (warehouse-less item returned **0**,
-should be `db_items.stock` = 15) and post-fix (warehouse-less **15**, tracked unchanged
-**7** for a selected warehouse, no-warehouse path unchanged **10**). Regression coverage:
-[`StockSearchStockTest`](../tests/Feature/StockSearchStockTest.php:1).
+---
 
-## 2. Phase 4.5 — Per-store invoice templates
+## 5. CLOSED since the previous audit (removed from the tracker, kept here for traceability)
 
-Not built. The gap analysis marks this optional and only worth doing if document
-branding becomes a real requirement.
+| Previously tracked | Resolution | Evidence |
+|---|---|---|
+| **Phase 4.2 — stock source of truth** ("drop the column") | Resolved pragmatically: `DbItem::availableStock()` is the single canonical rule; `db_items.stock` is retained as authoritative for warehouse-less items and never zeroed. `syncGlobalStock()` is the single aggregation. | [`DbItem.php`](app/Models/DbItem.php:114), [`DbItem.php`](app/Models/DbItem.php:148), [`ItemStockSourceOfTruthTest.php`](tests/Feature/ItemStockSourceOfTruthTest.php:1) |
+| **Stock read-site gap in search endpoints** | Fixed in POS, Stock Adjustment and Stock Transfer search, all routed through `availableStock()`. | [`PosController.php`](app/Http/Controllers/PosController.php:230), [`StockAdjustmentController.php`](app/Http/Controllers/StockAdjustmentController.php:648), [`StockTransferController.php`](app/Http/Controllers/StockTransferController.php:660), [`PosItemSearchStockTest.php`](tests/Feature/PosItemSearchStockTest.php:1), [`StockSearchStockTest.php`](tests/Feature/StockSearchStockTest.php:1) |
+| **Phase 4.3 — `purchase_return` numbering** | Routed through `generateSequential()` with prefix `PR`. | [`CodeGeneratorService.php`](app/Services/CodeGeneratorService.php:167), [`CodeGeneratorServiceTest.php`](tests/Feature/CodeGeneratorServiceTest.php:1) |
+| **Phase 4.1 — dead `to_store_id` columns** | Dropped from both tables (with index cleanup) and removed from `$fillable`. | [`2026_09_13_000005`](database/migrations/2026_09_13_000005_drop_dead_to_store_id_columns.php:27) |
+| **Phase 5 — customer sharing decision** | Decided (shared identity only) and implemented. | [`2026_09_13_000006`](database/migrations/2026_09_13_000006_create_db_customer_identities_table.php:25), [`CustomerIdentityResolver.php`](app/Services/CustomerIdentityResolver.php:29), [`SharedCustomerIdentityTest.php`](tests/Feature/SharedCustomerIdentityTest.php:1) |
+| **Phase 2 — three-role model** | Branch Admin / Owner / Developer implemented; branch-admin global privilege cleared. | [`RolePermissionSeeder.php`](database/seeders/RolePermissionSeeder.php:169), [`ThreeRoleModelTest.php`](tests/Feature/ThreeRoleModelTest.php:1) |
+| **Phase 3.2 — Owner-gated consolidated reporting** | Ledger + stock consolidated endpoints, Owner-gated, with per-store filter. | [`ConsolidatedReportController.php`](app/Http/Controllers/ConsolidatedReportController.php:25), [`…:69`](app/Http/Controllers/ConsolidatedReportController.php:69), [`ConsolidatedReportingTest.php`](tests/Feature/ConsolidatedReportingTest.php:1) |
+| **Acting-store context / `SetCurrentStore`** | Implemented as a `web`-group middleware + `StoreContext` singleton. | [`bootstrap/app.php`](bootstrap/app.php:25), [`SetCurrentStore.php`](app/Http/Middleware/SetCurrentStore.php:39), [`SetCurrentStoreMiddlewareTest.php`](tests/Feature/SetCurrentStoreMiddlewareTest.php:1) |
+| **Invalid inline JS + failing concurrency tests** | The full SQLite suite now passes with **0 failures**. | see §6 |
 
-## 3. Customer sharing — DECIDED (2026-09-14): shared identity only
+---
 
-Option (c) was chosen and is implemented as **Phase 5**:
-- New table `db_customer_identities` (NOT StoreScoped; globally unique `phone`) holds
-  the person's identity; `db_customers.customer_identity_id` links each store-scoped
-  row to it. Resolution is centralised in `App\Services\CustomerIdentityResolver`
-  (the single sanctioned cross-store read).
-- `db_customers` stays `StoreScoped`; dues/loyalty/sales history stay per store and do
-  not carry over. Phone uniqueness on `db_customers` is now **per store** (it was
-  global), which is what allows the same person to exist in two stores.
-- Phase 3.2 consolidated reporting still deliberately **excludes** customer/due
-  rollups (a cross-store customer view was explicitly deferred).
-
-Still deferred (not built): consolidated Owner customer/due view; identity merge tooling
-for corrected phone numbers.
-
-## Verification commands
+## 6. Verification commands & latest result
 
 ```
-# SQLite (default)
+# SQLite (default) — run 2026-09-16
 php artisan test --parallel
+#   Tests:    1346 passed (6479 assertions)
+#   Duration: 149.92s
+#   Parallel: 12 processes
+```
 
+```
 # MySQL gate (dedicated throwaway database; never the dev DB)
 php -r "$p=new PDO('mysql:host=127.0.0.1;port=3306','root','');$p->exec('DROP DATABASE IF EXISTS laravelpos_test');$p->exec('CREATE DATABASE laravelpos_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');"
 php vendor\bin\pest -c phpunit.mysql.xml
 ```
 
-Note: 16 self-contained SQLite concurrency/migration harnesses are skipped on MySQL
-via `skipUnlessSqlite()` — they build their own SQLite files and spawn `php` workers,
-so they are not applicable to the MySQL gate.
+**Result (2026-09-16):**
+
+```
+Tests:    16 skipped, 1330 passed (6392 assertions)
+Duration: 336.42s
+```
+
+The self-contained SQLite concurrency/migration harnesses are reported as **skipped** on MySQL by design, via `skipUnlessSqlite()` ([`tests/Pest.php`](tests/Pest.php:91)); the 16 skips match the 16 `skipUnlessSqlite()` call sites in test bodies. **Zero failures.**

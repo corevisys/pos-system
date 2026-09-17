@@ -7,7 +7,9 @@
         editDescription: '',
         editStatus: 1,
         isSubmitting: false
-    }">
+    }"
+        x-effect="document.body.classList.toggle('overflow-y-hidden', showAddModal || showEditModal)"
+        @keydown.escape.window="showAddModal = false; showEditModal = false">
         <!-- HEADER & BREADCRUMBS -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
             <div>
@@ -114,13 +116,22 @@
         </x-card>
 
         <!-- ADD UNIT MODAL -->
+        {{-- x-teleport is REQUIRED: the app shell has overflow-hidden/overflow-y-auto
+             ancestors, so a fixed overlay left in place is clipped (backdrop shows,
+             dialog invisible, page unusable). Teleporting to <body> fixes positioning
+             while keeping the Alpine scope intact. --}}
+        <template x-teleport="body">
         <div x-show="showAddModal" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
             <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                <div x-show="showAddModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="fixed inset-0 transition-opacity" aria-hidden="true">
+                {{-- Backdrop z-0 + panel relative z-10: the positioned, z-index:auto
+                     blurred layer is painted in CSS 2.1 Appendix E step 6, which beats
+                     the static inline-block panel in step 5 — that painted the blur
+                     over the dialog and swallowed every click at its coordinates. --}}
+                <div x-show="showAddModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" @click="showAddModal = false" class="fixed inset-0 z-0 transition-opacity" aria-hidden="true">
                     <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
                 </div>
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                <div x-show="showAddModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="inline-block align-bottom card rounded-2xl text-left overflow-hidden shadow-modal transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div x-show="showAddModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" @click.stop class="relative z-10 inline-block align-bottom card rounded-2xl text-left overflow-hidden shadow-modal transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                     <form action="/settings/units" method="POST" @submit="isSubmitting = true">
                         @csrf
                         <div class="px-6 py-4 border-b border-border dark:border-dark-border flex justify-between items-center">
@@ -154,15 +165,17 @@
                 </div>
             </div>
         </div>
+        </template>
 
         <!-- EDIT UNIT MODAL -->
+        <template x-teleport="body">
         <div x-show="showEditModal" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
             <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                <div x-show="showEditModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div x-show="showEditModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" @click="showEditModal = false" class="fixed inset-0 z-0 transition-opacity" aria-hidden="true">
                     <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
                 </div>
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                <div x-show="showEditModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="inline-block align-bottom card rounded-2xl text-left overflow-hidden shadow-modal transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div x-show="showEditModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" @click.stop class="relative z-10 inline-block align-bottom card rounded-2xl text-left overflow-hidden shadow-modal transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                     <form :action="'/settings/units/' + editId" method="POST" @submit="isSubmitting = true">
                         @csrf
                         <div class="px-6 py-4 border-b border-border dark:border-dark-border flex justify-between items-center">
@@ -196,5 +209,6 @@
                 </div>
             </div>
         </div>
+        </template>
     </div>
 </x-app-layout>

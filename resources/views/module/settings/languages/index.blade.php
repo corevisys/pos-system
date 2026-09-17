@@ -9,8 +9,20 @@
             this.targetLanguageId = id;
             this.targetLanguageName = name;
             this.showConfirmModal = true;
+            // Move focus into the dialog once Alpine has shown it.
+            this.$nextTick(() => setTimeout(() => {
+                const panel = document.getElementById('activate-language-panel');
+                if (panel) panel.focus();
+            }, 60));
+        },
+
+        closeActivateConfirm() {
+            this.showConfirmModal = false;
+            this.targetLanguageId = null;
         }
-    }">
+    }"
+    x-effect="document.body.classList.toggle('overflow-y-hidden', showConfirmModal)"
+    @keydown.escape.window="showConfirmModal = false">
 
         <!-- HEADER & BREADCRUMBS -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
@@ -155,13 +167,34 @@
         </x-card>
 
         <!-- ACTIVATE CONFIRMATION MODAL -->
+        {{--
+            x-teleport="body" is REQUIRED, not cosmetic.
+            This page lives inside the app shell's `overflow-hidden` + `overflow-y-auto`
+            scroll containers. A `position: fixed` overlay rendered inside a clipping
+            ancestor is clipped (backdrop shows, dialog invisible). Teleporting the
+            overlay to <body> makes `fixed inset-0` resolve against the viewport again.
+            Alpine keeps the component scope (showConfirmModal / targetLanguageId /
+            targetLanguageName) across the teleport, so the bindings below stay intact.
+
+            z-index on the backdrop is ALSO required, not cosmetic. Per CSS 2.1
+            Appendix E painting order, positioned descendants with `z-index: auto`
+            are painted in step 6 — BEFORE the inline-level content of step 5. The
+            panel below is `display: inline-block; position: static`, so it lands in
+            step 5 and the *positioned* blurred backdrop (position:absolute, z-index
+            auto) was painted ON TOP of it: the whole viewport including the dialog
+            looked blurred/washed out and every click at the panel's coordinates hit
+            the backdrop instead of the buttons. Giving the backdrop z-0 and the
+            panel `relative z-10` puts the panel back on top with both above the
+            app shell (sidebar z-50 header z-40 footer z-30).
+        --}}
+        <template x-teleport="body">
         <div x-show="showConfirmModal" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
             <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                <div x-show="showConfirmModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div x-show="showConfirmModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="fixed inset-0 z-0 transition-opacity" aria-hidden="true" @click="closeActivateConfirm()">
                     <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
                 </div>
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                <div x-show="showConfirmModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="inline-block align-bottom card rounded-2xl text-left overflow-hidden shadow-modal transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
+                <div id="activate-language-panel" tabindex="-1" x-show="showConfirmModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" @click.stop class="relative z-10 inline-block align-bottom card rounded-2xl text-left overflow-hidden shadow-modal transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full outline-none">
                     <div class="px-6 py-5 border-b border-border dark:border-dark-border flex items-center gap-3">
                         <div class="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-warning flex items-center justify-center shrink-0">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
@@ -178,7 +211,7 @@
                         <p class="text-[11px] font-semibold text-text-muted">Continue?</p>
                     </div>
                     <div class="px-6 py-4 bg-background/50 dark:bg-white/5 border-t border-border dark:border-dark-border flex justify-end items-center gap-3">
-                        <button @click="showConfirmModal = false; targetLanguageId = null;" type="button" class="btn-secondary">Cancel</button>
+                        <button @click="closeActivateConfirm()" type="button" class="btn-secondary">Cancel</button>
                         <form :action="'/settings/languages/' + targetLanguageId + '/activate'" method="POST" class="inline">
                             @csrf
                             <button type="submit" class="btn-primary !bg-success hover:!bg-success/90 flex items-center gap-1.5">
@@ -190,6 +223,7 @@
                 </div>
             </div>
         </div>
+        </template>
 
     </div>
 </x-app-layout>

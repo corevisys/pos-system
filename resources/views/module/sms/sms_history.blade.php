@@ -24,7 +24,9 @@
             };
             this.isDetailModalOpen = true;
         }
-    }">
+    }"
+        x-effect="document.body.classList.toggle('overflow-y-hidden', isDetailModalOpen)"
+        @keydown.escape.window="isDetailModalOpen = false">
         <!-- HEADER -->
         <div class="bg-white dark:bg-dark-card p-3 md:p-4 rounded-2xl border border-slate-100 dark:border-dark-border shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div>
@@ -179,11 +181,15 @@
              x-transition:leave-end="opacity-0"
              class="fixed inset-0 z-[100] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true" x-cloak>
             <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                <div @click="isDetailModalOpen = false" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" aria-hidden="true"></div>
+                {{-- Backdrop must sit at z-0 (explicit). Left at `z-index: auto` this
+                     positioned blurred layer is painted in CSS 2.1 Appendix E step 6,
+                     above the static `inline-block` panel in step 5 — blurring the
+                     dialog itself and swallowing every click inside it. --}}
+                <div @click="isDetailModalOpen = false" class="fixed inset-0 z-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" aria-hidden="true"></div>
 
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-                <div class="inline-block align-bottom bg-white dark:bg-dark-card rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full border border-slate-100 dark:border-dark-border">
+                <div class="relative z-10 inline-block align-bottom bg-white dark:bg-dark-card rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full border border-slate-100 dark:border-dark-border">
                     <!-- Modal Header -->
                     <div class="px-6 py-4 border-b border-slate-50 dark:border-dark-border flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
                         <div>
