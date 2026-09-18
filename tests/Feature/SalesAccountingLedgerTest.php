@@ -413,6 +413,7 @@ test('6. Cash transactions ledger displays sales payments and return refunds wit
     $response->assertSee('SALES PAYMENT');
     $response->assertSee('SALES RETURN REFUND');
     $response->assertSee('Ledger Test Account');
-    $response->assertSee('350.00');
-    $response->assertSee('50.00');
+    // Debit amounts render through <x-money>.
+    assert_compact_amount($response, 350.00);
+    assert_compact_amount($response, 50.00);
 });

@@ -87,7 +87,7 @@
                         <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Settlement Status</p>
                         @if($refundPayment && (float)$refundPayment->payment > 0)
                             <span class="inline-block px-3 py-1 bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 rounded-lg text-[10px] font-black uppercase tracking-wider border border-emerald-200 dark:border-emerald-800">
-                                Cash / Bank Refund: {{ format_currency($refundPayment->payment) }} ({{ $refundPayment->payment_type }})
+                                Cash / Bank Refund: <x-money value="{{ $refundPayment->payment }}" /> ({{ $refundPayment->payment_type }})
                             </span>
                         @else
                             <span class="inline-block px-3 py-1 bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 rounded-lg text-[10px] font-black uppercase tracking-wider border border-amber-200 dark:border-amber-800">
@@ -118,8 +118,8 @@
                                         <div class="text-[10px] text-slate-400 font-normal font-mono">{{ $item->item->item_code ?? '' }}</div>
                                     </td>
                                     <td class="px-4 py-3 text-center font-black text-rose-600">{{ $item->return_qty }}</td>
-                                    <td class="px-4 py-3 text-right font-bold tabular-nums">{{ format_currency($item->price_per_unit) }}</td>
-                                    <td class="px-4 py-3 text-right font-black tabular-nums text-rose-600">{{ format_currency($item->total_cost) }}</td>
+                                    <td class="px-4 py-3 text-right font-bold tabular-nums"><x-money value="{{ $item->price_per_unit }}" /></td>
+                                    <td class="px-4 py-3 text-right font-black tabular-nums text-rose-600"><x-money value="{{ $item->total_cost }}" /></td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -131,11 +131,11 @@
                     <div class="w-full max-w-xs space-y-2 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-dark-border">
                         <div class="flex justify-between text-xs font-bold text-slate-600 dark:text-slate-400">
                             <span>Subtotal Return:</span>
-                            <span class="tabular-nums">{{ format_currency($return->subtotal) }}</span>
+                            <span class="tabular-nums"><x-money value="{{ $return->subtotal }}" /></span>
                         </div>
                         <div class="border-t border-slate-200 dark:border-dark-border pt-2 flex justify-between text-sm font-black text-rose-600 dark:text-rose-400">
                             <span>Total Refund / Credit:</span>
-                            <span class="tabular-nums">{{ format_currency($return->grand_total) }}</span>
+                            <span class="tabular-nums"><x-money value="{{ $return->grand_total }}" /></span>
                         </div>
                     </div>
                 </div>

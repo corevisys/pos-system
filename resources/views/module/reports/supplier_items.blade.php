@@ -112,7 +112,7 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-2.5 text-[10px] font-black text-slate-700 dark:text-slate-200" x-text="record.supplier"></td>
-                                <td class="px-6 py-2.5 text-right font-mono text-[11px] font-black text-slate-800 dark:text-white" x-text="'{{ $currencySymbol }}' + record.price"></td>
+                                <td class="px-6 py-2.5 text-right font-mono text-[11px] font-black text-slate-800 dark:text-white"><x-money value="parseFloat(record.price.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                                 
                             </tr>
                         </template>

@@ -128,8 +128,8 @@ test('2. Store A user sees store-A-only totals in the four stat cards', function
 
     $response->assertOk();
     // Store-1 only has the 1000.00 payment
-    $response->assertSee(format_currency(1000.00));
-    $response->assertDontSee(format_currency(99999.00));
+    assert_compact_amount($response, 1000.00);
+    assert_compact_amount_absent($response, 99999.00);
 });
 
 test('3. Stat cards reflect the applied payment_type filter', function () {
@@ -157,12 +157,12 @@ test('3. Stat cards reflect the applied payment_type filter', function () {
     // Without filter: total = 1500
     $response = $this->actingAs($user)->get(route('sales.payments'));
     $response->assertOk();
-    $response->assertSee(format_currency(1500.00));
+    assert_compact_amount($response, 1500.00);
 
     // With payment_type=Bank Transfer: total = 500, cash = 0
     $response = $this->actingAs($user)->get(route('sales.payments', ['payment_type' => 'Bank Transfer']));
     $response->assertOk();
-    $response->assertSee(format_currency(500.00));
+    assert_compact_amount($response, 500.00);
 });
 
 test('4. Stat cards reflect the applied search filter', function () {
@@ -203,11 +203,11 @@ test('4. Stat cards reflect the applied search filter', function () {
 
     // Unfiltered: total = 1200
     $response = $this->actingAs($user)->get(route('sales.payments'));
-    $response->assertSee(format_currency(1200.00));
+    assert_compact_amount($response, 1200.00);
 
     // Search for SA-PAYLIST-1 only: total = 1000
     $response = $this->actingAs($user)->get(route('sales.payments', ['search' => 'SA-PAYLIST-1']));
-    $response->assertSee(format_currency(1000.00));
+    assert_compact_amount($response, 1000.00);
     $response->assertDontSee('SA-SEARCH-MATCH');
 });
 

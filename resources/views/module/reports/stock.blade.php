@@ -140,10 +140,10 @@
                                             <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest" x-text="record.brand"></span>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-2.5 text-right font-mono text-[11px] font-black text-slate-700 dark:text-white" x-text="'{{ $currencySymbol }}' + record.unitPrice"></td>
-                                    <td class="px-6 py-2.5 text-right font-mono text-[11px] font-black text-primary-600" x-text="'{{ $currencySymbol }}' + record.salesPrice"></td>
+                                    <td class="px-6 py-2.5 text-right font-mono text-[11px] font-black text-slate-700 dark:text-white"><x-money value="parseFloat(record.unitPrice.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
+                                    <td class="px-6 py-2.5 text-right font-mono text-[11px] font-black text-primary-600"><x-money value="parseFloat(record.salesPrice.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                                     <td class="px-6 py-2.5 text-right font-mono text-[11px] font-black text-emerald-600" x-text="record.stock"></td>
-                                    <td class="px-6 py-2.5 text-right font-mono text-[11px] font-black text-slate-800 dark:text-white" x-text="'{{ $currencySymbol }}' + record.value"></td>
+                                    <td class="px-6 py-2.5 text-right font-mono text-[11px] font-black text-slate-800 dark:text-white"><x-money value="parseFloat(record.value.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                                     
                                 </tr>
                             </template>
@@ -156,7 +156,7 @@
                                     
                                     <td class="px-6 py-2.5 text-[11px] font-black uppercase text-slate-700 dark:text-slate-200" x-text="record.brand"></td>
                                     <td class="px-6 py-2.5 text-right font-mono text-[11px] font-black text-emerald-600" x-text="record.stock"></td>
-                                    <td class="px-6 py-2.5 text-right font-mono text-[11px] font-black text-slate-800 dark:text-white" x-text="'{{ $currencySymbol }}' + record.value"></td>
+                                    <td class="px-6 py-2.5 text-right font-mono text-[11px] font-black text-slate-800 dark:text-white"><x-money value="parseFloat(record.value.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                                     <td class="px-6 py-2.5 text-center">
                                         <button class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">View Details</button>
                                     </td>
@@ -168,12 +168,12 @@
                         <tr class="font-black text-slate-700 dark:text-slate-200" x-show="viewType === 'item-wise'">
                             <td colspan="7" class="px-6 py-3 text-right uppercase text-[9px] tracking-widest text-slate-500 italic">Total Inventory Summary</td>
                             <td class="px-6 py-3 text-[11px] tabular-nums text-right text-emerald-600 font-mono" x-text="formatNumber(records.reduce((acc, r) => acc + parseRaw(r.stock), 0))"></td>
-                            <td class="px-6 py-3 text-[11px] tabular-nums text-right text-slate-800 dark:text-white font-mono">{{ $currencySymbol }}<span x-text="formatNumber(records.reduce((acc, r) => acc + parseRaw(r.value), 0))"></span></td>
+                            <td class="px-6 py-3 text-[11px] tabular-nums text-right text-slate-800 dark:text-white font-mono"><x-money value="records.reduce((acc, r) => acc + parseRaw(r.value), 0)" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                         <tr class="font-black text-slate-700 dark:text-slate-200" x-show="viewType === 'brand-wise'" x-cloak>
                             <td colspan="7" class="px-6 py-3 text-right uppercase text-[9px] tracking-widest text-slate-500 italic">Total Brand Summary</td>
                             <td class="px-6 py-3 text-[11px] tabular-nums text-right text-emerald-600 font-mono" x-text="formatNumber(records.reduce((acc, r) => acc + parseRaw(r.stock), 0))"></td>
-                            <td class="px-6 py-3 text-[11px] tabular-nums text-right text-slate-800 dark:text-white font-mono">{{ $currencySymbol }}<span x-text="formatNumber(records.reduce((acc, r) => acc + parseRaw(r.value), 0))"></span></td>
+                            <td class="px-6 py-3 text-[11px] tabular-nums text-right text-slate-800 dark:text-white font-mono"><x-money value="records.reduce((acc, r) => acc + parseRaw(r.value), 0)" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                     </tfoot>
                 </table>

@@ -781,7 +781,7 @@
                         </div>
                         <div class="text-xs font-bold">
                             <span class="text-text-secondary">Paid So Far: </span>
-                            <span class="text-emerald-600 font-black tabular-nums">{{ format_currency($purchase->paid_amount) }}</span>
+                            <span class="text-emerald-600 font-black tabular-nums"><x-money value="{{ $purchase->paid_amount }}" /></span>
                         </div>
                     </div>
 

@@ -141,20 +141,20 @@
                         <div class="p-3 bg-background dark:bg-slate-800/40 rounded-xl border border-border-light dark:border-dark-border space-y-1.5 text-xs">
                             <div class="flex justify-between items-center text-[10px]">
                                 <span class="text-text-muted font-bold uppercase tracking-wider">Sale Total:</span>
-                                <span class="font-black text-text-primary dark:text-slate-200 tabular-nums">{{ format_currency($sale_grand_total) }}</span>
+                                <span class="font-black text-text-primary dark:text-slate-200 tabular-nums"><x-money value="{{ $sale_grand_total }}" /></span>
                             </div>
                             <div class="flex justify-between items-center text-[10px]">
                                 <span class="text-success font-bold uppercase tracking-wider">Customer Paid:</span>
-                                <span class="font-black text-success tabular-nums">{{ format_currency($sale_paid) }}</span>
+                                <span class="font-black text-success tabular-nums"><x-money value="{{ $sale_paid }}" /></span>
                             </div>
                             <div class="flex justify-between items-center text-[10px]">
                                 <span class="{{ $sale_due > 0 ? 'text-danger' : 'text-text-muted' }} font-bold uppercase tracking-wider">Outstanding Due:</span>
-                                <span class="font-black {{ $sale_due > 0 ? 'text-danger' : 'text-text-secondary dark:text-slate-300' }} tabular-nums">{{ format_currency($sale_due) }}</span>
+                                <span class="font-black {{ $sale_due > 0 ? 'text-danger' : 'text-text-secondary dark:text-slate-300' }} tabular-nums"><x-money value="{{ $sale_due }}" /></span>
                             </div>
                             @if($sale_credit > 0)
                             <div class="flex justify-between items-center text-[10px]">
                                 <span class="text-warning font-bold uppercase tracking-wider">Credit Balance (Overpaid):</span>
-                                <span class="font-black text-warning tabular-nums">{{ format_currency($sale_credit) }}</span>
+                                <span class="font-black text-warning tabular-nums"><x-money value="{{ $sale_credit }}" /></span>
                             </div>
                             @endif
                         </div>
@@ -176,8 +176,7 @@
                     <div class="p-5 bg-navy dark:bg-slate-900 text-white">
                         <p class="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-300/60 mb-1">Return Amount Summary</p>
                         <div class="flex items-baseline gap-2">
-                              <span class="text-[11px] font-black text-indigo-400 italic">{{ $currencySymbol }}</span>
-                             <h2 class="text-3xl font-black tracking-tighter tabular-nums" x-text="formatNumber(calculateGrandTotal)"></h2>
+                             <h2 class="text-3xl font-black tracking-tighter tabular-nums"><x-money value="calculateGrandTotal" symbol="{{ $currencySymbol }}" /></h2>
                         </div>
                     </div>
 

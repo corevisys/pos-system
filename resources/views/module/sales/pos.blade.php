@@ -253,7 +253,7 @@
                             <span class="text-[8px] font-bold text-text-muted truncate" x-text="customerSnapshotMobile || 'No mobile'"></span>
                         </div>
                         <template x-if="selectedCustomer && customerSnapshotDue > 0">
-                            <span class="bg-danger-light text-danger px-2 py-0.5 rounded-full text-[9px] font-black tabular-nums shrink-0" x-text="'Due ' + '{{ $currencySymbol }}' + customerSnapshotDue.toFixed(2)"></span>
+                            <span class="bg-danger-light text-danger px-2 py-0.5 rounded-full text-[9px] font-black tabular-nums shrink-0 inline-flex items-center gap-0.5">Due <x-money value="customerSnapshotDue" /></span>
                         </template>
                         <template x-if="!selectedCustomer || customerSnapshotDue <= 0">
                             <span class="text-[9px] font-black text-emerald-500 uppercase tracking-wider shrink-0">No due</span>
@@ -287,7 +287,7 @@
                     <div x-show="appliedCoupon" class="flex items-center justify-between bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 rounded-xl py-1.5 px-3 text-[10px]" x-cloak>
                         <div class="flex flex-col truncate">
                             <span class="font-black text-emerald-700 dark:text-emerald-300" x-text="appliedCoupon ? appliedCoupon.code : ''"></span>
-                            <span class="text-[8px] font-bold text-emerald-600 dark:text-emerald-400" x-text="'Saved ' + '{{ $currencySymbol }}' + parseFloat(couponAmount || 0).toFixed(2)"></span>
+                            <span class="text-[8px] font-bold text-emerald-600 dark:text-emerald-400 inline-flex items-center gap-0.5">Saved <x-money value="parseFloat(couponAmount) || 0" /></span>
                         </div>
                         <button type="button" @click="removeCoupon()" class="text-rose-500 hover:text-rose-700 p-0.5 rounded-lg ml-1 shrink-0" title="Remove Coupon">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -301,16 +301,16 @@
                         <span>
                             <span x-text="'Qty ' + totalQty"></span>
                             <span class="mx-1 text-slate-300 dark:text-slate-600">·</span>
-                            <span x-text="'Subtotal ' + '{{ $currencySymbol }}' + subtotal.toFixed(2)"></span>
+                            <span class="inline-flex items-center gap-0.5">Subtotal <x-money value="subtotal" /></span>
                             <template x-if="totalDiscount > 0">
                                 <span class="mx-1 text-slate-300 dark:text-slate-600">·</span>
                             </template>
-                            <span x-show="totalDiscount > 0" class="text-danger" x-text="'Disc −' + '{{ $currencySymbol }}' + totalDiscount.toFixed(2)"></span>
+                            <span x-show="totalDiscount > 0" class="text-danger inline-flex items-center gap-0.5">Disc −<x-money value="totalDiscount" /></span>
                         </span>
                     </div>
                     <div class="flex items-center justify-between mt-1.5 pt-1.5 border-t border-border-light dark:border-dark-border">
                         <span class="text-[9px] font-black uppercase text-primary tracking-widest">Grand total</span>
-                        <span class="text-lg font-black tabular-nums text-text-primary dark:text-dark-text" x-text="'{{ $currencySymbol }}' + totalPayable.toFixed(2)"></span>
+                        <x-money value="totalPayable" class="text-lg font-black tabular-nums text-text-primary dark:text-dark-text" />
                     </div>
                 </div>
 
@@ -360,7 +360,7 @@
                                             <span class="text-[9px] font-black text-text-primary dark:text-dark-text truncate" x-text="hold.reference_no"></span>
                                             <span class="text-[7px] font-bold text-text-muted uppercase tracking-wider truncate" x-text="hold.customer_name + ' · ' + hold.item_count + ' items'"></span>
                                         </div>
-                                        <span class="text-[10px] font-black tabular-nums text-primary dark:text-primary-300 shrink-0" x-text="'{{ $currencySymbol }}' + parseFloat(hold.grand_total).toFixed(2)"></span>
+                                        <x-money value="parseFloat(hold.grand_total) || 0" intercept class="text-[10px] font-black tabular-nums text-primary dark:text-primary-300 shrink-0" />
                                     </a>
                                 </template>
                             </div>
@@ -481,7 +481,7 @@
                                         </div>
                                         <div class="flex justify-between mt-1.5 px-1">
                                             <span class="text-[9px] font-bold text-text-muted">Coupon Value</span>
-                                            <span class="text-[9px] font-black text-text-secondary dark:text-slate-300" x-text="'{{ $currencySymbol }}' + couponAmount.toFixed(2)"></span>
+                                            <x-money value="couponAmount" class="text-[9px] font-black text-text-secondary dark:text-slate-300" />
                                         </div>
                                     </div>
                                 </div>
@@ -556,36 +556,36 @@
                                         </div>
                                         <div class="flex justify-between items-center">
                                             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Subtotal</span>
-                                            <span class="text-sm font-black" x-text="'{{ $currencySymbol }}' + subtotal.toFixed(2)"></span>
+                                            <x-money value="subtotal" class="text-sm font-black" />
                                         </div>
                                         <div class="flex justify-between items-center text-rose-400">
                                             <span class="text-[10px] font-bold uppercase tracking-wider">Discount (-)</span>
-                                            <span class="text-sm font-black" x-text="'{{ $currencySymbol }}' + (totalDiscount - couponAmount).toFixed(2)"></span>
+                                            <x-money value="totalDiscount - couponAmount" class="text-sm font-black" />
                                         </div>
                                         <div class="flex justify-between items-center text-emerald-400">
                                             <span class="text-[10px] font-bold uppercase tracking-wider">Coupon (-)</span>
-                                            <span class="text-sm font-black" x-text="'{{ $currencySymbol }}' + couponAmount.toFixed(2)"></span>
+                                            <x-money value="couponAmount" class="text-sm font-black" />
                                         </div>
                                         
                                         <div class="my-4 border-t border-dashed border-white/20"></div>
                                         
                                         <div class="flex flex-wrap justify-between items-end gap-y-1">
                                             <span class="text-[11px] font-black uppercase tracking-widest text-slate-300">Net Payable</span>
-                                            <span class="text-2xl font-black text-white" x-text="'{{ $currencySymbol }}' + totalPayable.toFixed(2)"></span>
+                                            <x-money value="totalPayable" class="text-2xl font-black text-white" />
                                         </div>
                                         
                                         <div class="bg-white/5 rounded-xl p-3 border border-white/10 space-y-2 mt-2">
                                              <div class="flex justify-between items-center">
                                                 <span class="text-[10px] font-bold uppercase tracking-wider text-primary-300">Total Paying</span>
-                                                <span class="text-sm font-black text-primary-300" x-text="'{{ $currencySymbol }}' + totalPaying.toFixed(2)"></span>
+                                                <x-money value="totalPaying" class="text-sm font-black text-primary-300" />
                                             </div>
                                              <div class="flex justify-between items-center">
                                                  <span class="text-[10px] font-bold uppercase tracking-wider text-orange-300">Balance Due</span>
-                                                <span class="text-sm font-black text-orange-300" x-text="'{{ $currencySymbol }}' + balance.toFixed(2)"></span>
+                                                <x-money value="balance" class="text-sm font-black text-orange-300" />
                                             </div>
                                              <div x-show="changeReturnEnabled" class="flex flex-wrap justify-between items-center gap-y-1 border-t border-white/10 pt-2">
                                                 <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-300">Change Return</span>
-                                                <span class="text-lg font-black text-emerald-300" x-text="'{{ $currencySymbol }}' + changeReturn.toFixed(2)"></span>
+                                                <x-money value="changeReturn" class="text-lg font-black text-emerald-300" />
                                             </div>
                                         </div>
                                     </div>
@@ -733,7 +733,7 @@
                                         </div>
                                         <div class="flex justify-between mt-1.5 px-1">
                                             <span class="text-[9px] font-bold text-text-muted">Coupon Value</span>
-                                            <span class="text-[9px] font-black text-text-secondary dark:text-slate-300" x-text="'{{ $currencySymbol }}' + couponAmount.toFixed(2)"></span>
+                                            <x-money value="couponAmount" class="text-[9px] font-black text-text-secondary dark:text-slate-300" />
                                         </div>
                                     </div>
                                 </div>
@@ -780,36 +780,36 @@
                                         </div>
                                          <div class="flex justify-between items-center">
                                             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Subtotal</span>
-                                            <span class="text-sm font-black" x-text="'{{ $currencySymbol }}' + subtotal.toFixed(2)"></span>
+                                            <x-money value="subtotal" class="text-sm font-black" />
                                         </div>
                                          <div class="flex justify-between items-center text-rose-400">
                                             <span class="text-[10px] font-bold uppercase tracking-wider">Discount (-)</span>
-                                            <span class="text-sm font-black" x-text="'{{ $currencySymbol }}' + (totalDiscount - couponAmount).toFixed(2)"></span>
+                                            <x-money value="totalDiscount - couponAmount" class="text-sm font-black" />
                                         </div>
                                          <div class="flex justify-between items-center text-emerald-400">
                                             <span class="text-[10px] font-bold uppercase tracking-wider">Coupon (-)</span>
-                                            <span class="text-sm font-black" x-text="'{{ $currencySymbol }}' + couponAmount.toFixed(2)"></span>
+                                            <x-money value="couponAmount" class="text-sm font-black" />
                                         </div>
                                         
                                         <div class="my-4 border-t border-dashed border-white/20"></div>
                                         
                                          <div class="flex flex-wrap justify-between items-end gap-y-1">
                                             <span class="text-[11px] font-black uppercase tracking-widest text-slate-300">Net Payable</span>
-                                            <span class="text-2xl font-black text-white" x-text="'{{ $currencySymbol }}' + totalPayable.toFixed(2)"></span>
+                                            <x-money value="totalPayable" class="text-2xl font-black text-white" />
                                         </div>
                                         
                                         <div class="bg-white/5 rounded-xl p-3 border border-white/10 space-y-2 mt-2">
                                              <div class="flex justify-between items-center">
                                                 <span class="text-[10px] font-bold uppercase tracking-wider text-primary-300">Cash Paying</span>
-                                                <span class="text-sm font-black text-primary-300" x-text="'{{ $currencySymbol }}' + (parseFloat(cashAmount) || 0).toFixed(2)"></span>
+                                                <x-money value="parseFloat(cashAmount) || 0" class="text-sm font-black text-primary-300" />
                                             </div>
                                              <div class="flex justify-between items-center">
                                                   <span class="text-[10px] font-bold uppercase tracking-wider text-orange-300">Balance Due</span>
-                                                 <span class="text-sm font-black text-orange-300" x-text="'{{ $currencySymbol }}' + cashBalance.toFixed(2)"></span>
+                                                 <x-money value="cashBalance" class="text-sm font-black text-orange-300" />
                                              </div>
                                              <div x-show="changeReturnEnabled" class="flex flex-wrap justify-between items-center gap-y-1 border-t border-white/10 pt-2">
                                                 <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-300">Change Return</span>
-                                                <span class="text-lg font-black text-emerald-300" x-text="'{{ $currencySymbol }}' + cashChangeReturn.toFixed(2)"></span>
+                                                <x-money value="cashChangeReturn" class="text-lg font-black text-emerald-300" />
                                             </div>
                                         </div>
                                     </div>
@@ -952,15 +952,15 @@
                             <div class="space-y-3 mb-4">
                                 <div class="flex justify-between items-center text-xs">
                                     <span class="text-slate-400 font-medium">Total Amount:</span>
-                                    <span class="font-bold" x-text="'{{ $currencySymbol }}' + emiTotalAmount.toFixed(2)"></span>
+                                    <x-money value="emiTotalAmount" class="font-bold" />
                                 </div>
                                 <div class="flex justify-between items-center text-xs">
                                     <span class="text-slate-400 font-medium">Initial Payment:</span>
-                                    <span class="font-bold" x-text="'{{ $currencySymbol }}' + (parseFloat(emiInitialPay) || 0).toFixed(2)"></span>
+                                    <x-money value="parseFloat(emiInitialPay) || 0" class="font-bold" />
                                 </div>
                                 <div class="flex justify-between items-center text-xs">
                                     <span class="text-slate-400 font-medium">Remaining:</span>
-                                    <span class="font-bold" x-text="'{{ $currencySymbol }}' + emiRemaining.toFixed(2)"></span>
+                                    <x-money value="emiRemaining" class="font-bold" />
                                 </div>
                                 <div class="flex justify-between items-center text-xs">
                                     <span class="text-slate-400 font-medium">Duration:</span>
@@ -968,7 +968,7 @@
                                 </div>
                                 <div class="flex justify-between items-center text-xs">
                                     <span class="text-slate-400 font-medium">Processing Fee:</span>
-                                    <span class="font-bold" x-text="'{{ $currencySymbol }}' + (parseFloat(emiProcessingFee) || 0).toFixed(0)"></span>
+                                    <x-money value="parseFloat(emiProcessingFee) || 0" class="font-bold" />
                                 </div>
                             </div>
                             
@@ -977,7 +977,7 @@
                             <div class="flex flex-wrap items-baseline justify-between gap-y-1 mb-4">
                                 <span class="text-sm font-bold text-white">Monthly EMI</span>
                                 <div class="text-right">
-                                    <span class="text-lg font-black text-teal-400" x-text="'{{ $currencySymbol }}' + emiMonthly.toFixed(0)"></span>
+                                    <x-money value="emiMonthly" class="text-lg font-black text-teal-400" />
                                     <span class="text-[10px] text-slate-400 block">per month</span>
                                 </div>
                             </div>
@@ -995,7 +995,7 @@
                                         <template x-for="row in emiSchedule" :key="row.month">
                                             <tr>
                                                 <td class="px-3 py-2" x-text="new Date(row.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })"></td>
-                                                <td class="px-3 py-2 text-right font-bold" x-text="'{{ $currencySymbol }}' + row.amount.toFixed(2)"></td>
+                                                <td class="px-3 py-2 text-right font-bold"><x-money value="row.amount" /></td>
                                             </tr>
                                         </template>
                                     </tbody>

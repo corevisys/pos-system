@@ -27,15 +27,15 @@
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div class="card p-4">
             <div class="text-[10px] font-bold uppercase tracking-widest text-text-muted">Total Debit</div>
-            <div class="text-lg font-black text-text-primary dark:text-dark-text">{{ format_currency($totals['total_debit']) }}</div>
+            <div class="text-lg font-black text-text-primary dark:text-dark-text"><x-money value="{{ $totals['total_debit'] }}" /></div>
         </div>
         <div class="card p-4">
             <div class="text-[10px] font-bold uppercase tracking-widest text-text-muted">Total Credit</div>
-            <div class="text-lg font-black text-text-primary dark:text-dark-text">{{ format_currency($totals['total_credit']) }}</div>
+            <div class="text-lg font-black text-text-primary dark:text-dark-text"><x-money value="{{ $totals['total_credit'] }}" /></div>
         </div>
         <div class="card p-4">
             <div class="text-[10px] font-bold uppercase tracking-widest text-text-muted">Net (Debit − Credit)</div>
-            <div class="text-lg font-black {{ $totals['net'] < 0 ? 'text-rose-600' : 'text-emerald-600' }}">{{ format_currency($totals['net']) }}</div>
+            <div class="text-lg font-black {{ $totals['net'] < 0 ? 'text-rose-600' : 'text-emerald-600' }}"><x-money value="{{ $totals['net'] }}" /></div>
         </div>
     </div>
 
@@ -52,9 +52,9 @@
             @forelse($rows as $row)
                 <tr>
                     <td>{{ $row['store']->store_name }}</td>
-                    <td class="text-right">{{ format_currency($row['total_debit']) }}</td>
-                    <td class="text-right">{{ format_currency($row['total_credit']) }}</td>
-                    <td class="text-right font-semibold {{ $row['net'] < 0 ? 'text-rose-600' : 'text-emerald-600' }}">{{ format_currency($row['net']) }}</td>
+                    <td class="text-right"><x-money value="{{ $row['total_debit'] }}" /></td>
+                    <td class="text-right"><x-money value="{{ $row['total_credit'] }}" /></td>
+                    <td class="text-right font-semibold {{ $row['net'] < 0 ? 'text-rose-600' : 'text-emerald-600' }}"><x-money value="{{ $row['net'] }}" /></td>
                 </tr>
             @empty
                 <tr><td colspan="4" class="text-center text-text-muted">No ledger activity.</td></tr>

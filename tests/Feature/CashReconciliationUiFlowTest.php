@@ -119,7 +119,7 @@ test('UI Flow 2: Form submission opens drawer, displays live estimate show page,
     $closeFormResponse = $this->actingAs($user)->get(route('accounts.cash-reconciliation.close-form', $recon->id));
     $closeFormResponse->assertOk();
     $closeFormResponse->assertSee('Close and Reconcile Cash Drawer (Evening)');
-    $closeFormResponse->assertSee('825.00'); // Expected
+    assert_compact_amount($closeFormResponse, 825.00); // Expected
 
     // 5. Submit Evening Close with $820 counted (-$5 shortage)
     $closePostResponse = $this->actingAs($user)->post(route('accounts.cash-reconciliation.close', $recon->id), [
@@ -135,13 +135,14 @@ test('UI Flow 2: Form submission opens drawer, displays live estimate show page,
     $showFinalResponse->assertOk();
     $showFinalResponse->assertSee('Daily Cash Drawer Closing Slip');
     $showFinalResponse->assertSee('Main Showroom Cash');
-    $showFinalResponse->assertSee('200.00'); // Confirmed Starting Float
-    $showFinalResponse->assertSee('750.00'); // Sales
-    $showFinalResponse->assertSee('80.00');  // Refund
-    $showFinalResponse->assertSee('45.00');  // Expense
-    $showFinalResponse->assertSee('825.00'); // Expected
-    $showFinalResponse->assertSee('820.00'); // Counted
-    $showFinalResponse->assertSee('5.00');   // Variance
+    // Closing-slip amounts render through <x-money>.
+    assert_compact_amount($showFinalResponse, 200.00); // Confirmed Starting Float
+    assert_compact_amount($showFinalResponse, 750.00); // Sales
+    assert_compact_amount($showFinalResponse, 80.00);  // Refund
+    assert_compact_amount($showFinalResponse, 45.00);  // Expense
+    assert_compact_amount($showFinalResponse, 825.00); // Expected
+    assert_compact_amount($showFinalResponse, 820.00); // Counted
+    assert_compact_amount($showFinalResponse, -5.00);  // Variance (counted 820 - expected 825)
     $showFinalResponse->assertSee('Evening count: verified $5 shortage with cashier');
 });
 

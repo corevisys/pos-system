@@ -132,9 +132,9 @@
                                         <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest" x-text="record.purchaseCode"></span>
                                     </div>
                                 </td>
-                                <td class="px-6 py-2.5 text-right font-mono text-[11px] font-black text-slate-700 dark:text-white" x-text="record.total"></td>
-                                <td class="px-6 py-2.5 text-right font-mono text-[11px] font-black text-emerald-600" x-text="record.paid"></td>
-                                <td class="px-6 py-2.5 text-right font-mono text-[11px] font-black text-rose-500" x-text="record.due"></td>
+                                <td class="px-6 py-2.5 text-right font-mono text-[11px] font-black text-slate-700 dark:text-white"><x-money value="parseFloat(record.total.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
+                                <td class="px-6 py-2.5 text-right font-mono text-[11px] font-black text-emerald-600"><x-money value="parseFloat(record.paid.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
+                                <td class="px-6 py-2.5 text-right font-mono text-[11px] font-black text-rose-500"><x-money value="parseFloat(record.due.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                                 
                             </tr>
                         </template>
@@ -142,9 +142,9 @@
                     <tfoot class="bg-slate-50/80 dark:bg-slate-800/80 border-t border-slate-200">
                         <tr class="font-black text-slate-700 dark:text-slate-200">
                             <td colspan="2" class="px-6 py-3 text-right uppercase text-[9px] tracking-widest text-slate-500 italic">Total Summary</td>
-                            <td class="px-6 py-3 text-[11px] tabular-nums text-right font-mono" x-text="records.reduce((acc, r) => acc + parseFloat(r.total.replace(/,/g, '')), 0).toFixed(2)"></td>
-                            <td class="px-6 py-3 text-[11px] tabular-nums text-right text-emerald-600 font-mono" x-text="records.reduce((acc, r) => acc + parseFloat(r.paid.replace(/,/g, '')), 0).toFixed(2)"></td>
-                            <td class="px-6 py-3 text-[11px] tabular-nums text-right text-rose-500 font-mono" x-text="records.reduce((acc, r) => acc + parseFloat(r.due.replace(/,/g, '')), 0).toFixed(2)"></td>
+                            <td class="px-6 py-3 text-[11px] tabular-nums text-right font-mono"><x-money value="records.reduce((acc, r) => acc + parseFloat(r.total.replace(/,/g,'')), 0)" symbol="{{ $currencySymbol ?? '' }}" /></td>
+                            <td class="px-6 py-3 text-[11px] tabular-nums text-right text-emerald-600 font-mono"><x-money value="records.reduce((acc, r) => acc + parseFloat(r.paid.replace(/,/g,'')), 0)" symbol="{{ $currencySymbol ?? '' }}" /></td>
+                            <td class="px-6 py-3 text-[11px] tabular-nums text-right text-rose-500 font-mono"><x-money value="records.reduce((acc, r) => acc + parseFloat(r.due.replace(/,/g,'')), 0)" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                     </tfoot>
                 </table>

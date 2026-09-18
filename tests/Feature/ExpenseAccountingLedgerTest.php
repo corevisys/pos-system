@@ -200,5 +200,5 @@ test('4. Cash transactions ledger displays EXPENSE entries with account name and
     $response->assertSee('EXPENSE');
     $response->assertSee('Shop Cash Drawer');
     $response->assertSee('Tea &amp; Snacks', false);
-    $response->assertSee('80.00');
+    assert_compact_amount($response, 80.00);
 });

@@ -29,13 +29,13 @@
             <x-stat-card label="Total Invoices" :value="number_format($globalStats['total_invoices'])"
                 iconBg="bg-success-light text-success"
                 icon='<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>' />
-            <x-stat-card label="Return Amount" :value="format_currency($globalStats['grand_total'])"
+            <x-stat-card label="Return Amount" :money="true" :value="$globalStats['grand_total']"
                 iconBg="bg-primary-light text-primary"
                 icon='<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>' />
-            <x-stat-card label="Paid Amount" :value="format_currency($globalStats['paid_amount'])"
+            <x-stat-card label="Paid Amount" :money="true" :value="$globalStats['paid_amount']"
                 iconBg="bg-warning-light text-warning"
                 icon='<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>' />
-            <x-stat-card label="Return Due" :value="format_currency($globalStats['total_due'])"
+            <x-stat-card label="Return Due" :money="true" :value="$globalStats['total_due']"
                 iconBg="bg-danger-light text-danger"
                 icon='<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>' />
         </div>
@@ -144,7 +144,7 @@
                                 @endphp
                                 @if($creditAmt > 0)
                                     <span class="ml-1 px-1.5 py-0.5 rounded-full text-[7px] font-black uppercase tracking-widest bg-amber-100 text-amber-700 border border-amber-200" title="Customer is overpaid by this amount after returns/refunds">
-                                        Credit {{ format_currency($creditAmt) }}
+                                        Credit <x-money value="{{ $creditAmt }}" />
                                     </span>
                                 @endif
                             @else
@@ -160,8 +160,8 @@
                         <td class="px-6 py-2.5 text-[10px] font-medium text-text-muted">{{ $r->reference_no ?: '---' }}</td>
                         <td class="px-6 py-2.5 text-[10px] font-bold italic text-text-secondary">{{ $r->warehouse->warehouse_name ?? '---' }}</td>
                         <td class="px-6 py-2.5 text-[10px] font-bold text-text-primary dark:text-dark-text">{{ $r->customer->customer_name ?? 'Walk-in' }}</td>
-                        <td class="px-6 py-2.5 text-[10px] font-black text-right tabular-nums">{{ format_currency($r->grand_total) }}</td>
-                        <td class="px-6 py-2.5 text-[10px] font-black text-right tabular-nums text-success">{{ format_currency($r->paid_amount) }}</td>
+                        <td class="px-6 py-2.5 text-[10px] font-black text-right tabular-nums"><x-money value="{{ $r->grand_total }}" /></td>
+                        <td class="px-6 py-2.5 text-[10px] font-black text-right tabular-nums text-success"><x-money value="{{ $r->paid_amount }}" /></td>
                         <td class="px-6 py-2.5 text-center">
                             <x-badge color="{{ $r->payment_status === 'Paid' ? 'success' : ($r->payment_status === 'Partial' ? 'warning' : 'danger') }}">{{ $r->payment_status }}</x-badge>
                         </td>
@@ -199,15 +199,15 @@
             <div class="card p-3 flex flex-wrap items-center justify-end gap-6">
                 <div class="flex items-center gap-2">
                     <span class="text-[9px] font-black uppercase tracking-widest text-text-muted">Total Summary</span>
-                    <span class="text-sm font-black tabular-nums text-text-primary dark:text-white">{{ format_currency($globalStats['grand_total']) }}</span>
+                    <span class="text-sm font-black tabular-nums text-text-primary dark:text-white"><x-money value="{{ $globalStats['grand_total'] }}" /></span>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="text-[9px] font-black uppercase tracking-widest text-text-muted">Paid</span>
-                    <span class="text-sm font-black tabular-nums text-success">{{ format_currency($globalStats['paid_amount']) }}</span>
+                    <span class="text-sm font-black tabular-nums text-success"><x-money value="{{ $globalStats['paid_amount'] }}" /></span>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="text-[9px] font-black uppercase tracking-widest text-text-muted">Due</span>
-                    <span class="text-sm font-black tabular-nums text-danger">{{ format_currency($globalStats['total_due']) }}</span>
+                    <span class="text-sm font-black tabular-nums text-danger"><x-money value="{{ $globalStats['total_due'] }}" /></span>
                 </div>
             </div>
 

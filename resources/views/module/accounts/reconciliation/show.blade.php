@@ -60,7 +60,7 @@
                         <div class="text-left sm:text-right">
                             <div class="text-[10px] font-black uppercase tracking-widest text-amber-200">Confirmed Starting Float</div>
                             <div class="text-3xl font-black mt-0.5">
-                                {{ format_currency($reconciliation->opening_balance) }}
+                                <x-money value="{{ $reconciliation->opening_balance }}" />
                             </div>
                         </div>
                     </div>
@@ -97,16 +97,16 @@
                         <div class="space-y-2.5 text-xs">
                             <div class="flex justify-between py-1 border-b border-slate-100 dark:border-dark-border">
                                 <span class="text-slate-400">System Suggestion:</span>
-                                <span class="font-bold text-slate-700 dark:text-slate-200">{{ format_currency($reconciliation->system_opening_balance) }}</span>
+                                <span class="font-bold text-slate-700 dark:text-slate-200"><x-money value="{{ $reconciliation->system_opening_balance }}" /></span>
                             </div>
                             <div class="flex justify-between py-1 border-b border-slate-100 dark:border-dark-border">
                                 <span class="text-slate-400">Confirmed Float:</span>
-                                <span class="font-black text-slate-900 dark:text-white">{{ format_currency($reconciliation->opening_balance) }}</span>
+                                <span class="font-black text-slate-900 dark:text-white"><x-money value="{{ $reconciliation->opening_balance }}" /></span>
                             </div>
                             <div class="flex justify-between py-1">
                                 <span class="text-slate-400">Starting Variance:</span>
                                 <span class="font-black {{ $reconciliation->opening_variance == 0 ? 'text-emerald-600' : 'text-amber-600' }}">
-                                    {{ $reconciliation->opening_variance >= 0 ? '+' : '' }}{{ format_currency($reconciliation->opening_variance) }}
+                                    {{ $reconciliation->opening_variance >= 0 ? '+' : '' }}<x-money value="{{ $reconciliation->opening_variance }}" />
                                 </span>
                             </div>
                         </div>
@@ -128,20 +128,20 @@
                         <div class="space-y-2 text-xs">
                             <div class="flex justify-between">
                                 <span class="text-emerald-600 font-bold">+ Cash Sales:</span>
-                                <span class="font-bold text-emerald-600">{{ format_currency($breakdown['cash_sales_amount'] ?? 0) }}</span>
+                                <span class="font-bold text-emerald-600"><x-money value="{{ $breakdown['cash_sales_amount'] ?? 0 }}" /></span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-emerald-600 font-bold">+ Deposits & Transfers In:</span>
-                                <span class="font-bold text-emerald-600">{{ format_currency(($breakdown['cash_deposits_amount'] ?? 0) + ($breakdown['cash_transfers_in'] ?? 0)) }}</span>
+                                <span class="font-bold text-emerald-600"><x-money value="{{ ($breakdown['cash_deposits_amount'] ?? 0) + ($breakdown['cash_transfers_in'] ?? 0) }}" /></span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-rose-600 font-bold">- Refunds & Expenses:</span>
-                                <span class="font-bold text-rose-600">-{{ format_currency(($breakdown['cash_refunds_amount'] ?? 0) + ($breakdown['cash_expenses_amount'] ?? 0)) }}</span>
+                                <span class="font-bold text-rose-600">-<x-money value="{{ ($breakdown['cash_refunds_amount'] ?? 0) + ($breakdown['cash_expenses_amount'] ?? 0) }}" /></span>
                             </div>
                             <div class="flex justify-between pt-2 border-t border-slate-100 dark:border-dark-border">
                                 <span class="font-black text-slate-800 dark:text-slate-100">Live Expected Cash:</span>
                                 <span class="font-black text-emerald-600 dark:text-emerald-400 text-sm">
-                                    {{ format_currency($liveExpectedClosing) }}
+                                    <x-money value="{{ $liveExpectedClosing }}" />
                                 </span>
                             </div>
                         </div>
@@ -205,25 +205,25 @@
                         @elseif($reconciliation->opening_variance == 0)
                             <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 rounded-full text-[9px] font-black uppercase">Matched Prior Close</span>
                         @elseif($reconciliation->opening_variance > 0)
-                            <span class="px-2 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 rounded-full text-[9px] font-black uppercase">+{{ format_currency($reconciliation->opening_variance) }} Float Addition</span>
+                            <span class="px-2 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 rounded-full text-[9px] font-black uppercase">+<x-money value="{{ $reconciliation->opening_variance }}" /> Float Addition</span>
                         @else
-                            <span class="px-2 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 rounded-full text-[9px] font-black uppercase">-{{ format_currency(abs($reconciliation->opening_variance)) }} Float Reduction</span>
+                            <span class="px-2 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 rounded-full text-[9px] font-black uppercase">-<x-money value="{{ abs($reconciliation->opening_variance) }}" /> Float Reduction</span>
                         @endif
                     </div>
 
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         <div>
                             <span class="text-[9px] text-slate-400 font-bold block">System Suggestion (Prior Close)</span>
-                            <strong class="text-slate-700 dark:text-slate-300 text-sm">{{ format_currency($reconciliation->system_opening_balance) }}</strong>
+                            <strong class="text-slate-700 dark:text-slate-300 text-sm"><x-money value="{{ $reconciliation->system_opening_balance }}" /></strong>
                         </div>
                         <div>
                             <span class="text-[9px] text-slate-400 font-bold block">Confirmed Starting Float</span>
-                            <strong class="text-slate-900 dark:text-white text-sm">{{ format_currency($reconciliation->opening_balance) }}</strong>
+                            <strong class="text-slate-900 dark:text-white text-sm"><x-money value="{{ $reconciliation->opening_balance }}" /></strong>
                         </div>
                         <div class="col-span-2 sm:col-span-1">
                             <span class="text-[9px] text-slate-400 font-bold block">Opening Variance</span>
                             <strong class="{{ $reconciliation->opening_variance == 0 ? 'text-emerald-600' : 'text-amber-600' }} text-sm">
-                                {{ $reconciliation->opening_variance >= 0 ? '+' : '' }}{{ format_currency($reconciliation->opening_variance) }}
+                                {{ $reconciliation->opening_variance >= 0 ? '+' : '' }}<x-money value="{{ $reconciliation->opening_variance }}" />
                             </strong>
                         </div>
                     </div>
@@ -244,35 +244,35 @@
                             <tbody class="divide-y divide-slate-100 dark:divide-dark-border">
                                 <tr class="bg-slate-50/50 dark:bg-slate-800/30">
                                     <td class="px-4 py-2.5 font-bold text-slate-700 dark:text-slate-300">Confirmed Starting Cash Float</td>
-                                    <td class="px-4 py-2.5 text-right font-bold text-slate-900 dark:text-white">{{ format_currency($reconciliation->opening_balance) }}</td>
+                                    <td class="px-4 py-2.5 text-right font-bold text-slate-900 dark:text-white"><x-money value="{{ $reconciliation->opening_balance }}" /></td>
                                 </tr>
                                 <tr>
                                     <td class="px-4 py-2.5 font-bold text-emerald-600">+ Cash Sales Payments Received</td>
-                                    <td class="px-4 py-2.5 text-right font-bold text-emerald-600">+{{ format_currency($reconciliation->cash_sales_amount) }}</td>
+                                    <td class="px-4 py-2.5 text-right font-bold text-emerald-600">+<x-money value="{{ $reconciliation->cash_sales_amount }}" /></td>
                                 </tr>
                                 <tr>
                                     <td class="px-4 py-2.5 font-bold text-emerald-600">+ Cash Deposits & Money Transfers In</td>
-                                    <td class="px-4 py-2.5 text-right font-bold text-emerald-600">+{{ format_currency($reconciliation->cash_deposits_amount + $reconciliation->cash_transfers_in) }}</td>
+                                    <td class="px-4 py-2.5 text-right font-bold text-emerald-600">+<x-money value="{{ $reconciliation->cash_deposits_amount + $reconciliation->cash_transfers_in }}" /></td>
                                 </tr>
                                 <tr>
                                     <td class="px-4 py-2.5 font-bold text-rose-600">- Cash Sales Return Refunds Paid Out</td>
-                                    <td class="px-4 py-2.5 text-right font-bold text-rose-600">-{{ format_currency($reconciliation->cash_refunds_amount) }}</td>
+                                    <td class="px-4 py-2.5 text-right font-bold text-rose-600">-<x-money value="{{ $reconciliation->cash_refunds_amount }}" /></td>
                                 </tr>
                                 <tr>
                                     <td class="px-4 py-2.5 font-bold text-rose-600">- Cash Expenses Paid Out</td>
-                                    <td class="px-4 py-2.5 text-right font-bold text-rose-600">-{{ format_currency($reconciliation->cash_expenses_amount) }}</td>
+                                    <td class="px-4 py-2.5 text-right font-bold text-rose-600">-<x-money value="{{ $reconciliation->cash_expenses_amount }}" /></td>
                                 </tr>
                                 <tr>
                                     <td class="px-4 py-2.5 font-bold text-rose-600">- Money Transfers Out</td>
-                                    <td class="px-4 py-2.5 text-right font-bold text-rose-600">-{{ format_currency($reconciliation->cash_transfers_out) }}</td>
+                                    <td class="px-4 py-2.5 text-right font-bold text-rose-600">-<x-money value="{{ $reconciliation->cash_transfers_out }}" /></td>
                                 </tr>
                                 <tr class="bg-slate-100 dark:bg-slate-800 font-black text-sm">
                                     <td class="px-4 py-3 text-slate-900 dark:text-white">Expected Closing Cash Balance</td>
-                                    <td class="px-4 py-3 text-right text-slate-900 dark:text-white">{{ format_currency($reconciliation->expected_closing_balance) }}</td>
+                                    <td class="px-4 py-3 text-right text-slate-900 dark:text-white"><x-money value="{{ $reconciliation->expected_closing_balance }}" /></td>
                                 </tr>
                                 <tr class="bg-emerald-50 dark:bg-emerald-950/40 font-black text-base">
                                     <td class="px-4 py-3 text-emerald-900 dark:text-emerald-200">Actual Physically Counted Cash</td>
-                                    <td class="px-4 py-3 text-right text-emerald-900 dark:text-emerald-200">{{ format_currency($reconciliation->counted_amount) }}</td>
+                                    <td class="px-4 py-3 text-right text-emerald-900 dark:text-emerald-200"><x-money value="{{ $reconciliation->counted_amount }}" /></td>
                                 </tr>
                                 <tr class="font-black text-sm {{ $reconciliation->variance == 0 ? 'bg-slate-50 dark:bg-slate-800' : ($reconciliation->variance > 0 ? 'bg-blue-50 dark:bg-blue-950/40' : 'bg-rose-50 dark:bg-rose-950/40') }}">
                                     <td class="px-4 py-3">
@@ -286,7 +286,7 @@
                                         @endif
                                     </td>
                                     <td class="px-4 py-3 text-right {{ $reconciliation->variance == 0 ? 'text-emerald-700' : ($reconciliation->variance > 0 ? 'text-blue-700' : 'text-rose-700') }}">
-                                        {{ $reconciliation->variance >= 0 ? '+' : '' }}{{ format_currency($reconciliation->variance) }}
+                                        {{ $reconciliation->variance >= 0 ? '+' : '' }}<x-money value="{{ $reconciliation->variance }}" />
                                     </td>
                                 </tr>
                             </tbody>
@@ -305,7 +305,7 @@
                             <div class="p-2 bg-white dark:bg-dark-card rounded-xl border border-slate-200 dark:border-dark-border text-center">
                                 <div class="text-[9px] text-slate-400 font-bold">{{ $currencySymbol ?? '' }}{{ $numVal }} Bill</div>
                                 <div class="font-black text-slate-800 dark:text-white">&times; {{ $qty }}</div>
-                                <div class="text-[10px] font-bold text-primary-600">{{ format_currency($numVal * $qty) }}</div>
+                                <div class="text-[10px] font-bold text-primary-600"><x-money value="{{ $numVal * $qty }}" /></div>
                             </div>
                             @endif
                         @endforeach

@@ -100,13 +100,13 @@
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 <td class="px-4 py-3 text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-widest">Gross Profit</td>
                                 <td class="px-4 py-3 text-xs font-black tabular-nums text-right text-slate-800 dark:text-white" :class="isLoading ? 'opacity-50' : ''">
-                                    {{ $currencySymbol }}<span x-text="summary.grossProfit">0.00</span>
+                                    <x-money value="parseFloat(summary.grossProfit.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" />
                                 </td>
                             </tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors bg-slate-50/50 dark:bg-slate-800/30">
                                 <td class="px-4 py-3 text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-widest">Net Profit</td>
                                 <td class="px-4 py-3 text-xs font-black tabular-nums text-right text-slate-800 dark:text-white" :class="isLoading ? 'opacity-50' : ''">
-                                    {{ $currencySymbol }}<span x-text="summary.netProfit">0.00</span>
+                                    <x-money value="parseFloat(summary.netProfit.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" />
                                 </td>
                             </tr>
                         </tbody>
@@ -124,7 +124,7 @@
                     <div class="grid grid-cols-2 gap-6">
                         <div>
                             <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Total Sales</p>
-                            <h4 class="text-2xl font-black text-white">{{ $currencySymbol }}<span x-text="sales.totalSales">0.00</span></h4>
+                            <h4 class="text-2xl font-black text-white"><x-money value="parseFloat(sales.totalSales.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></h4>
                             {{-- Phase 5 item 8: the previous "+12.5% vs prev" was a static
                                  hardcoded string presented as a computed trend. Removed
                                  rather than inventing an undefined period-over-period
@@ -135,7 +135,7 @@
                         </div>
                         <div>
                             <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Total Expense</p>
-                            <h4 class="text-2xl font-black text-white">{{ $currencySymbol }}<span x-text="expenses.total">0.00</span></h4>
+                            <h4 class="text-2xl font-black text-white"><x-money value="parseFloat(expenses.total.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></h4>
                             <p class="text-[9px] text-slate-500 font-bold mt-1 flex items-center gap-1">
                                 <span>Stable this period</span>
                             </p>
@@ -167,57 +167,57 @@
                         <tbody class="divide-y divide-slate-50 dark:divide-dark-border">
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors bg-blue-50/20 dark:bg-blue-500/5">
                                 <td class="px-4 py-2.5 text-[10px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Opening Stock</td>
-                                <td class="px-4 py-2.5 text-[11px] font-black tabular-nums text-right">{{ $currencySymbol }}<span x-text="inventory.openingStock">0.00</span></td>
+                                <td class="px-4 py-2.5 text-[11px] font-black tabular-nums text-right"><x-money value="parseFloat(inventory.openingStock.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                             <tr class="bg-slate-50/30 dark:bg-slate-800/20"><td colspan="2" class="px-4 py-1.5 text-[9px] font-black text-primary-600 uppercase tracking-widest italic">Purchase</td></tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 <td class="px-4 py-2 text-[10px] font-medium text-slate-500">Total Purchase</td>
-                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300">{{ $currencySymbol }}<span x-text="purchases.totalPurchase">0.00</span></td>
+                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300"><x-money value="parseFloat(purchases.totalPurchase.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 <td class="px-4 py-2 text-[10px] font-medium text-slate-500">Total Purchase Tax</td>
-                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300">{{ $currencySymbol }}<span x-text="purchases.purchaseTax">0.00</span></td>
+                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300"><x-money value="parseFloat(purchases.purchaseTax.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 <td class="px-4 py-2 text-[10px] font-medium text-slate-500">Other Charges</td>
-                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300">{{ $currencySymbol }}<span x-text="purchases.otherCharges">0.00</span></td>
+                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300"><x-money value="parseFloat(purchases.otherCharges.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 <td class="px-4 py-2 text-[10px] font-medium text-slate-500">Total Discount</td>
-                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300">{{ $currencySymbol }}<span x-text="purchases.discount">0.00</span></td>
+                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300"><x-money value="parseFloat(purchases.discount.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 <td class="px-4 py-2 text-[10px] font-bold text-emerald-600">Paid Payment</td>
-                                <td class="px-4 py-2 text-[10px] font-black tabular-nums text-right text-emerald-600">{{ $currencySymbol }}<span x-text="purchases.paidAmount">0.00</span></td>
+                                <td class="px-4 py-2 text-[10px] font-black tabular-nums text-right text-emerald-600"><x-money value="parseFloat(purchases.paidAmount.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 <td class="px-4 py-2 text-[10px] font-bold text-rose-600">Purchase Due</td>
-                                <td class="px-4 py-2 text-[10px] font-black tabular-nums text-right text-rose-600">{{ $currencySymbol }}<span x-text="purchases.due">0.00</span></td>
+                                <td class="px-4 py-2 text-[10px] font-black tabular-nums text-right text-rose-600"><x-money value="parseFloat(purchases.due.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                             <tr class="bg-slate-50/30 dark:bg-slate-800/20"><td colspan="2" class="px-4 py-1.5 text-[9px] font-black text-primary-600 uppercase tracking-widest italic">Purchase Return</td></tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 <td class="px-4 py-2 text-[10px] font-medium text-slate-500">Total Purchase Return</td>
-                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300">{{ $currencySymbol }}<span x-text="purchaseReturns.totalReturn">0.00</span></td>
+                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300"><x-money value="parseFloat(purchaseReturns.totalReturn.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 <td class="px-4 py-2 text-[10px] font-medium text-slate-500">Return Tax</td>
-                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300">{{ $currencySymbol }}<span x-text="purchaseReturns.returnTax">0.00</span></td>
+                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300"><x-money value="parseFloat(purchaseReturns.returnTax.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 <td class="px-4 py-2 text-[10px] font-medium text-slate-500">Other Charges</td>
-                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300">{{ $currencySymbol }}<span x-text="purchaseReturns.otherCharges">0.00</span></td>
+                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300"><x-money value="parseFloat(purchaseReturns.otherCharges.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 <td class="px-4 py-2 text-[10px] font-medium text-slate-500">Discount</td>
-                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300">{{ $currencySymbol }}<span x-text="purchaseReturns.discount">0.00</span></td>
+                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300"><x-money value="parseFloat(purchaseReturns.discount.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 <td class="px-4 py-2 text-[10px] font-bold text-emerald-600">Paid Payment</td>
-                                <td class="px-4 py-2 text-[10px] font-black tabular-nums text-right text-emerald-600">{{ $currencySymbol }}<span x-text="purchaseReturns.paidAmount">0.00</span></td>
+                                <td class="px-4 py-2 text-[10px] font-black tabular-nums text-right text-emerald-600"><x-money value="parseFloat(purchaseReturns.paidAmount.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 <td class="px-4 py-2 text-[10px] font-bold text-rose-600">Return Due</td>
-                                <td class="px-4 py-2 text-[10px] font-black tabular-nums text-right text-rose-600">{{ $currencySymbol }}<span x-text="purchaseReturns.due">0.00</span></td>
+                                <td class="px-4 py-2 text-[10px] font-black tabular-nums text-right text-rose-600"><x-money value="parseFloat(purchaseReturns.due.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                         </tbody>
                     </table>
@@ -240,74 +240,74 @@
                         <tbody class="divide-y divide-slate-50 dark:divide-dark-border">
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors bg-rose-50/20 dark:bg-rose-500/5">
                                 <td class="px-4 py-2.5 text-[10px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Total Expense</td>
-                                <td class="px-4 py-2.5 text-[11px] font-black tabular-nums text-right">{{ $currencySymbol }}<span x-text="expenses.total">0.00</span></td>
+                                <td class="px-4 py-2.5 text-[11px] font-black tabular-nums text-right"><x-money value="parseFloat(expenses.total.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                             <tr class="bg-slate-50/30 dark:bg-slate-800/20"><td colspan="2" class="px-4 py-1.5 text-[9px] font-black text-primary-600 uppercase tracking-widest italic">Sales</td></tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 <td class="px-4 py-2 text-[10px] font-medium text-slate-500">Sales</td>
-                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300">{{ $currencySymbol }}<span x-text="sales.totalSales">0.00</span></td>
+                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300"><x-money value="parseFloat(sales.totalSales.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 <td class="px-4 py-2 text-[10px] font-medium text-slate-500">Total Sales Tax</td>
-                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300">{{ $currencySymbol }}<span x-text="sales.salesTax">0.00</span></td>
+                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300"><x-money value="parseFloat(sales.salesTax.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 <td class="px-4 py-2 text-[10px] font-medium text-slate-500">Other Charges</td>
-                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300">{{ $currencySymbol }}<span x-text="sales.otherCharges">0.00</span></td>
+                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300"><x-money value="parseFloat(sales.otherCharges.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 <td class="px-4 py-2 text-[10px] font-medium text-slate-500">Total Discount</td>
-                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300">{{ $currencySymbol }}<span x-text="sales.discount">0.00</span></td>
+                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300"><x-money value="parseFloat(sales.discount.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 <td class="px-4 py-2 text-[10px] font-medium text-slate-500 font-italic">Coupon Discount</td>
-                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300">{{ $currencySymbol }}<span x-text="sales.couponDiscount">0.00</span></td>
+                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300"><x-money value="parseFloat(sales.couponDiscount.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors bg-slate-50/50 dark:bg-slate-800/50">
                                 <td class="px-4 py-2 text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">Total Sales</td>
-                                <td class="px-4 py-2 text-[11px] font-black tabular-nums text-right text-slate-800 dark:text-white">{{ $currencySymbol }}<span x-text="sales.grandTotal">0.00</span></td>
+                                <td class="px-4 py-2 text-[11px] font-black tabular-nums text-right text-slate-800 dark:text-white"><x-money value="parseFloat(sales.grandTotal.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 <td class="px-4 py-2 text-[10px] font-bold text-emerald-600">Paid Payment</td>
-                                <td class="px-4 py-2 text-[10px] font-black tabular-nums text-right text-emerald-600">{{ $currencySymbol }}<span x-text="sales.paidAmount">0.00</span></td>
+                                <td class="px-4 py-2 text-[10px] font-black tabular-nums text-right text-emerald-600"><x-money value="parseFloat(sales.paidAmount.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 <td class="px-4 py-2 text-[10px] font-bold text-rose-600">Sales Due</td>
-                                <td class="px-4 py-2 text-[10px] font-black tabular-nums text-right text-rose-600">{{ $currencySymbol }}<span x-text="sales.due">0.00</span></td>
+                                <td class="px-4 py-2 text-[10px] font-black tabular-nums text-right text-rose-600"><x-money value="parseFloat(sales.due.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
 
                             <tr class="bg-slate-50/30 dark:bg-slate-800/20"><td colspan="2" class="px-4 py-1.5 text-[9px] font-black text-primary-600 uppercase tracking-widest italic">Sales Return</td></tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 <td class="px-4 py-2 text-[10px] font-medium text-slate-500">Total Sales Return</td>
-                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300">{{ $currencySymbol }}<span x-text="salesReturns.totalReturn">0.00</span></td>
+                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300"><x-money value="parseFloat(salesReturns.totalReturn.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 <td class="px-4 py-2 text-[10px] font-medium text-slate-500">Return Tax</td>
-                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300">{{ $currencySymbol }}<span x-text="salesReturns.returnTax">0.00</span></td>
+                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300"><x-money value="parseFloat(salesReturns.returnTax.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 <td class="px-4 py-2 text-[10px] font-medium text-slate-500">Other Charges</td>
-                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300">{{ $currencySymbol }}<span x-text="salesReturns.otherCharges">0.00</span></td>
+                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300"><x-money value="parseFloat(salesReturns.otherCharges.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 <td class="px-4 py-2 text-[10px] font-medium text-slate-500 font-italic">Coupon Discount</td>
-                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300">{{ $currencySymbol }}<span x-text="salesReturns.couponDiscount">0.00</span></td>
+                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300"><x-money value="parseFloat(salesReturns.couponDiscount.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 <td class="px-4 py-2 text-[10px] font-medium text-slate-500">Return Discount</td>
-                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300">{{ $currencySymbol }}<span x-text="salesReturns.discount">0.00</span></td>
+                                <td class="px-4 py-2 text-[10px] font-bold tabular-nums text-right text-slate-700 dark:text-slate-300"><x-money value="parseFloat(salesReturns.discount.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors bg-slate-50/50 dark:bg-slate-800/50">
                                 <td class="px-4 py-2 text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">Return Total</td>
-                                <td class="px-4 py-2 text-[11px] font-black tabular-nums text-right text-slate-800 dark:text-white">{{ $currencySymbol }}<span x-text="salesReturns.grandTotal">0.00</span></td>
+                                <td class="px-4 py-2 text-[11px] font-black tabular-nums text-right text-slate-800 dark:text-white"><x-money value="parseFloat(salesReturns.grandTotal.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 <td class="px-4 py-2 text-[10px] font-bold text-emerald-600">Paid Payment</td>
-                                <td class="px-4 py-2 text-[10px] font-black tabular-nums text-right text-emerald-600">{{ $currencySymbol }}<span x-text="salesReturns.paidAmount">0.00</span></td>
+                                <td class="px-4 py-2 text-[10px] font-black tabular-nums text-right text-emerald-600"><x-money value="parseFloat(salesReturns.paidAmount.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 <td class="px-4 py-2 text-[10px] font-bold text-rose-600">Return Due</td>
-                                <td class="px-4 py-2 text-[10px] font-black tabular-nums text-right text-rose-600">{{ $currencySymbol }}<span x-text="salesReturns.due">0.00</span></td>
+                                <td class="px-4 py-2 text-[10px] font-black tabular-nums text-right text-rose-600"><x-money value="parseFloat(salesReturns.due.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                         </tbody>
                     </table>

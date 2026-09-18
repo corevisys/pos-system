@@ -44,7 +44,8 @@
 
             <x-stat-card 
                 label="Total Returned" 
-                :value="format_currency($stats['total_amount'])" 
+                :money="true"
+                :value="$stats['total_amount']"
                 icon-bg="bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400">
                 <x-slot:icon>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3m9 14V5a2 2 0 00-2-2H6a2 2 0 00-2 2v16l4-2 4 2 4-2 4 2z"></path></svg>
@@ -53,7 +54,8 @@
 
             <x-stat-card 
                 label="Refunds Received" 
-                :value="format_currency($stats['total_paid'])" 
+                :money="true"
+                :value="$stats['total_paid']"
                 icon-bg="bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
                 <x-slot:icon>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -62,7 +64,8 @@
 
             <x-stat-card 
                 label="Payable Adjusted" 
-                :value="format_currency($stats['total_due'])" 
+                :money="true"
+                :value="$stats['total_due']"
                 icon-bg="bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400">
                 <x-slot:icon>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -183,10 +186,10 @@
                                     {{ $ret->warehouse->warehouse_name ?? '---' }}
                                 </td>
                                 <td class="px-4 py-3 text-right font-black tabular-nums text-rose-600 whitespace-nowrap">
-                                    {{ format_currency($ret->grand_total) }}
+                                    <x-money value="{{ $ret->grand_total }}" />
                                 </td>
                                 <td class="px-4 py-3 text-right font-black tabular-nums text-emerald-600 whitespace-nowrap">
-                                    {{ format_currency($ret->paid_amount) }}
+                                    <x-money value="{{ $ret->paid_amount }}" />
                                 </td>
                                 <td class="px-4 py-3 text-center whitespace-nowrap">
                                     <x-badge variant="danger">Returned</x-badge>
@@ -228,8 +231,8 @@
                         <tfoot class="bg-slate-50/60 dark:bg-slate-800/60 border-t border-slate-100 dark:border-dark-border text-xs font-black">
                             <tr>
                                 <td colspan="6" class="px-4 py-3 text-right uppercase tracking-wider text-slate-400">Totals:</td>
-                                <td class="px-4 py-3 text-right tabular-nums text-rose-600">{{ format_currency($stats['total_amount']) }}</td>
-                                <td class="px-4 py-3 text-right tabular-nums text-emerald-600">{{ format_currency($stats['total_paid']) }}</td>
+                                <td class="px-4 py-3 text-right tabular-nums text-rose-600"><x-money value="{{ $stats['total_amount'] }}" /></td>
+                                <td class="px-4 py-3 text-right tabular-nums text-emerald-600"><x-money value="{{ $stats['total_paid'] }}" /></td>
                                 <td colspan="2"></td>
                             </tr>
                         </tfoot>

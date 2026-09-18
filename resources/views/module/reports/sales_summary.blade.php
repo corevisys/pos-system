@@ -112,7 +112,7 @@
                     </span>
                 </div>
                 <h3 class="text-2xl font-black text-slate-800 dark:text-white tabular-nums">
-                    {{ $currencySymbol ?? '' }}<span x-text="formatNumber(summary.total_sales)">0.00</span>
+                    <x-money value="summary.total_sales" symbol="{{ $currencySymbol ?? '' }}" />
                 </h3>
                 <p class="text-xs font-bold text-slate-400 mt-2 flex items-center justify-between">
                     <span>Invoices / Orders:</span>
@@ -129,7 +129,7 @@
                     </span>
                 </div>
                 <h3 class="text-2xl font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
-                    {{ $currencySymbol ?? '' }}<span x-text="formatNumber(summary.total_paid)">0.00</span>
+                    <x-money value="summary.total_paid" symbol="{{ $currencySymbol ?? '' }}" />
                 </h3>
                 <p class="text-xs font-bold text-slate-400 mt-2 flex items-center justify-between">
                     <span>Collection Rate:</span>
@@ -146,7 +146,7 @@
                     </span>
                 </div>
                 <h3 class="text-2xl font-black text-rose-600 dark:text-rose-400 tabular-nums">
-                    {{ $currencySymbol ?? '' }}<span x-text="formatNumber(summary.total_due)">0.00</span>
+                    <x-money value="summary.total_due" symbol="{{ $currencySymbol ?? '' }}" />
                 </h3>
                 <p class="text-xs font-bold text-slate-400 mt-2 flex items-center justify-between">
                     <span>Due Percentage:</span>
@@ -163,7 +163,7 @@
                     </span>
                 </div>
                 <h3 class="text-2xl font-black text-indigo-600 dark:text-indigo-400 tabular-nums">
-                    {{ $currencySymbol ?? '' }}<span x-text="formatNumber(summary.total_profit)">0.00</span>
+                    <x-money value="summary.total_profit" symbol="{{ $currencySymbol ?? '' }}" />
                 </h3>
                 <p class="text-xs font-bold text-slate-400 mt-2 flex items-center justify-between">
                     <span>Profit Margin:</span>
@@ -180,7 +180,7 @@
                     </span>
                 </div>
                 <h3 class="text-xl font-black text-slate-800 dark:text-white tabular-nums">
-                    {{ $currencySymbol ?? '' }}<span x-text="formatNumber(summary.total_cost)">0.00</span>
+                    <x-money value="summary.total_cost" symbol="{{ $currencySymbol ?? '' }}" />
                 </h3>
                 <p class="text-xs font-bold text-slate-400 mt-2">Baseline inventory cost</p>
             </div>
@@ -194,7 +194,7 @@
                     </span>
                 </div>
                 <h3 class="text-xl font-black text-amber-600 dark:text-amber-400 tabular-nums">
-                    {{ $currencySymbol ?? '' }}<span x-text="formatNumber(summary.total_discount)">0.00</span>
+                    <x-money value="summary.total_discount" symbol="{{ $currencySymbol ?? '' }}" />
                 </h3>
                 <p class="text-xs font-bold text-slate-400 mt-2">Item + Invoice + Coupon</p>
             </div>
@@ -208,7 +208,7 @@
                     </span>
                 </div>
                 <h3 class="text-xl font-black text-purple-600 dark:text-purple-400 tabular-nums">
-                    {{ $currencySymbol ?? '' }}<span x-text="formatNumber(summary.total_tax)">0.00</span>
+                    <x-money value="summary.total_tax" symbol="{{ $currencySymbol ?? '' }}" />
                 </h3>
                 <p class="text-xs font-bold text-slate-400 mt-2">GST / VAT Liability</p>
             </div>
@@ -222,7 +222,7 @@
                     </span>
                 </div>
                 <h3 class="text-xl font-black text-teal-600 dark:text-teal-400 tabular-nums">
-                    {{ $currencySymbol ?? '' }}<span x-text="formatNumber(summary.avg_order_value)">0.00</span>
+                    <x-money value="summary.avg_order_value" symbol="{{ $currencySymbol ?? '' }}" />
                 </h3>
                 <p class="text-xs font-bold text-slate-400 mt-2">Average checkout value</p>
             </div>
@@ -284,9 +284,9 @@
                                 <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
                                     <td class="p-3 font-bold text-slate-800 dark:text-slate-200" x-text="wh.warehouse_name"></td>
                                     <td class="p-3 text-center font-bold text-slate-500" x-text="wh.total_orders"></td>
-                                    <td class="p-3 text-right font-black text-slate-800 dark:text-white">{{ $currencySymbol ?? '' }}<span x-text="formatNumber(wh.total_sales)"></span></td>
-                                    <td class="p-3 text-right font-bold text-emerald-600">{{ $currencySymbol ?? '' }}<span x-text="formatNumber(wh.total_paid)"></span></td>
-                                    <td class="p-3 text-right font-bold text-rose-500">{{ $currencySymbol ?? '' }}<span x-text="formatNumber(wh.total_due)"></span></td>
+                                    <td class="p-3 text-right font-black text-slate-800 dark:text-white"><x-money value="wh.total_sales" symbol="{{ $currencySymbol ?? '' }}" /></td>
+                                    <td class="p-3 text-right font-bold text-emerald-600"><x-money value="wh.total_paid" symbol="{{ $currencySymbol ?? '' }}" /></td>
+                                    <td class="p-3 text-right font-bold text-rose-500"><x-money value="wh.total_due" symbol="{{ $currencySymbol ?? '' }}" /></td>
                                 </tr>
                             </template>
                             <tr x-show="!breakdowns.warehouse_wise || breakdowns.warehouse_wise.length === 0">
@@ -320,7 +320,7 @@
                                 <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
                                     <td class="p-3 font-bold text-slate-800 dark:text-slate-200" x-text="cat.category_name"></td>
                                     <td class="p-3 text-center font-bold text-slate-500" x-text="cat.total_qty"></td>
-                                    <td class="p-3 text-right font-black text-slate-800 dark:text-white">{{ $currencySymbol ?? '' }}<span x-text="formatNumber(cat.total_sales)"></span></td>
+                                    <td class="p-3 text-right font-black text-slate-800 dark:text-white"><x-money value="cat.total_sales" symbol="{{ $currencySymbol ?? '' }}" /></td>
                                     <td class="p-3 text-right font-bold text-purple-600" x-text="getCategoryShare(cat.total_sales) + '%'"></td>
                                 </tr>
                             </template>
@@ -363,10 +363,10 @@
                                         <div class="text-[10px] font-medium text-slate-400" x-text="prod.item_code"></div>
                                     </td>
                                     <td class="p-3 text-center font-extrabold text-slate-700 dark:text-slate-300" x-text="prod.qty"></td>
-                                    <td class="p-3 text-right font-bold text-slate-800 dark:text-white">{{ $currencySymbol ?? '' }}<span x-text="formatNumber(prod.revenue)"></span></td>
-                                    <td class="p-3 text-right font-medium text-slate-500">{{ $currencySymbol ?? '' }}<span x-text="formatNumber(prod.cost)"></span></td>
+                                    <td class="p-3 text-right font-bold text-slate-800 dark:text-white"><x-money value="prod.revenue" symbol="{{ $currencySymbol ?? '' }}" /></td>
+                                    <td class="p-3 text-right font-medium text-slate-500"><x-money value="prod.cost" symbol="{{ $currencySymbol ?? '' }}" /></td>
                                     <td class="p-3 text-right font-black" :class="prod.profit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'">
-                                        {{ $currencySymbol ?? '' }}<span x-text="formatNumber(prod.profit)"></span>
+                                        <x-money value="prod.profit" symbol="{{ $currencySymbol ?? '' }}" />
                                     </td>
                                 </tr>
                             </template>
@@ -405,9 +405,9 @@
                                         <div class="text-[10px] font-medium text-slate-400" x-text="cust.mobile"></div>
                                     </td>
                                     <td class="p-3 text-center font-bold text-slate-500" x-text="cust.orders_count"></td>
-                                    <td class="p-3 text-right font-bold text-slate-700 dark:text-slate-300">{{ $currencySymbol ?? '' }}<span x-text="formatNumber(cust.total_spent)"></span></td>
-                                    <td class="p-3 text-right font-bold text-emerald-600">{{ $currencySymbol ?? '' }}<span x-text="formatNumber(cust.total_paid)"></span></td>
-                                    <td class="p-3 text-right font-black text-rose-600">{{ $currencySymbol ?? '' }}<span x-text="formatNumber(cust.total_due)"></span></td>
+                                    <td class="p-3 text-right font-bold text-slate-700 dark:text-slate-300"><x-money value="cust.total_spent" symbol="{{ $currencySymbol ?? '' }}" /></td>
+                                    <td class="p-3 text-right font-bold text-emerald-600"><x-money value="cust.total_paid" symbol="{{ $currencySymbol ?? '' }}" /></td>
+                                    <td class="p-3 text-right font-black text-rose-600"><x-money value="cust.total_due" symbol="{{ $currencySymbol ?? '' }}" /></td>
                                 </tr>
                             </template>
                             <tr x-show="!breakdowns.customers_with_due || breakdowns.customers_with_due.length === 0">
@@ -456,10 +456,10 @@
                                 <td class="p-3 font-medium text-slate-500" x-text="inv.sales_date"></td>
                                 <td class="p-3 font-bold text-slate-800 dark:text-slate-200" x-text="inv.customer"></td>
                                 <td class="p-3 font-medium text-slate-500" x-text="inv.warehouse"></td>
-                                <td class="p-3 text-right font-black text-slate-800 dark:text-white">{{ $currencySymbol ?? '' }}<span x-text="formatNumber(inv.grand_total)"></span></td>
-                                <td class="p-3 text-right font-bold text-emerald-600">{{ $currencySymbol ?? '' }}<span x-text="formatNumber(inv.paid_amount)"></span></td>
+                                <td class="p-3 text-right font-black text-slate-800 dark:text-white"><x-money value="inv.grand_total" symbol="{{ $currencySymbol ?? '' }}" /></td>
+                                <td class="p-3 text-right font-bold text-emerald-600"><x-money value="inv.paid_amount" symbol="{{ $currencySymbol ?? '' }}" /></td>
                                 <td class="p-3 text-right font-bold" :class="inv.due_amount > 0 ? 'text-rose-500' : 'text-slate-400'">
-                                    {{ $currencySymbol ?? '' }}<span x-text="formatNumber(inv.due_amount)"></span>
+                                    <x-money value="inv.due_amount" symbol="{{ $currencySymbol ?? '' }}" />
                                 </td>
                                 <td class="p-3 text-center">
                                     <span class="px-2 py-0.5 text-[9px] font-black uppercase rounded-full tracking-wider" 

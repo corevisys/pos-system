@@ -119,9 +119,10 @@ test('2. Receive payment page renders with correct sale details, customer, and r
     $response->assertSee('Rahim Uddin');
     $response->assertSee('01811223344');
     $response->assertSee('Store Cash Counter');
-    $response->assertSee(format_currency(1500.00));
-    $response->assertSee(format_currency(500.00));
-    $response->assertSee(format_currency(1000.00)); // remaining balance
+    // Grand total / paid / remaining due all render through <x-money>.
+    assert_compact_amount($response, 1500.00);
+    assert_compact_amount($response, 500.00);
+    assert_compact_amount($response, 1000.00); // remaining balance
     $response->assertSee('Record Payment');
 });
 

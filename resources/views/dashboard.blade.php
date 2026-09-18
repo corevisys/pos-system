@@ -87,7 +87,8 @@
             {{-- 1. Today's Sales --}}
             <x-stat-card
                 label="Today's Sales"
-                :value="format_currency($stats['today_sales'])"
+                :money="true"
+                :value="$stats['today_sales']"
                 iconBg="bg-blue-50 dark:bg-blue-500/10 text-blue-600"
                 icon='<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
                 :footer="$todaySalesFooter"
@@ -105,7 +106,8 @@
             {{-- 3. Today's Profit --}}
             <x-stat-card
                 label="Today's Profit"
-                :value="format_currency($stats['today_net_profit'])"
+                :money="true"
+                :value="$stats['today_net_profit']"
                 :iconBg="$stats['today_net_profit'] >= 0 ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-500'"
                 icon='<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>'
                 :footer="$todayProfitFooter"
@@ -114,7 +116,8 @@
             {{-- 4. Total Outstanding Due --}}
             <x-stat-card
                 label="Outstanding Due"
-                :value="format_currency($stats['total_outstanding_due'])"
+                :money="true"
+                :value="$stats['total_outstanding_due']"
                 iconBg="bg-rose-50 dark:bg-rose-500/10 text-rose-600"
                 icon='<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>'
                 :footer="$outstandingFooter"
@@ -123,7 +126,8 @@
             {{-- 5. This Month's Sales --}}
             <x-stat-card
                 label="This Month"
-                :value="format_currency($stats['this_month_sales'])"
+                :money="true"
+                :value="$stats['this_month_sales']"
                 iconBg="bg-purple-50 dark:bg-purple-500/10 text-purple-600"
                 icon='<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>'
                 :footer="$monthFooter"
@@ -187,7 +191,7 @@
                                 <span class="text-[10px] font-bold text-text-secondary dark:text-dark-text">{{ $pm['method'] }}</span>
                             </div>
                             <span class="text-[10px] font-black text-text-primary dark:text-dark-text tabular-nums">
-                                {{ format_currency($pm['amount']) }}
+                                <x-money value="{{ $pm['amount'] }}" />
                             </span>
                         </div>
                         @endforeach
@@ -241,7 +245,7 @@
                                 <span class="text-[11px] font-black tabular-nums text-indigo-600 dark:text-indigo-400">{{ format_quantity($product->total_qty) }}</span>
                             </td>
                             <td class="px-4 py-3 text-right">
-                                <span class="text-[11px] font-black tabular-nums text-text-primary dark:text-dark-text">{{ format_currency($product->total_revenue) }}</span>
+                                <span class="text-[11px] font-black tabular-nums text-text-primary dark:text-dark-text"><x-money value="{{ $product->total_revenue }}" /></span>
                             </td>
                         </tr>
                         @endforeach
@@ -361,7 +365,7 @@
                             </td>
                             <td class="px-4 py-3 text-right">
                                 <span class="text-[11px] font-black tabular-nums text-text-primary dark:text-dark-text">
-                                    {{ format_currency($txn->grand_total) }}
+                                    <x-money value="{{ $txn->grand_total }}" />
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-center">
@@ -427,7 +431,7 @@
                                 </div>
                                 <div class="text-right flex-shrink-0 ml-2">
                                     <p class="text-[11px] font-black text-rose-600 dark:text-rose-400 tabular-nums">
-                                        {{ format_currency($customer->total_due) }}
+                                        <x-money value="{{ $customer->total_due }}" />
                                     </p>
                                     <p class="text-[9px] text-text-muted">{{ $customer->orders_count }} order(s)</p>
                                 </div>
@@ -465,7 +469,7 @@
                             <span class="text-[11px] font-black text-text-primary dark:text-dark-text">Total Sales</span>
                         </div>
                         <span class="text-sm font-black text-primary-600 dark:text-primary-400 tabular-nums">
-                            {{ format_currency($stats['this_month_sales']) }}
+                            <x-money value="{{ $stats['this_month_sales'] }}" />
                         </span>
                     </div>
                     @php
@@ -484,7 +488,7 @@
                             <span class="text-[11px] font-black text-text-primary dark:text-dark-text">Total Purchases</span>
                         </div>
                         <span class="text-sm font-black text-orange-500 tabular-nums">
-                            {{ format_currency($stats['this_month_purchases']) }}
+                            <x-money value="{{ $stats['this_month_purchases'] }}" />
                         </span>
                     </div>
                     @php
@@ -502,7 +506,7 @@
             <div class="mt-5 pt-4 border-t border-border-light dark:border-dark-border flex items-center justify-between">
                 <span class="text-[10px] font-bold text-text-muted uppercase tracking-widest">Net Margin (Sales − Purchases)</span>
                 <span class="text-sm font-black tabular-nums {{ $margin >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500' }}">
-                    {{ ($margin >= 0 ? '+' : '') }}{{ format_currency($margin) }}
+                    {{ ($margin >= 0 ? '+' : '') }}<x-money value="{{ $margin }}" />
                 </span>
             </div>
         </x-card>

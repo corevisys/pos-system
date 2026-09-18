@@ -118,9 +118,9 @@
                     <td class="px-4 py-2 text-[10px] font-medium text-text-secondary whitespace-nowrap">{{ $s->mobile }}</td>
                     <td class="px-4 py-2 text-[10px] font-medium text-text-muted truncate max-w-[150px]">{{ $s->email ?? '—' }}</td>
                     <td class="px-4 py-2 text-[10px] font-medium text-text-secondary whitespace-nowrap">{{ $s->city ?? '—' }}</td>
-                    <td class="px-4 py-2 text-[10px] font-black text-right tabular-nums text-text-secondary">{{ format_currency($s->opening_balance) }}</td>
-                    <td class="px-4 py-2 text-[10px] font-black text-right tabular-nums text-danger">{{ format_currency($s->live_purchase_due ?? 0) }}</td>
-                    <td class="px-4 py-2 text-[10px] font-black text-right tabular-nums text-emerald-600">{{ format_currency($s->live_return_due ?? 0) }}</td>
+                    <td class="px-4 py-2 text-[10px] font-black text-right tabular-nums text-text-secondary"><x-money value="{{ $s->opening_balance }}" /></td>
+                    <td class="px-4 py-2 text-[10px] font-black text-right tabular-nums text-danger"><x-money value="{{ $s->live_purchase_due ?? 0 }}" /></td>
+                    <td class="px-4 py-2 text-[10px] font-black text-right tabular-nums text-emerald-600"><x-money value="{{ $s->live_return_due ?? 0 }}" /></td>
                     <td class="px-4 py-2 text-center whitespace-nowrap">
                         <x-badge :color="$s->status == 1 ? 'success' : 'danger'">
                             {{ $s->status == 1 ? 'Active' : 'Inactive' }}
@@ -160,9 +160,9 @@
             <x-slot name="tfoot">
                 <tr class="font-black text-[9px] uppercase tracking-widest text-text-muted bg-slate-50/80 dark:bg-slate-800/80 border-t border-border dark:border-dark-border">
                     <td colspan="5" class="px-4 py-3 text-right">Total Summary</td>
-                    <td class="px-4 py-3 text-right tabular-nums text-text-primary dark:text-dark-text border-l border-border dark:border-dark-border">{{ format_currency($suppliers->sum('opening_balance')) }}</td>
-                    <td class="px-4 py-3 text-right tabular-nums text-danger border-l border-border dark:border-dark-border">{{ format_currency($suppliers->sum('live_purchase_due')) }}</td>
-                    <td class="px-4 py-3 text-right tabular-nums text-emerald-600 border-l border-border dark:border-dark-border">{{ format_currency($suppliers->sum('live_return_due')) }}</td>
+                    <td class="px-4 py-3 text-right tabular-nums text-text-primary dark:text-dark-text border-l border-border dark:border-dark-border"><x-money value="{{ $suppliers->sum('opening_balance') }}" /></td>
+                    <td class="px-4 py-3 text-right tabular-nums text-danger border-l border-border dark:border-dark-border"><x-money value="{{ $suppliers->sum('live_purchase_due') }}" /></td>
+                    <td class="px-4 py-3 text-right tabular-nums text-emerald-600 border-l border-border dark:border-dark-border"><x-money value="{{ $suppliers->sum('live_return_due') }}" /></td>
                     <td colspan="2" class="border-l border-border dark:border-dark-border"></td>
                 </tr>
             </x-slot>

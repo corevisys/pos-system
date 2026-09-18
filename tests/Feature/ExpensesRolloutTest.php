@@ -416,7 +416,9 @@ class ExpensesRolloutTest extends TestCase
         $res->assertOk();
 
         // Full filtered total = 120.00, not the page-1 sum (100.00).
-        $res->assertSee('120.00');
+        // The total now renders through <x-money>, so the exact value lives in
+        // the Alpine tooltip binding rather than in static server HTML.
+        assert_compact_amount($res, 120.00);
     }
 
     // ─────────────────────────────── PHASE 5 ───────────────────────────────

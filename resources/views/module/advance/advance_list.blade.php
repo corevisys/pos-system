@@ -81,7 +81,7 @@
                         </div>
                     </td>
                     <td class="px-5 py-3 text-[11px] font-black text-right tabular-nums text-emerald-600 dark:text-emerald-400">
-                        {{ format_currency($advance->amount) }}
+                        <x-money value="{{ $advance->amount }}" />
                     </td>
                     <td class="px-5 py-3 text-center">
                         <x-badge color="neutral">{{ $advance->payment_type }}</x-badge>

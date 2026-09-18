@@ -210,14 +210,14 @@
                                 <p class="font-bold text-text-primary dark:text-dark-text">{{ $item->item->item_name }}</p>
                                 <p class="text-[9px] text-text-secondary font-mono">{{ $item->item->item_code }}</p>
                             </td>
-                            <td class="px-3 py-2 text-right tabular-nums">{{ format_currency($item->price_per_unit) }}</td>
+                            <td class="px-3 py-2 text-right tabular-nums"><x-money value="{{ $item->price_per_unit }}" /></td>
                             <td class="px-3 py-2 text-center tabular-nums font-bold">{{ format_quantity($item->quotation_qty) }}</td>
                             <td class="px-3 py-2">
                                 <span class="text-[9px] font-bold uppercase text-text-secondary">{{ $item->item->tax->tax_name ?? 'No Tax' }}</span>
                             </td>
-                            <td class="px-3 py-2 text-right tabular-nums text-text-secondary">{{ format_currency($item->tax_amt) }}</td>
-                            <td class="px-3 py-2 text-right tabular-nums text-danger">{{ $item->discount_amt > 0 ? format_currency($item->discount_amt) : '0' }}</td>
-                            <td class="px-3.5 py-2 text-right tabular-nums font-black text-text-primary dark:text-dark-text">{{ format_currency($item->total_cost) }}</td>
+                            <td class="px-3 py-2 text-right tabular-nums text-text-secondary"><x-money value="{{ $item->tax_amt }}" /></td>
+                            <td class="px-3 py-2 text-right tabular-nums text-danger">@if($item->discount_amt > 0)<x-money value="{{ $item->discount_amt }}" />@else 0 @endif</td>
+                            <td class="px-3.5 py-2 text-right tabular-nums font-black text-text-primary dark:text-dark-text"><x-money value="{{ $item->total_cost }}" /></td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -226,7 +226,7 @@
                             <td colspan="3" class="px-3.5 py-2 text-[9px] uppercase tracking-wider text-center font-black">Total Quantity</td>
                             <td class="px-3 py-2 text-center tabular-nums">{{ format_quantity($quotation->items->sum('quotation_qty')) }}</td>
                             <td colspan="3"></td>
-                            <td class="px-3.5 py-2 text-right tabular-nums font-black text-primary">{{ format_currency($quotation->items->sum('total_cost')) }}</td>
+                            <td class="px-3.5 py-2 text-right tabular-nums font-black text-primary"><x-money value="{{ $quotation->items->sum('total_cost') }}" /></td>
                         </tr>
                     </tfoot>
                 </table>
@@ -248,7 +248,7 @@
                     @if($quotation->tot_discount_to_all_amt > 0)
                         <div class="p-2.5 bg-background dark:bg-dark-bg/50 rounded-xl border border-border-light dark:border-dark-border flex justify-between items-center text-xs">
                             <span class="text-text-secondary font-bold">Global Discount ({{ $quotation->discount_to_all_input }} {{ $quotation->discount_to_all_type === 'Percentage' ? '%' : 'Fixed' }}):</span>
-                            <span class="font-bold text-danger">- {{ format_currency($quotation->tot_discount_to_all_amt) }}</span>
+                            <span class="font-bold text-danger">- <x-money value="{{ $quotation->tot_discount_to_all_amt }}" /></span>
                         </div>
                     @endif
                 </div>
@@ -257,31 +257,31 @@
                 <div class="space-y-2 text-xs bg-slate-900 text-white dark:bg-dark-bg p-4 rounded-2xl">
                     <div class="flex justify-between items-center py-0.5 border-b border-white/10 dark:border-dark-border">
                         <span class="text-slate-400">Subtotal:</span>
-                        <span class="font-bold tabular-nums">{{ format_currency($quotation->subtotal) }}</span>
+                        <span class="font-bold tabular-nums"><x-money value="{{ $quotation->subtotal }}" /></span>
                     </div>
 
                     @if($quotation->other_charges_input > 0 || $quotation->other_charges_amt > 0)
                         <div class="flex justify-between items-center py-0.5 border-b border-white/10 dark:border-dark-border">
                             <span class="text-slate-400">Other Charges:</span>
-                            <span class="font-bold tabular-nums">{{ format_currency($quotation->other_charges_input + $quotation->other_charges_amt) }}</span>
+                            <span class="font-bold tabular-nums"><x-money value="{{ $quotation->other_charges_input + $quotation->other_charges_amt }}" /></span>
                         </div>
                     @endif
 
                     @if($quotation->tot_discount_to_all_amt > 0)
                         <div class="flex justify-between items-center py-0.5 border-b border-white/10 dark:border-dark-border text-rose-400">
                             <span>Discount on All:</span>
-                            <span class="font-bold tabular-nums">- {{ format_currency($quotation->tot_discount_to_all_amt) }}</span>
+                            <span class="font-bold tabular-nums">- <x-money value="{{ $quotation->tot_discount_to_all_amt }}" /></span>
                         </div>
                     @endif
 
                     <div class="flex justify-between items-center py-0.5 border-b border-white/10 dark:border-dark-border">
                         <span class="text-slate-400">Round Off:</span>
-                        <span class="font-bold tabular-nums">{{ $quotation->round_off >= 0 ? '+' : '-' }} {{ format_currency(abs($quotation->round_off ?? 0)) }}</span>
+                        <span class="font-bold tabular-nums">{{ $quotation->round_off >= 0 ? '+' : '-' }} <x-money value="{{ abs($quotation->round_off ?? 0) }}" /></span>
                     </div>
 
                     <div class="pt-2 flex justify-between items-baseline">
                         <span class="text-primary-400 uppercase tracking-widest font-black text-xs">Grand Total:</span>
-                        <span class="text-2xl font-black text-white tabular-nums tracking-tight">{{ format_currency($quotation->grand_total) }}</span>
+                        <span class="text-2xl font-black text-white tabular-nums tracking-tight"><x-money value="{{ $quotation->grand_total }}" /></span>
                     </div>
                 </div>
             </div>

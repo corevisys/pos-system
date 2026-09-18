@@ -95,7 +95,7 @@
                     </div>
                     <div>
                         <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-0.5 italic">Previous Due</span>
-                        <span class="text-[11px] font-black tabular-nums text-rose-500" x-text="'{{ $currencySymbol }}' + customerInfo.previousDue"></span>
+                        <span class="text-[11px] font-black tabular-nums text-rose-500"><x-money value="parseFloat(customerInfo.previousDue.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></span>
                     </div>
                 </div>
             </div>
@@ -142,8 +142,8 @@
                     <tfoot class="bg-slate-50/80 dark:bg-slate-800/80 border-t border-slate-200">
                         <tr class="font-black text-slate-700 dark:text-slate-200">
                             <td colspan="2" class="px-6 py-3 text-right uppercase text-[9px] tracking-widest text-slate-500 italic">Total Summary</td>
-                            <td class="px-6 py-3 text-[11px] tabular-nums text-right font-mono" x-text="totalBillAmt"></td>
-                            <td class="px-6 py-3 text-[11px] tabular-nums text-center text-emerald-600 font-mono" x-text="totalReceive"></td>
+                            <td class="px-6 py-3 text-[11px] tabular-nums text-right font-mono"><x-money value="parseFloat(totalBillAmt.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
+                            <td class="px-6 py-3 text-[11px] tabular-nums text-center text-emerald-600 font-mono"><x-money value="parseFloat(totalReceive.replace(/,/g,''))" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             <td class="px-6 py-3 text-[11px] tabular-nums text-right text-rose-500 font-mono"></td>
                             </tr>
                     </tfoot>

@@ -148,11 +148,11 @@
                                             @endif
                                         </div>
                                     </td>
-                                    <td class="px-4 py-3 text-[10px] font-black text-right tabular-nums">{{ format_currency($item->price_per_unit) }}</td>
+                                    <td class="px-4 py-3 text-[10px] font-black text-right tabular-nums"><x-money value="{{ $item->price_per_unit }}" /></td>
                                     <td class="px-4 py-3 text-[10px] font-black text-center tabular-nums">
                                         <span class="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-600 dark:text-slate-400">{{ format_quantity($item->sales_qty) }}</span>
                                     </td>
-                                    <td class="px-4 py-3 text-[10px] font-black text-right tabular-nums text-primary-600">{{ format_currency($item->total_cost) }}</td>
+                                    <td class="px-4 py-3 text-[10px] font-black text-right tabular-nums text-primary-600"><x-money value="{{ $item->total_cost }}" /></td>
                                 </tr>
                                 @endforeach
                             </tbody>
@@ -183,7 +183,7 @@
                                         <span class="text-[10px] font-black uppercase text-slate-600">{{ $payment->payment_type }}</span>
                                     </td>
                                     <td class="px-4 py-3 text-[10px] font-medium text-slate-500">{{ $payment->account->account_name ?? 'N/A' }}</td>
-                                     <td class="px-4 py-3 text-[10px] font-black text-right tabular-nums text-emerald-600">{{ format_currency($payment->payment) }}</td>
+                                     <td class="px-4 py-3 text-[10px] font-black text-right tabular-nums text-emerald-600"><x-money value="{{ $payment->payment }}" /></td>
                                 </tr>
                                 @empty
                                 <tr>
@@ -275,11 +275,11 @@
                                                     @endif
                                                 @endif
                                             </td>
-                                            <td class="px-3 py-2 text-[9.5px] font-black text-right tabular-nums">{{ format_currency($rItem->price_per_unit) }}</td>
+                                            <td class="px-3 py-2 text-[9.5px] font-black text-right tabular-nums"><x-money value="{{ $rItem->price_per_unit }}" /></td>
                                             <td class="px-3 py-2 text-[9.5px] font-black text-center tabular-nums">
                                                 <span class="bg-rose-50 text-rose-600 dark:bg-rose-900/30 px-1.5 py-0.5 rounded">{{ format_quantity($rItem->return_qty) }}</span>
                                             </td>
-                                            <td class="px-3 py-2 text-[9.5px] font-black text-right tabular-nums text-rose-600">{{ format_currency($rItem->total_cost) }}</td>
+                                            <td class="px-3 py-2 text-[9.5px] font-black text-right tabular-nums text-rose-600"><x-money value="{{ $rItem->total_cost }}" /></td>
                                         </tr>
                                         @endforeach
                                     </tbody>
@@ -293,12 +293,12 @@
                                         @foreach($ret->payments as $rPay)
                                             <span class="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1">
                                                 <span>Refund ({{ $rPay->payment_type }} - {{ $rPay->account->account_name ?? 'N/A' }}):</span>
-                                                <span class="font-black text-rose-600">{{ format_currency($rPay->payment) }}</span>
+                                                <span class="font-black text-rose-600"><x-money value="{{ $rPay->payment }}" /></span>
                                             </span>
                                         @endforeach
                                     @elseif($ret->paid_amount > 0)
                                         <span class="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 font-bold text-slate-600 dark:text-slate-300">
-                                            Refund Paid: <span class="font-black text-rose-600">{{ format_currency($ret->paid_amount) }}</span>
+                                            Refund Paid: <span class="font-black text-rose-600"><x-money value="{{ $ret->paid_amount }}" /></span>
                                         </span>
                                     @else
                                         <span class="text-[9px] font-bold text-slate-400 italic">No cash refund issued (Due offset).</span>
@@ -307,7 +307,7 @@
 
                                 <div class="text-right">
                                     <span class="text-slate-400 font-bold text-[9px] uppercase tracking-wider">Return Total:</span>
-                                    <span class="text-xs font-black text-rose-600 tabular-nums ml-1">{{ format_currency($ret->grand_total) }}</span>
+                                    <span class="text-xs font-black text-rose-600 tabular-nums ml-1"><x-money value="{{ $ret->grand_total }}" /></span>
                                 </div>
                             </div>
 
@@ -331,23 +331,23 @@
                     <div class="space-y-3">
                         <div class="flex justify-between items-center">
                             <span class="text-xs font-medium text-slate-500">Subtotal</span>
-                             <span class="text-xs font-black">{{ format_currency($sale->subtotal) }}</span>
+                             <span class="text-xs font-black"><x-money value="{{ $sale->subtotal }}" /></span>
                         </div>
                         @if($sale->tot_discount_to_all_amt > 0)
                         <div class="flex justify-between items-center text-rose-500 p-2 bg-rose-50/50 dark:bg-rose-900/10 rounded-lg">
                             <span class="text-[10px] font-black uppercase tracking-tight">Invoice Discount</span>
-                             <span class="text-xs font-black">- {{ format_currency($sale->tot_discount_to_all_amt) }}</span>
+                             <span class="text-xs font-black">- <x-money value="{{ $sale->tot_discount_to_all_amt }}" /></span>
                         </div>
                         @endif
                         @if($sale->coupon_amt > 0)
                         <div class="flex justify-between items-center text-emerald-600 p-2 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-lg">
                             <span class="text-[10px] font-black uppercase tracking-tight">Coupon Discount</span>
-                             <span class="text-xs font-black">- {{ format_currency($sale->coupon_amt) }}</span>
+                             <span class="text-xs font-black">- <x-money value="{{ $sale->coupon_amt }}" /></span>
                         </div>
                         @endif
                         <div class="flex justify-between items-center">
                             <span class="text-xs font-medium text-slate-500">Other Charges / Tax</span>
-                             <span class="text-xs font-black">{{ format_currency($sale->round_off + $sale->other_charges_amt) }}</span>
+                             <span class="text-xs font-black"><x-money value="{{ $sale->round_off + $sale->other_charges_amt }}" /></span>
                         </div>
                         <hr class="border-slate-100 dark:border-dark-border">
                         <div class="flex justify-between items-center pt-1">
@@ -360,7 +360,7 @@
                                     </span>
                                 @endif
                             </div>
-                             <span class="text-2xl font-black text-primary-600 tabular-nums leading-none">{{ format_currency($sale->grand_total) }}</span>
+                             <span class="text-2xl font-black text-primary-600 tabular-nums leading-none"><x-money value="{{ $sale->grand_total }}" /></span>
                         </div>
 
                         @if($sale->returns->isNotEmpty())
@@ -368,24 +368,24 @@
                             <div class="flex flex-col">
                                 <span class="text-[10px] font-black uppercase tracking-tight">Returned Items</span>
                                 @if($totalRefundedPaid > 0)
-                                    <span class="text-[8px] font-bold text-slate-400">(Refund Paid: {{ format_currency($totalRefundedPaid) }})</span>
+                                    <span class="text-[8px] font-bold text-slate-400">(Refund Paid: <x-money value="{{ $totalRefundedPaid }}" />)</span>
                                 @endif
                             </div>
-                            <span class="text-xs font-black">- {{ format_currency($totalReturnedAmount) }}</span>
+                            <span class="text-xs font-black">- <x-money value="{{ $totalReturnedAmount }}" /></span>
                         </div>
                         @endif
                         
                         <div class="grid grid-cols-2 gap-2 mt-4">
                             <div class="p-2 bg-emerald-50 dark:bg-emerald-900/10 rounded-xl border border-emerald-100 dark:border-emerald-900/20">
                                 <p class="text-[8px] font-black text-emerald-600 uppercase tracking-widest">Received</p>
-                                 <p class="text-xs font-black text-emerald-600 tabular-nums">{{ format_currency($sale->paid_amount) }}</p>
+                                 <p class="text-xs font-black text-emerald-600 tabular-nums"><x-money value="{{ $sale->paid_amount }}" /></p>
                             </div>
                             <div class="p-2 {{ $creditBalance > 0 ? 'bg-amber-50 dark:bg-amber-900/10 rounded-xl border border-amber-200 dark:border-amber-800/40' : 'bg-rose-50 dark:bg-rose-900/10 rounded-xl border border-rose-100 dark:border-rose-900/20' }} text-right">
                                 <p class="text-[8px] font-black {{ $creditBalance > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600' }} uppercase tracking-widest">
                                     {{ $creditBalance > 0 ? 'Credit Balance (Overpaid)' : 'Balance Due' }}
                                 </p>
                                  <p class="text-xs font-black {{ $creditBalance > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600' }} tabular-nums">
-                                     {{ $creditBalance > 0 ? format_currency($creditBalance) : format_currency($netBalanceDue) }}
+                                     <x-money value="{{ $creditBalance > 0 ? $creditBalance : $netBalanceDue }}" />
                                  </p>
                             </div>
                         </div>

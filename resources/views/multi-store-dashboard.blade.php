@@ -57,7 +57,8 @@
         {{-- Network Today Sales --}}
         <x-stat-card
             label="Network Sales Today"
-            :value="format_currency($networkStats['today_sales'])"
+            :money="true"
+            :value="$networkStats['today_sales']"
             iconBg="bg-blue-50 dark:bg-blue-500/10 text-blue-600"
             icon='<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
             footer='<p class="text-xs font-bold text-text-muted mt-2">Combined today</p>'
@@ -75,7 +76,8 @@
         {{-- Network Month Sales --}}
         <x-stat-card
             label="Network Month Sales"
-            :value="format_currency($networkStats['this_month_sales'])"
+            :money="true"
+            :value="$networkStats['this_month_sales']"
             iconBg="bg-purple-50 dark:bg-purple-500/10 text-purple-600"
             icon='<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>'
             footer='<p class="text-xs font-bold text-text-muted mt-2">Current month</p>'
@@ -84,7 +86,8 @@
         {{-- Network Month Purchases --}}
         <x-stat-card
             label="Network Purchases"
-            :value="format_currency($networkStats['this_month_purchases'])"
+            :money="true"
+            :value="$networkStats['this_month_purchases']"
             iconBg="bg-amber-50 dark:bg-amber-500/10 text-amber-600"
             icon='<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>'
             footer='<p class="text-xs font-bold text-text-muted mt-2">Current month</p>'
@@ -93,7 +96,8 @@
         {{-- Network Outstanding Due --}}
         <x-stat-card
             label="Network Due"
-            :value="format_currency($networkStats['total_outstanding_due'])"
+            :money="true"
+            :value="$networkStats['total_outstanding_due']"
             iconBg="bg-rose-50 dark:bg-rose-500/10 text-rose-600"
             icon='<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>'
             footer='<p class="text-xs font-bold text-text-muted mt-2">Total outstanding</p>'
@@ -176,7 +180,7 @@
                     <div class="p-4">
                         <p class="text-[9px] font-bold text-text-muted uppercase tracking-widest mb-1">Today Sales</p>
                         <p class="text-base font-black text-text-primary dark:text-dark-text leading-none">
-                            {{ format_currency($s['today_sales']) }}
+                            <x-money value="{{ $s['today_sales'] }}" />
                         </p>
                         <p class="text-[10px] text-slate-400 mt-1">{{ $s['today_orders'] }} order{{ $s['today_orders'] !== 1 ? 's' : '' }}</p>
                     </div>
@@ -185,7 +189,7 @@
                     <div class="p-4">
                         <p class="text-[9px] font-bold text-text-muted uppercase tracking-widest mb-1">Outstanding Due</p>
                         <p class="text-base font-black {{ $s['total_outstanding_due'] > 0 ? 'text-rose-500' : 'text-emerald-500' }} leading-none">
-                            {{ format_currency($s['total_outstanding_due']) }}
+                            <x-money value="{{ $s['total_outstanding_due'] }}" />
                         </p>
                         <p class="text-[10px] text-slate-400 mt-1">Unpaid invoices</p>
                     </div>
@@ -194,7 +198,7 @@
                     <div class="p-4">
                         <p class="text-[9px] font-bold text-text-muted uppercase tracking-widest mb-1">Month Sales</p>
                         <p class="text-base font-black text-text-primary dark:text-dark-text leading-none">
-                            {{ format_currency($s['this_month_sales']) }}
+                            <x-money value="{{ $s['this_month_sales'] }}" />
                         </p>
                         <p class="text-[10px] {{ $changeClass }} mt-1 font-semibold">{{ $changeLabel }}</p>
                     </div>
@@ -203,7 +207,7 @@
                     <div class="p-4">
                         <p class="text-[9px] font-bold text-text-muted uppercase tracking-widest mb-1">Month Purchases</p>
                         <p class="text-base font-black text-text-primary dark:text-dark-text leading-none">
-                            {{ format_currency($s['this_month_purchases']) }}
+                            <x-money value="{{ $s['this_month_purchases'] }}" />
                         </p>
                         <p class="text-[10px] text-slate-400 mt-1">Current month</p>
                     </div>

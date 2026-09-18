@@ -120,9 +120,10 @@ test('Sales List stat cards are scoped to the current store only', function () {
 
     $response = $this->actingAs($userA)->get('/sales/list');
 
-    // Store 1 only: total amount card shows 100, not 600
-    $response->assertSee('100.00');
-    $response->assertDontSee('500.00');
+    // Store 1 only: total amount card shows 100, not Store 2's 500.
+    // The stat card renders the amount through <x-money> (compact at runtime).
+    assert_compact_amount($response, 100.00);
+    assert_compact_amount_absent($response, 500.00);
 });
 
 test('Search submit preserves active warehouse filter in the query string', function () {

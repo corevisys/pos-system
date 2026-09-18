@@ -101,6 +101,49 @@
 	}
 }
 
+/* ═══ Compact-amount reveal tooltip (POS card amounts) ═══ */
+/* Reuses the sidebar-tooltip interaction (absolute popover, group-hover
+   reveal) but anchors horizontally to the LEFT of the value so it never
+   escapes an `overflow-hidden` card (e.g. the navy payment-summary cards).
+   Plain unlayered classes (same proven pattern as `.sidebar-tooltip`) so
+   they reliably beat utility display/opacity states. Tokens only — no new
+   hex values. */
+.amount-tip {
+	position: absolute;
+	right: calc(100% + 8px);
+	top: 50%;
+	transform: translateY(-50%);
+	z-index: 60;
+	display: none;
+	align-items: center;
+	gap: 0.25rem;
+	padding: 0.3125rem 0.5625rem;
+	background-color: var(--color-navy);
+	color: var(--color-dark-text);
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 1;
+	white-space: nowrap;
+	border-radius: 0.5rem;
+	box-shadow: var(--shadow-dropdown);
+	pointer-events: none;
+}
+
+/* Desktop hover reveal. */
+.group:hover .amount-tip {
+	display: flex;
+}
+
+/* Tap/click reveal (touch, where hover does not exist). */
+.amount-tip.tip-open {
+	display: flex !important;
+}
+
+.dark .amount-tip {
+	background-color: var(--color-dark-card);
+	border: 1px solid var(--color-dark-border);
+}
+
 /* Fade-in animation (formerly inline in sales/payments.blade.php) */
 @utility anime-fade-in {
 	animation: fade-in 0.3s ease-out;

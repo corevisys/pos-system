@@ -169,9 +169,9 @@ test('5. Store A user only sees store-A returns and store-A stats', function () 
     $response->assertOk();
     $response->assertSee('SR-RLF-A');
     $response->assertDontSee('SR-RLF-B');
-    // Stats: only store-1's 300 shows as total
-    $response->assertSee(format_currency(300));
-    $response->assertDontSee(format_currency(50));
+    // Stats: only store-1's 300 shows as total (rendered through <x-money>)
+    assert_compact_amount($response, 300);
+    assert_compact_amount_absent($response, 50);
 });
 
 test('6. Stat cards reflect the applied warehouse filter', function () {
@@ -204,10 +204,10 @@ test('6. Stat cards reflect the applied warehouse filter', function () {
 
     // Unfiltered: total = 600
     $respAll = $this->actingAs($user)->get(route('sales.returns'));
-    $respAll->assertSee(format_currency(600));
+    assert_compact_amount($respAll, 600);
 
     // Filtered to WH1: total = 500
     $respWh = $this->actingAs($user)->get(route('sales.returns', ['warehouse_id' => $fx['warehouse']->id]));
-    $respWh->assertSee(format_currency(500));
-    $respWh->assertDontSee(format_currency(100));
+    assert_compact_amount($respWh, 500);
+    assert_compact_amount_absent($respWh, 100);
 });

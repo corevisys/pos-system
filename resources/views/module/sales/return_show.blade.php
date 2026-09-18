@@ -126,14 +126,14 @@
                                         </div>
                                     @endif
                                 </td>
-                                <td class="px-4 py-3 text-right font-black tabular-nums text-[10px] text-text-primary dark:text-dark-text">{{ format_currency($item->price_per_unit) }}</td>
+                                <td class="px-4 py-3 text-right font-black tabular-nums text-[10px] text-text-primary dark:text-dark-text"><x-money value="{{ $item->price_per_unit }}" /></td>
                                 <td class="px-4 py-3 text-center font-black tabular-nums text-[10px]">
                                     <x-badge color="danger">{{ format_quantity($item->return_qty) }}</x-badge>
                                 </td>
-                                <td class="px-4 py-3 text-right font-black tabular-nums text-[10px] text-text-primary dark:text-dark-text">{{ format_currency($item->tax_amt) }}</td>
-                                <td class="px-4 py-3 text-right font-black tabular-nums text-[10px] text-danger whitespace-nowrap">{{ $item->discount_amt > 0 ? format_currency($item->discount_amt) : '0' }}</td>
-                                <td class="px-4 py-3 text-right font-black tabular-nums text-[10px] text-text-primary dark:text-dark-text">{{ format_currency($item->price_per_unit + $item->tax_amt - $item->discount_amt) }}</td>
-                                <td class="px-4 py-3 text-right font-black tabular-nums text-[10px] text-text-primary dark:text-dark-text">{{ format_currency($item->total_cost) }}</td>
+                                <td class="px-4 py-3 text-right font-black tabular-nums text-[10px] text-text-primary dark:text-dark-text"><x-money value="{{ $item->tax_amt }}" /></td>
+                                <td class="px-4 py-3 text-right font-black tabular-nums text-[10px] text-danger whitespace-nowrap">@if($item->discount_amt > 0)<x-money value="{{ $item->discount_amt }}" />@else 0 @endif</td>
+                                <td class="px-4 py-3 text-right font-black tabular-nums text-[10px] text-text-primary dark:text-dark-text"><x-money value="{{ $item->price_per_unit + $item->tax_amt - $item->discount_amt }}" /></td>
+                                <td class="px-4 py-3 text-right font-black tabular-nums text-[10px] text-text-primary dark:text-dark-text"><x-money value="{{ $item->total_cost }}" /></td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -141,10 +141,10 @@
                             <tr>
                                 <td colspan="3" class="px-4 py-2.5 text-[9px] uppercase tracking-widest text-center text-text-secondary">Total Return</td>
                                 <td class="px-4 py-2.5 text-center text-[10px]">{{ format_quantity($return->items->sum('return_qty')) }}</td>
-                                <td class="px-4 py-2.5 text-right text-[10px]">{{ format_currency($return->items->sum('tax_amt')) }}</td>
-                                <td class="px-4 py-2.5 text-right text-[10px] text-danger">{{ format_currency($return->items->sum('discount_amt')) }}</td>
+                                <td class="px-4 py-2.5 text-right text-[10px]"><x-money value="{{ $return->items->sum('tax_amt') }}" /></td>
+                                <td class="px-4 py-2.5 text-right text-[10px] text-danger"><x-money value="{{ $return->items->sum('discount_amt') }}" /></td>
                                 <td class="px-4 py-2.5"></td>
-                                <td class="px-4 py-2.5 text-right text-[10px]">{{ format_currency($return->items->sum('total_cost')) }}</td>
+                                <td class="px-4 py-2.5 text-right text-[10px]"><x-money value="{{ $return->items->sum('total_cost') }}" /></td>
                             </tr>
                         </tfoot>
                     </table>
@@ -182,14 +182,14 @@
                                                 <x-badge color="success">{{ strtoupper($payment->payment_type) }}</x-badge>
                                             </td>
                                             <td class="px-3 py-2 italic font-medium">{{ $payment->account->account_name ?? 'N/A' }}</td>
-                                            <td class="px-3 py-2 text-right font-black text-text-primary dark:text-dark-text whitespace-nowrap">{{ format_currency($payment->payment) }}</td>
+                                            <td class="px-3 py-2 text-right font-black text-text-primary dark:text-dark-text whitespace-nowrap"><x-money value="{{ $payment->payment }}" /></td>
                                         </tr>
                                         @endforeach
                                     </tbody>
                                     <tfoot class="bg-background/60 dark:bg-slate-900/50">
                                         <tr>
                                             <td colspan="4" class="px-3 py-2 text-right text-[8px] font-black uppercase tracking-widest text-text-muted">Total Released</td>
-                                            <td class="px-3 py-2 text-right font-black text-xs text-success">{{ format_currency($return->paid_amount) }}</td>
+                                            <td class="px-3 py-2 text-right font-black text-xs text-success"><x-money value="{{ $return->paid_amount }}" /></td>
                                         </tr>
                                     </tfoot>
                                 </table>
@@ -210,31 +210,31 @@
                             
                             <div class="flex justify-between items-center relative z-10 border-b border-white/10 pb-3">
                                 <span class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Return Subtotal</span>
-                                <span class="text-base font-black tabular-nums">{{ format_currency($return->subtotal) }}</span>
+                                <span class="text-base font-black tabular-nums"><x-money value="{{ $return->subtotal }}" /></span>
                             </div>
 
                             <div class="flex justify-between items-center relative z-10">
                                 <span class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Return Tax</span>
-                                <span class="text-base font-black tabular-nums">{{ format_currency($return->items->sum('tax_amt')) }}</span>
+                                <span class="text-base font-black tabular-nums"><x-money value="{{ $return->items->sum('tax_amt') }}" /></span>
                             </div>
 
                             @if($return->other_charges_amt > 0)
                             <div class="flex justify-between items-center relative z-10">
                                 <span class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Other Charges (+)</span>
-                                <span class="text-base font-black tabular-nums">{{ format_currency($return->other_charges_amt) }}</span>
+                                <span class="text-base font-black tabular-nums"><x-money value="{{ $return->other_charges_amt }}" /></span>
                             </div>
                             @endif
 
                             @if($return->tot_discount_to_all_amt > 0)
                             <div class="flex justify-between items-center relative z-10">
                                 <span class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Discount to All (-)</span>
-                                <span class="text-base font-black tabular-nums text-rose-400">{{ format_currency($return->tot_discount_to_all_amt) }}</span>
+                                <span class="text-base font-black tabular-nums text-rose-400"><x-money value="{{ $return->tot_discount_to_all_amt }}" /></span>
                             </div>
                             @endif
 
                             <div class="flex justify-between items-center relative z-10">
                                 <span class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Round Off</span>
-                                <span class="text-base font-black tabular-nums text-slate-300">{{ ($return->round_off ?? 0) >= 0 ? '+' : '-' }} {{ format_currency(abs($return->round_off ?? 0)) }}</span>
+                                <span class="text-base font-black tabular-nums text-slate-300">{{ ($return->round_off ?? 0) >= 0 ? '+' : '-' }} <x-money value="{{ abs($return->round_off ?? 0) }}" /></span>
                             </div>
 
                             <div class="pt-4 flex justify-between items-end relative z-10">
@@ -242,7 +242,7 @@
                                     <p class="text-[9px] font-black uppercase tracking-[0.3em] text-success mb-0.5">Grand Total Return</p>
                                     <p class="text-[8px] text-slate-500 font-bold uppercase tracking-widest leading-none whitespace-nowrap">Amount to Refund</p>
                                 </div>
-                                <span class="text-2xl font-black tabular-nums tracking-tighter text-success">{{ format_currency($return->grand_total) }}</span>
+                                <span class="text-2xl font-black tabular-nums tracking-tighter text-success"><x-money value="{{ $return->grand_total }}" /></span>
                             </div>
                         </div>
                     </div>

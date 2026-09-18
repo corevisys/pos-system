@@ -99,7 +99,7 @@
                         {{ $coupon->expire_date ? \Carbon\Carbon::parse($coupon->expire_date)->format('d-m-Y') : 'No Expiry' }}
                     </td>
                     <td class="px-5 py-3 text-[11px] font-black text-right tabular-nums text-emerald-600 dark:text-emerald-400">
-                        {{ $coupon->type == 'Fixed' ? format_currency($coupon->value) : number_format($coupon->value, 2).'%' }}
+                        @if($coupon->type == 'Fixed')<x-money value="{{ $coupon->value }}" />@else{{ number_format($coupon->value, 2) }}%@endif
                     </td>
                     <td class="px-5 py-3 text-center">
                         <x-badge color="neutral">{{ $coupon->type }}</x-badge>

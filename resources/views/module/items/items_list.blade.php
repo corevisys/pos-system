@@ -146,7 +146,7 @@
                         </div>
                     </td>
                     <td class="px-4 py-2 text-right whitespace-nowrap">
-                        <span class="text-[11px] font-black text-emerald-600 dark:text-emerald-400 tabular-nums">{{ format_currency($item->sales_price) }}</span>
+                        <span class="text-[11px] font-black text-emerald-600 dark:text-emerald-400 tabular-nums"><x-money value="{{ $item->sales_price }}" /></span>
                     </td>
                     <td class="px-4 py-2 text-center whitespace-nowrap">
                         @if($item->status)

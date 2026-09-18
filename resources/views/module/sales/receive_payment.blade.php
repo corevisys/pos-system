@@ -55,7 +55,7 @@
                 </div>
                 <div>
                     <p class="text-[9px] font-black text-text-muted uppercase tracking-widest">Grand Total</p>
-                    <h3 class="text-lg font-black text-text-primary dark:text-white tabular-nums">{{ format_currency($sale->grand_total) }}</h3>
+                    <h3 class="text-lg font-black text-text-primary dark:text-white tabular-nums"><x-money value="{{ $sale->grand_total }}" /></h3>
                 </div>
             </div>
 
@@ -66,7 +66,7 @@
                 </div>
                 <div>
                     <p class="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Paid Amount</p>
-                    <h3 class="text-lg font-black text-emerald-600 dark:text-emerald-400 tabular-nums">{{ format_currency($sale->paid_amount) }}</h3>
+                    <h3 class="text-lg font-black text-emerald-600 dark:text-emerald-400 tabular-nums"><x-money value="{{ $sale->paid_amount }}" /></h3>
                 </div>
             </div>
 
@@ -77,7 +77,7 @@
                 </div>
                 <div>
                     <p class="text-[9px] font-black {{ $isFullyPaid ? 'text-slate-400' : 'text-rose-600 dark:text-rose-400' }} uppercase tracking-widest">Balance Due</p>
-                    <h3 class="text-lg font-black {{ $isFullyPaid ? 'text-slate-600 dark:text-slate-300' : 'text-rose-600 dark:text-rose-400' }} tabular-nums">{{ format_currency($remainingDue) }}</h3>
+                    <h3 class="text-lg font-black {{ $isFullyPaid ? 'text-slate-600 dark:text-slate-300' : 'text-rose-600 dark:text-rose-400' }} tabular-nums"><x-money value="{{ $remainingDue }}" /></h3>
                 </div>
             </div>
 
@@ -168,7 +168,7 @@
                                             <span class="font-bold text-text-primary dark:text-slate-200">{{ $item->item->item_name ?? 'Product' }}</span>
                                             <span class="text-[10px] text-text-muted">× {{ format_quantity($item->sales_qty) }}</span>
                                         </div>
-                                        <span class="font-mono font-bold text-text-primary dark:text-slate-300">{{ format_currency($item->total_cost) }}</span>
+                                        <span class="font-mono font-bold text-text-primary dark:text-slate-300"><x-money value="{{ $item->total_cost }}" /></span>
                                     </div>
                                 @endforeach
                             </div>
@@ -218,7 +218,7 @@
                                             {{ $payment->payment_note ?: '—' }}
                                         </td>
                                         <td class="px-5 py-3.5 text-[11px] font-black text-text-primary dark:text-white text-right tabular-nums">
-                                            {{ format_currency($payment->payment) }}
+                                            <x-money value="{{ $payment->payment }}" />
                                         </td>
                                     </tr>
                                 @empty
@@ -238,7 +238,7 @@
                                 <tfoot class="bg-background/80 dark:bg-slate-800/50 border-t border-border-light dark:border-dark-border">
                                     <tr>
                                         <td colspan="4" class="px-5 py-3 text-[10px] font-black text-text-muted uppercase tracking-widest text-right">Total Collected</td>
-                                        <td class="px-5 py-3 text-xs font-black text-success text-right tabular-nums">{{ format_currency($sale->paid_amount) }}</td>
+                                        <td class="px-5 py-3 text-xs font-black text-success text-right tabular-nums"><x-money value="{{ $sale->paid_amount }}" /></td>
                                     </tr>
                                 </tfoot>
                             @endif
@@ -281,7 +281,7 @@
                                 Record Payment Receipt
                             </h2>
                             <span class="text-[9px] font-black text-danger uppercase tracking-widest">
-                                Due: {{ format_currency($remainingDue) }}
+                                Due: <x-money value="{{ $remainingDue }}" />
                             </span>
                         </div>
 
@@ -298,7 +298,7 @@
                                         Payment Amount ({{ $currencySymbol ?? '$' }}) <span class="text-danger">*</span>
                                     </label>
                                     <button type="button" @click="setFullAmount()" class="text-[10px] font-bold text-primary hover:underline">
-                                        Pay Full Due ({{ $currencySymbol ?? '$' }}<span x-text="formatMoney(maxDue)"></span>)
+                                        Pay Full Due (<x-money value="maxDue" symbol="{{ $currencySymbol ?? '$' }}" />)
                                     </button>
                                 </div>
                                 <div class="relative">
@@ -317,7 +317,7 @@
                                 <!-- Overpayment Warning -->
                                 <p x-show="isOverpaying" x-cloak class="text-[10px] text-danger font-bold mt-1 flex items-center gap-1">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                    Amount cannot exceed remaining balance ({{ $currencySymbol ?? '$' }}<span x-text="formatMoney(maxDue)"></span>)
+                                    Amount cannot exceed remaining balance (<x-money value="maxDue" symbol="{{ $currencySymbol ?? '$' }}" />)
                                 </p>
                             </div>
 
@@ -380,13 +380,13 @@
                                 <div class="flex justify-between items-center">
                                     <span class="text-text-muted font-medium">New Total Paid:</span>
                                     <span class="font-bold text-text-primary dark:text-slate-200">
-                                        {{ $currencySymbol ?? '$' }}<span x-text="formatMoney(newPaidTotal)"></span>
+                                        <x-money value="newPaidTotal" symbol="{{ $currencySymbol ?? '$' }}" />
                                     </span>
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <span class="text-text-muted font-medium">New Remaining Due:</span>
                                     <span class="font-black" :class="newBalance <= 0 ? 'text-success' : 'text-danger'">
-                                        {{ $currencySymbol ?? '$' }}<span x-text="formatMoney(newBalance)"></span>
+                                        <x-money value="newBalance" symbol="{{ $currencySymbol ?? '$' }}" />
                                     </span>
                                 </div>
                                 <div x-show="isFullSettlement" x-cloak class="pt-1.5 border-t border-border-light dark:border-dark-border flex items-center justify-center gap-1.5 text-success text-[10px] font-bold">

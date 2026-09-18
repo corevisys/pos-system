@@ -170,7 +170,7 @@
                             <td colspan="3" class="px-6 py-3 text-right uppercase text-[9px] tracking-widest text-slate-500 italic">Total Summary</td>
                             <td class="px-6 py-3 text-[11px] tabular-nums text-right font-mono" x-text="formatNumber(records.reduce((acc, r) => acc + parseRaw(r.quantity), 0))"></td>
                              <td></td>
-                            <td class="px-6 py-3 text-[11px] tabular-nums text-right text-emerald-600 font-mono" x-text="formatNumber(records.reduce((acc, r) => acc + parseRaw(r.total), 0))"></td>
+                            <td class="px-6 py-3 text-[11px] tabular-nums text-right text-emerald-600 font-mono"><x-money value="records.reduce((acc, r) => acc + parseRaw(r.total), 0)" symbol="{{ $currencySymbol ?? '' }}" /></td>
                             </tr>
                     </tfoot>
                 </table>

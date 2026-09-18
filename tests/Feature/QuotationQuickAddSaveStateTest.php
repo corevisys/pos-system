@@ -128,4 +128,30 @@ class QuotationQuickAddSaveStateTest extends TestCase
             ->assertSee('Quick Add Item', false)
             ->assertSee('Save Item', false);
     }
-}
+
+    /**
+     * Regression test for x-data JavaScript leaking onto the page as visible text.
+     * Asserts Alpine state is cleanly bound via x-data="quotationPage" (mirroring
+     * new_purchase.blade.php) and raw JavaScript method source (such as
+     * "async submitQuickItem()") does NOT leak outside <script> blocks into rendered
+     * HTML output.
+     */
+    public function test_quotation_alpine_source_does_not_leak_into_rendered_body(): void
+    {
+        $response = $this->actingAs($this->user)
+            ->get(route('quotation.new'))
+            ->assertOk();
+
+        $content = $response->getContent();
+
+        // Must use clean x-data="quotationPage" registration
+        $this->assertStringContainsString('x-data="quotationPage"', $content);
+
+        // Outside <script> tags, no JavaScript method declarations should leak into the DOM
+        $withoutScripts = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', '', $content);
+        $this->assertStringNotContainsString('async submitQuickItem()', $withoutScripts);
+        $this->assertStringNotContainsString('async saveQuotation()', $withoutScripts);
+        $this->assertStringNotContainsString('async searchItems()', $withoutScripts);
+        $this->assertStringNotContainsString('async handleEnterKey()', $withoutScripts);
+    }
+}

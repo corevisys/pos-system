@@ -114,17 +114,17 @@
                     </td>
                     <td class="px-4 py-2 text-right whitespace-nowrap">
                         <span class="text-[10px] font-black tabular-nums text-text-primary dark:text-dark-text">
-                            {{ $customer->credit_limit == -1 ? 'No Limit' : format_currency($customer->credit_limit) }}
+                            @if($customer->credit_limit == -1) No Limit @else <x-money value="{{ $customer->credit_limit }}" /> @endif
                         </span>
                     </td>
                     <td class="px-4 py-2 text-right whitespace-nowrap">
-                        <span class="text-[10px] font-black tabular-nums text-text-secondary dark:text-text-muted">{{ format_currency($customer->opening_balance) }}</span>
+                        <span class="text-[10px] font-black tabular-nums text-text-secondary dark:text-text-muted"><x-money value="{{ $customer->opening_balance }}" /></span>
                     </td>
                     <td class="px-4 py-2 text-right whitespace-nowrap">
-                        <span class="text-[10px] font-black tabular-nums text-danger">{{ format_currency($customer->sales_return_due) }}</span>
+                        <span class="text-[10px] font-black tabular-nums text-danger"><x-money value="{{ $customer->sales_return_due }}" /></span>
                     </td>
                     <td class="px-4 py-2 text-right whitespace-nowrap">
-                        <span class="text-[10px] font-black tabular-nums text-success">{{ format_currency($customer->tot_advance) }}</span>
+                        <span class="text-[10px] font-black tabular-nums text-success"><x-money value="{{ $customer->tot_advance }}" /></span>
                     </td>
                     <td class="px-4 py-2 text-center">
                         @if($customer->status == 1)
@@ -164,9 +164,9 @@
         <div class="mt-4 card p-2.5 px-4 flex flex-wrap items-center justify-between gap-3">
             <p class="text-[9px] font-black text-text-muted uppercase tracking-widest italic">This Page Total</p>
             <div class="flex flex-wrap items-center gap-x-6 gap-y-1">
-                <span class="text-[9px] font-black uppercase tracking-widest text-text-secondary italic">Prev Due: <span class="tabular-nums not-italic">{{ format_currency($customers->sum('opening_balance')) }}</span></span>
-                <span class="text-[9px] font-black uppercase tracking-widest text-danger italic">Return Due: <span class="tabular-nums not-italic">{{ format_currency($customers->sum('sales_return_due')) }}</span></span>
-                <span class="text-[9px] font-black uppercase tracking-widest text-success italic">Advance: <span class="tabular-nums not-italic">{{ format_currency($customers->sum('tot_advance')) }}</span></span>
+                <span class="text-[9px] font-black uppercase tracking-widest text-text-secondary italic">Prev Due: <span class="tabular-nums not-italic"><x-money value="{{ $customers->sum('opening_balance') }}" /></span></span>
+                <span class="text-[9px] font-black uppercase tracking-widest text-danger italic">Return Due: <span class="tabular-nums not-italic"><x-money value="{{ $customers->sum('sales_return_due') }}" /></span></span>
+                <span class="text-[9px] font-black uppercase tracking-widest text-success italic">Advance: <span class="tabular-nums not-italic"><x-money value="{{ $customers->sum('tot_advance') }}" /></span></span>
             </div>
         </div>
 

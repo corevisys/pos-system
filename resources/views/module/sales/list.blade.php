@@ -36,7 +36,7 @@
                     </div>
                 </div>
                 <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Total Amount</p>
-                <h3 class="text-base font-black dark:text-white">{{ format_currency($stats['total_amount']) }}</h3>
+                <h3 class="text-base font-black dark:text-white"><x-money value="{{ $stats['total_amount'] }}" /></h3>
             </div>
 
             <div class="bg-white dark:bg-dark-card p-3 rounded-2xl border border-slate-100 dark:border-dark-border group hover:shadow-lg transition-all duration-300">
@@ -46,7 +46,7 @@
                     </div>
                 </div>
                 <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Received</p>
-                <h3 class="text-base font-black dark:text-white">{{ format_currency($stats['total_paid']) }}</h3>
+                <h3 class="text-base font-black dark:text-white"><x-money value="{{ $stats['total_paid'] }}" /></h3>
             </div>
 
             <div class="bg-white dark:bg-dark-card p-3 rounded-2xl border border-slate-100 dark:border-dark-border group hover:shadow-lg transition-all duration-300">
@@ -56,7 +56,7 @@
                     </div>
                 </div>
                 <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Sales Due</p>
-                <h3 class="text-base font-black dark:text-white">{{ format_currency($stats['total_due']) }}</h3>
+                <h3 class="text-base font-black dark:text-white"><x-money value="{{ $stats['total_due'] }}" /></h3>
             </div>
         </div>
 
@@ -179,8 +179,8 @@
                                     </td>
                                     <td class="px-4 py-2 text-[10px] font-medium text-slate-500">{{ $sale->reference_no ?? 'N/A' }}</td>
                                     <td class="px-4 py-2 text-[10px] font-bold">{{ $sale->customer->customer_name ?? 'Walk-in customer' }}</td>
-                                    <td class="px-4 py-2 text-[10px] font-black text-right tabular-nums">{{ format_currency($sale->grand_total) }}</td>
-                                    <td class="px-4 py-2 text-[10px] font-black text-right tabular-nums text-emerald-600">{{ format_currency($sale->paid_amount) }}</td>
+                                    <td class="px-4 py-2 text-[10px] font-black text-right tabular-nums"><x-money value="{{ $sale->grand_total }}" /></td>
+                                    <td class="px-4 py-2 text-[10px] font-black text-right tabular-nums text-emerald-600"><x-money value="{{ $sale->paid_amount }}" /></td>
                                     <td class="px-4 py-2 text-center">
                                         <div class="flex flex-col gap-1 items-center">
                                             @php
@@ -214,7 +214,7 @@
                                             @endif
                                             @if($creditAmt > 0)
                                                 <span class="px-2 py-0.5 rounded-full text-[7.5px] font-black uppercase tracking-widest bg-amber-100 text-amber-700 border border-amber-200" title="Customer is overpaid by this amount after returns/refunds">
-                                                    Credit {{ format_currency($creditAmt) }}
+                                                    Credit <x-money value="{{ $creditAmt }}" />
                                                 </span>
                                             @endif
                                         </div>
@@ -316,8 +316,8 @@
                         <tfoot class="bg-slate-50/80 dark:bg-slate-800/80">
                             <tr class="font-black text-[9px] uppercase tracking-widest text-slate-500">
                                 <td colspan="5" class="px-4 py-3 text-right">Total Summary</td>
-                                <td class="px-4 py-3 text-right tabular-nums text-slate-900 dark:text-white">{{ format_currency($filteredStats['total_amount']) }}</td>
-                                <td class="px-4 py-3 text-right tabular-nums text-emerald-600">{{ format_currency($filteredStats['total_paid']) }}</td>
+                                <td class="px-4 py-3 text-right tabular-nums text-slate-900 dark:text-white"><x-money value="{{ $filteredStats['total_amount'] }}" /></td>
+                                <td class="px-4 py-3 text-right tabular-nums text-emerald-600"><x-money value="{{ $filteredStats['total_paid'] }}" /></td>
                                 <td colspan="3"></td>
                             </tr>
                         </tfoot>

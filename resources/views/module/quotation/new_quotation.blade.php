@@ -1,340 +1,347 @@
 <x-app-layout title="New Quotation">
-    <div x-data="{
-        quotationInfo: {
-            warehouse_id: '',
-            customer_id: '',
-            quotationDate: '{{ date('Y-m-d') }}',
-            expireDate: '{{ date('Y-m-d', strtotime('+7 days')) }}',
-            referenceNo: '',
-            note: '',
-            other_charges_tax_id: ''
-        },
-        cart: [],
-        searchResults: [],
-        searchQuery: '',
-        otherCharges: 0,
-        otherChargesTaxAmount: 0,
-        discountOnAll: 0,
-        discountType: 'Fixed',
-        roundOff: 0,
-        isSubmitting: false,
-        showQuickAdd: false,
-        // Save-in-flight flag for the Quick Add Item modal. Kept separate from
-        // isSubmitting (which drives the main Save Quotation button) so approving
-        // a quick-added item never shows "Saving Quotation..." on the wrong button.
-        // Mirrors the verified new_purchase.blade.php Quick Add fix.
-        quickItemSaving: false,
-        successMessage: '',
-        errorMessage: '',
-        errorDetails: [],
-        showSuccessModal: false,
-        showErrorModal: false,
-        quickItem: {
-            item_name: '',
-            barcode: '',
-            category_id: '',
-            unit_id: '',
-            tax_id: '',
-            tax_type: 'Inclusive',
-            purchase_price: 0,
-            sales_price: 0,
-            brand_id: '',
-            sku: '',
-            alert_qty: 0,
-            description: '',
-            custom_barcode: ''
-        },
-        taxRates: {
-            @foreach($taxes as $tax)
-                '{{ $tax->id }}': {{ $tax->tax }},
-            @endforeach
-        },
 
-        async searchItems() {
-            if (this.searchQuery.length < 1) {
-                this.searchResults = [];
-                return;
-            }
-            try {
-                const response = await fetch(`{{ route('quotation.search.items', [], false) }}?q=${encodeURIComponent(this.searchQuery)}`, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('quotationPage', () => ({
+            quotationInfo: {
+                warehouse_id: '',
+                customer_id: '',
+                quotationDate: '{{ date('Y-m-d') }}',
+                expireDate: '{{ date('Y-m-d', strtotime('+7 days')) }}',
+                referenceNo: '',
+                note: '',
+                other_charges_tax_id: ''
+            },
+            cart: [],
+            searchResults: [],
+            searchQuery: '',
+            otherCharges: 0,
+            otherChargesTaxAmount: 0,
+            discountOnAll: 0,
+            discountType: 'Fixed',
+            roundOff: 0,
+            isSubmitting: false,
+            showQuickAdd: false,
+            // Save-in-flight flag for the Quick Add Item modal. Kept separate from
+            // isSubmitting (which drives the main Save Quotation button) so approving
+            // a quick-added item never shows "Saving Quotation..." on the wrong button.
+            // Mirrors the verified new_purchase.blade.php Quick Add fix.
+            quickItemSaving: false,
+            successMessage: '',
+            errorMessage: '',
+            errorDetails: [],
+            showSuccessModal: false,
+            showErrorModal: false,
+            quickItem: {
+                item_name: '',
+                barcode: '',
+                category_id: '',
+                unit_id: '',
+                tax_id: '',
+                tax_type: 'Inclusive',
+                purchase_price: 0,
+                sales_price: 0,
+                brand_id: '',
+                sku: '',
+                alert_qty: 0,
+                description: '',
+                custom_barcode: ''
+            },
+            taxRates: {
+                @foreach($taxes as $tax)
+                    '{{ $tax->id }}': {{ $tax->tax }},
+                @endforeach
+            },
+
+            async searchItems() {
+                if (this.searchQuery.length < 1) {
+                    this.searchResults = [];
+                    return;
+                }
+                try {
+                    const response = await fetch(`{{ route('quotation.search.items', [], false) }}?q=${encodeURIComponent(this.searchQuery)}`, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    });
+                    if (!response.ok) throw new Error('Search failed');
+                    this.searchResults = await response.json();
+                    
+                    if (this.searchResults.length === 1) {
+                        this.addItem(this.searchResults[0]);
                     }
-                });
-                if (!response.ok) throw new Error('Search failed');
-                this.searchResults = await response.json();
-                
-                if (this.searchResults.length === 1) {
-                    this.addItem(this.searchResults[0]);
+                } catch (e) {
+                    console.error(e);
+                    this.searchResults = [];
                 }
-            } catch (e) {
-                console.error(e);
-                this.searchResults = [];
-            }
-        },
-        
-        addItem(item) {
-            let existing = this.cart.find(i => i.item_id === item.id);
-            if (existing) {
-                existing.qty++;
-            } else {
-                this.cart.push({
-                    item_id: item.id,
-                    name: item.item_name,
-                    qty: 1,
-                    price: parseFloat(item.sales_price || item.price || 0),
-                    discount: 0,
-                    tax: item.tax ? parseFloat(item.tax.tax || 0) : 0,
-                    tax_type: item.tax_type || 'Inclusive',
-                    taxAmount: 0,
-                    unitCost: parseFloat(item.sales_price || item.price || 0),
-                    total: parseFloat(item.sales_price || item.price || 0)
-                });
-            }
-            this.searchQuery = '';
-            this.searchResults = [];
-            this.calculateTotals();
-            this.$nextTick(() => {
-                if (this.$refs.searchInput) this.$refs.searchInput.focus();
-            });
-        },
-
-        async handleEnterKey() {
-            if (this.searchResults.length === 1) {
-                this.addItem(this.searchResults[0]);
-                return;
-            }
+            },
             
-            if (this.searchResults.length === 0 && this.searchQuery.length > 0) {
-                await this.searchItems();
+            addItem(item) {
+                let existing = this.cart.find(i => i.item_id === item.id);
+                if (existing) {
+                    existing.qty++;
+                } else {
+                    this.cart.push({
+                        item_id: item.id,
+                        name: item.item_name,
+                        qty: 1,
+                        price: parseFloat(item.sales_price || item.price || 0),
+                        discount: 0,
+                        tax: item.tax ? parseFloat(item.tax.tax || 0) : 0,
+                        tax_type: item.tax_type || 'Inclusive',
+                        taxAmount: 0,
+                        unitCost: parseFloat(item.sales_price || item.price || 0),
+                        total: parseFloat(item.sales_price || item.price || 0)
+                    });
+                }
+                this.searchQuery = '';
+                this.searchResults = [];
+                this.calculateTotals();
+                this.$nextTick(() => {
+                    if (this.$refs.searchInput) this.$refs.searchInput.focus();
+                });
+            },
+
+            async handleEnterKey() {
                 if (this.searchResults.length === 1) {
                     this.addItem(this.searchResults[0]);
+                    return;
                 }
-            }
-            else if (this.searchResults.length > 0) {
-                this.addItem(this.searchResults[0]);
-            }
-        },
-        
-        removeItem(item_id) {
-            this.cart = this.cart.filter(item => item.item_id !== item_id);
-            this.calculateTotals();
-        },
-        
-        calculateTotals() {
-            this.cart.forEach(item => {
-                let price = parseFloat(item.price || 0);
-                let qty = parseFloat(item.qty || 0);
-                let sub = price * qty;
-                let disc = Math.min(parseFloat(item.discount || 0), sub);
-                let taxable = Math.max(0, sub - disc);
-                let taxRate = parseFloat(item.tax || 0);
-                let taxAmt = 0;
-                let total = 0;
-
-                if (item.tax_type === 'Inclusive') {
-                    taxAmt = taxRate > 0 ? (taxable * taxRate) / (100 + taxRate) : 0;
-                    total = taxable;
-                } else {
-                    taxAmt = taxRate > 0 ? (taxable * taxRate) / 100 : 0;
-                    total = taxable + taxAmt;
+                
+                if (this.searchResults.length === 0 && this.searchQuery.length > 0) {
+                    await this.searchItems();
+                    if (this.searchResults.length === 1) {
+                        this.addItem(this.searchResults[0]);
+                    }
                 }
+                else if (this.searchResults.length > 0) {
+                    this.addItem(this.searchResults[0]);
+                }
+            },
+            
+            removeItem(item_id) {
+                this.cart = this.cart.filter(item => item.item_id !== item_id);
+                this.calculateTotals();
+            },
+            
+            calculateTotals() {
+                this.cart.forEach(item => {
+                    let price = parseFloat(item.price || 0);
+                    let qty = parseFloat(item.qty || 0);
+                    let sub = price * qty;
+                    let disc = Math.min(parseFloat(item.discount || 0), sub);
+                    let taxable = Math.max(0, sub - disc);
+                    let taxRate = parseFloat(item.tax || 0);
+                    let taxAmt = 0;
+                    let total = 0;
 
-                item.taxAmount = taxAmt;
-                item.total = total;
-                item.unitCost = qty > 0 ? (total / qty) : price;
-            });
+                    if (item.tax_type === 'Inclusive') {
+                        taxAmt = taxRate > 0 ? (taxable * taxRate) / (100 + taxRate) : 0;
+                        total = taxable;
+                    } else {
+                        taxAmt = taxRate > 0 ? (taxable * taxRate) / 100 : 0;
+                        total = taxable + taxAmt;
+                    }
 
-            if (this.quotationInfo.other_charges_tax_id && this.taxRates[this.quotationInfo.other_charges_tax_id]) {
-                let per = parseFloat(this.taxRates[this.quotationInfo.other_charges_tax_id]);
-                this.otherChargesTaxAmount = (parseFloat(this.otherCharges || 0) * per) / 100;
-            } else {
-                this.otherChargesTaxAmount = 0;
-            }
-        },
-        
-        get subtotal() {
-            return this.cart.reduce((sum, item) => sum + (parseFloat(item.qty || 0) * parseFloat(item.price || 0)), 0);
-        },
-        
-        get totalDiscount() {
-            let itemDisco = this.cart.reduce((sum, item) => sum + Math.min(parseFloat(item.discount || 0), parseFloat(item.qty || 0) * parseFloat(item.price || 0)), 0);
-            let globalDisco = 0;
-            let discInput = parseFloat(this.discountOnAll || 0);
-            if (this.discountType === 'Fixed') {
-                globalDisco = discInput;
-            } else {
-                globalDisco = (this.subtotal * discInput) / 100;
-            }
-            return itemDisco + globalDisco;
-        },
-
-        get totalTax() {
-             return this.cart.reduce((sum, item) => sum + (item.taxAmount || 0), 0) + (this.otherChargesTaxAmount || 0);
-        },
-        
-        get grandTotal() {
-            let itemTotals = this.cart.reduce((sum, item) => sum + (item.total || 0), 0);
-            let globalDisco = 0;
-            let discInput = parseFloat(this.discountOnAll || 0);
-            if (this.discountType === 'Fixed') {
-                globalDisco = discInput;
-            } else {
-                globalDisco = (this.subtotal * discInput) / 100;
-            }
-            globalDisco = Math.min(globalDisco, itemTotals);
-
-            let total = itemTotals - globalDisco + parseFloat(this.otherCharges || 0) + parseFloat(this.otherChargesTaxAmount || 0) + parseFloat(this.roundOff || 0);
-            return Math.max(0, total);
-        },
-
-        async saveQuotation() {
-            if (this.isSubmitting) return;
-
-            let errors = [];
-            if (!this.quotationInfo.warehouse_id) errors.push('Warehouse selection is required');
-            if (!this.quotationInfo.customer_id) errors.push('Customer selection is required');
-            if (this.cart.length === 0) errors.push('Cart is empty. Please add at least one item');
-
-            if (errors.length > 0) {
-                this.errorMessage = 'Required Fields Missing';
-                this.errorDetails = errors;
-                this.showErrorModal = true;
-                return;
-            }
-
-            this.isSubmitting = true;
-            try {
-                const data = {
-                    warehouse_id: this.quotationInfo.warehouse_id,
-                    customer_id: this.quotationInfo.customer_id,
-                    quotation_date: this.quotationInfo.quotationDate,
-                    expire_date: this.quotationInfo.expireDate,
-                    reference_no: this.quotationInfo.referenceNo,
-                    note: this.quotationInfo.note,
-                    other_charges_tax_id: this.quotationInfo.other_charges_tax_id,
-                    cart: this.cart,
-                    subtotal: this.subtotal,
-                    other_charges_input: this.otherCharges,
-                    other_charges_amt: this.otherChargesTaxAmount,
-                    discount_type: this.discountType,
-                    discount_on_all: this.discountOnAll,
-                    round_off: this.roundOff,
-                    grand_total: this.grandTotal,
-                    _token: '{{ csrf_token() }}'
-                };
-
-                const response = await fetch('{{ route('quotation.store', [], false) }}', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify(data)
+                    item.taxAmount = taxAmt;
+                    item.total = total;
+                    item.unitCost = qty > 0 ? (total / qty) : price;
                 });
 
-                const result = await response.json();
-                if (response.ok && result.success) {
-                    this.successMessage = result.message || 'Quotation saved successfully!';
-                    this.showSuccessModal = true;
-                    setTimeout(() => {
-                        window.location.href = result.redirect;
-                    }, 1000);
+                if (this.quotationInfo.other_charges_tax_id && this.taxRates[this.quotationInfo.other_charges_tax_id]) {
+                    let per = parseFloat(this.taxRates[this.quotationInfo.other_charges_tax_id]);
+                    this.otherChargesTaxAmount = (parseFloat(this.otherCharges || 0) * per) / 100;
                 } else {
-                    this.errorMessage = result.message || 'Submission Failed';
-                    this.errorDetails = result.errors ? Object.values(result.errors).flat() : [result.message || 'Validation failed'];
-                    this.showErrorModal = true;
+                    this.otherChargesTaxAmount = 0;
                 }
-            } catch (err) {
-                console.error(err);
-                this.errorMessage = 'Network Error';
-                this.errorDetails = ['Failed to communicate with server. Please try again.'];
-                this.showErrorModal = true;
-            } finally {
-                this.isSubmitting = false;
-            }
-        },
+            },
+            
+            get subtotal() {
+                return this.cart.reduce((sum, item) => sum + (parseFloat(item.qty || 0) * parseFloat(item.price || 0)), 0);
+            },
+            
+            get totalDiscount() {
+                let itemDisco = this.cart.reduce((sum, item) => sum + Math.min(parseFloat(item.discount || 0), parseFloat(item.qty || 0) * parseFloat(item.price || 0)), 0);
+                let globalDisco = 0;
+                let discInput = parseFloat(this.discountOnAll || 0);
+                if (this.discountType === 'Fixed') {
+                    globalDisco = discInput;
+                } else {
+                    globalDisco = (this.subtotal * discInput) / 100;
+                }
+                return itemDisco + globalDisco;
+            },
 
-        async submitQuickItem() {
-            // Re-entry guard: never fire two quick-add requests from a double-click
-            // (the Save button is also :disabled while saving).
-            if (this.quickItemSaving) return;
+            get totalTax() {
+                 return this.cart.reduce((sum, item) => sum + (item.taxAmount || 0), 0) + (this.otherChargesTaxAmount || 0);
+            },
+            
+            get grandTotal() {
+                let itemTotals = this.cart.reduce((sum, item) => sum + (item.total || 0), 0);
+                let globalDisco = 0;
+                let discInput = parseFloat(this.discountOnAll || 0);
+                if (this.discountType === 'Fixed') {
+                    globalDisco = discInput;
+                } else {
+                    globalDisco = (this.subtotal * discInput) / 100;
+                }
+                globalDisco = Math.min(globalDisco, itemTotals);
 
-            let errors = [];
-            if (!this.quickItem.item_name) errors.push('Item Name is required');
-            if (!this.quickItem.category_id) errors.push('Category is required');
-            if (!this.quickItem.unit_id) errors.push('Unit is required');
-            if (!this.quickItem.tax_id) errors.push('Tax is required');
-            if (!this.quickItem.sales_price || parseFloat(this.quickItem.sales_price) < 0) errors.push('Valid Sales Price is required');
+                let total = itemTotals - globalDisco + parseFloat(this.otherCharges || 0) + parseFloat(this.otherChargesTaxAmount || 0) + parseFloat(this.roundOff || 0);
+                return Math.max(0, total);
+            },
 
-            if (errors.length > 0) {
-                this.errorMessage = 'Quick Add Failed';
-                this.errorDetails = errors;
-                this.showErrorModal = true;
-                return;
-            }
+            async saveQuotation() {
+                if (this.isSubmitting) return;
 
-            this.quickItemSaving = true;
+                let errors = [];
+                if (!this.quotationInfo.warehouse_id) errors.push('Warehouse selection is required');
+                if (!this.quotationInfo.customer_id) errors.push('Customer selection is required');
+                if (this.cart.length === 0) errors.push('Cart is empty. Please add at least one item');
 
-            try {
-                const response = await fetch('{{ route('purchase.quick.item.store', [], false) }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({
-                        ...this.quickItem,
-                        purchase_price: parseFloat(this.quickItem.purchase_price || 0),
-                        sales_price: parseFloat(this.quickItem.sales_price || 0),
+                if (errors.length > 0) {
+                    this.errorMessage = 'Required Fields Missing';
+                    this.errorDetails = errors;
+                    this.showErrorModal = true;
+                    return;
+                }
+
+                this.isSubmitting = true;
+                try {
+                    const data = {
+                        warehouse_id: this.quotationInfo.warehouse_id,
+                        customer_id: this.quotationInfo.customer_id,
+                        quotation_date: this.quotationInfo.quotationDate,
+                        expire_date: this.quotationInfo.expireDate,
+                        reference_no: this.quotationInfo.referenceNo,
+                        note: this.quotationInfo.note,
+                        other_charges_tax_id: this.quotationInfo.other_charges_tax_id,
+                        cart: this.cart,
+                        subtotal: this.subtotal,
+                        other_charges_input: this.otherCharges,
+                        other_charges_amt: this.otherChargesTaxAmount,
+                        discount_type: this.discountType,
+                        discount_on_all: this.discountOnAll,
+                        round_off: this.roundOff,
+                        grand_total: this.grandTotal,
                         _token: '{{ csrf_token() }}'
-                    })
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    this.addItem(result.item);
-                    this.showQuickAdd = false;
-
-                    this.successMessage = result.message || 'Item added successfully!';
-                    this.showSuccessModal = true;
-                    setTimeout(() => this.showSuccessModal = false, 3000);
-
-                    this.quickItem = {
-                        item_name: '',
-                        barcode: '',
-                        category_id: '',
-                        unit_id: '',
-                        tax_id: '',
-                        tax_type: 'Inclusive',
-                        purchase_price: 0,
-                        sales_price: 0,
-                        brand_id: '',
-                        sku: '',
-                        alert_qty: 0,
-                        description: '',
-                        custom_barcode: ''
                     };
-                } else {
-                    this.errorMessage = result.message || 'Validation Error';
-                    this.errorDetails = result.errors ? Object.values(result.errors).flat() : [result.message || 'Error saving item.'];
+
+                    const response = await fetch('{{ route('quotation.store', [], false) }}', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    const result = await response.json();
+                    if (response.ok && result.success) {
+                        this.successMessage = result.message || 'Quotation saved successfully!';
+                        this.showSuccessModal = true;
+                        setTimeout(() => {
+                            window.location.href = result.redirect;
+                        }, 1000);
+                    } else {
+                        this.errorMessage = result.message || 'Submission Failed';
+                        this.errorDetails = result.errors ? Object.values(result.errors).flat() : [result.message || 'Validation failed'];
+                        this.showErrorModal = true;
+                    }
+                } catch (err) {
+                    console.error(err);
+                    this.errorMessage = 'Network Error';
+                    this.errorDetails = ['Failed to communicate with server. Please try again.'];
                     this.showErrorModal = true;
+                } finally {
+                    this.isSubmitting = false;
                 }
-            } catch (error) {
-                console.error('Quick Add Error:', error);
-                this.errorMessage = 'System Error';
-                this.errorDetails = ['An error occurred while saving the item.'];
-                this.showErrorModal = true;
-            } finally {
-                // Reset on BOTH success and failure paths so the button
-                // re-enables and the spinner clears.
-                this.quickItemSaving = false;
+            },
+
+            async submitQuickItem() {
+                // Re-entry guard: never fire two quick-add requests from a double-click
+                // (the Save button is also :disabled while saving).
+                if (this.quickItemSaving) return;
+
+                let errors = [];
+                if (!this.quickItem.item_name) errors.push('Item Name is required');
+                if (!this.quickItem.category_id) errors.push('Category is required');
+                if (!this.quickItem.unit_id) errors.push('Unit is required');
+                if (!this.quickItem.tax_id) errors.push('Tax is required');
+                if (!this.quickItem.sales_price || parseFloat(this.quickItem.sales_price) < 0) errors.push('Valid Sales Price is required');
+
+                if (errors.length > 0) {
+                    this.errorMessage = 'Quick Add Failed';
+                    this.errorDetails = errors;
+                    this.showErrorModal = true;
+                    return;
+                }
+
+                this.quickItemSaving = true;
+
+                try {
+                    const response = await fetch('{{ route('purchase.quick.item.store', [], false) }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            ...this.quickItem,
+                            purchase_price: parseFloat(this.quickItem.purchase_price || 0),
+                            sales_price: parseFloat(this.quickItem.sales_price || 0),
+                            _token: '{{ csrf_token() }}'
+                        })
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        this.addItem(result.item);
+                        this.showQuickAdd = false;
+
+                        this.successMessage = result.message || 'Item added successfully!';
+                        this.showSuccessModal = true;
+                        setTimeout(() => this.showSuccessModal = false, 3000);
+
+                        this.quickItem = {
+                            item_name: '',
+                            barcode: '',
+                            category_id: '',
+                            unit_id: '',
+                            tax_id: '',
+                            tax_type: 'Inclusive',
+                            purchase_price: 0,
+                            sales_price: 0,
+                            brand_id: '',
+                            sku: '',
+                            alert_qty: 0,
+                            description: '',
+                            custom_barcode: ''
+                        };
+                    } else {
+                        this.errorMessage = result.message || 'Validation Error';
+                        this.errorDetails = result.errors ? Object.values(result.errors).flat() : [result.message || 'Error saving item.'];
+                        this.showErrorModal = true;
+                    }
+                } catch (error) {
+                    console.error('Quick Add Error:', error);
+                    this.errorMessage = 'System Error';
+                    this.errorDetails = ['An error occurred while saving the item.'];
+                    this.showErrorModal = true;
+                } finally {
+                    // Reset on BOTH success and failure paths so the button
+                    // re-enables and the spinner clears.
+                    this.quickItemSaving = false;
+                }
             }
-        }
-    }" class="space-y-4">
+        }));
+    });
+</script>
+
+    <div x-data="quotationPage" class="space-y-4">
         
         <!-- HEADER & ACTIONS -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">

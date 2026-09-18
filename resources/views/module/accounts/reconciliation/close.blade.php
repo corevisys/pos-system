@@ -68,14 +68,14 @@
                             <div class="flex justify-between py-1">
                                 <span class="text-slate-400">Confirmed Starting Float:</span>
                                 <span class="font-black text-emerald-600 dark:text-emerald-400 text-sm">
-                                    {{ format_currency($reconciliation->opening_balance) }}
+                                    <x-money value="{{ $reconciliation->opening_balance }}" />
                                 </span>
                             </div>
                         </div>
 
                         @if($reconciliation->opening_variance != 0)
                             <div class="mt-3 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-[11px] text-amber-800 dark:text-amber-300">
-                                <div class="font-bold mb-0.5">Overnight Float Discrepancy: {{ $reconciliation->opening_variance > 0 ? '+' : '' }}{{ format_currency($reconciliation->opening_variance) }}</div>
+                                <div class="font-bold mb-0.5">Overnight Float Discrepancy: {{ $reconciliation->opening_variance > 0 ? '+' : '' }}<x-money value="{{ $reconciliation->opening_variance }}" /></div>
                                 @if($reconciliation->opening_notes)
                                     <div class="text-[10px] text-amber-700 dark:text-amber-400 italic">"{{ $reconciliation->opening_notes }}"</div>
                                 @endif
@@ -93,37 +93,37 @@
                         </div>
 
                         <div class="text-3xl font-black tracking-tight mb-4 text-emerald-400">
-                            {{ format_currency($liveExpectedClosing) }}
+                            <x-money value="{{ $liveExpectedClosing }}" />
                         </div>
 
                         <div class="space-y-2 text-xs border-t border-slate-700/60 pt-3 text-slate-300">
                             <div class="flex justify-between">
                                 <span class="text-slate-400">Confirmed Starting Float:</span>
-                                <span class="font-bold text-white">{{ format_currency($reconciliation->opening_balance) }}</span>
+                                <span class="font-bold text-white"><x-money value="{{ $reconciliation->opening_balance }}" /></span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-emerald-400">+ Cash Sales:</span>
-                                <span class="font-bold text-emerald-400">{{ format_currency($breakdown['cash_sales_amount'] ?? 0) }}</span>
+                                <span class="font-bold text-emerald-400"><x-money value="{{ $breakdown['cash_sales_amount'] ?? 0 }}" /></span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-emerald-400">+ Cash Deposits:</span>
-                                <span class="font-bold text-emerald-400">{{ format_currency($breakdown['cash_deposits_amount'] ?? 0) }}</span>
+                                <span class="font-bold text-emerald-400"><x-money value="{{ $breakdown['cash_deposits_amount'] ?? 0 }}" /></span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-emerald-400">+ Transfers In:</span>
-                                <span class="font-bold text-emerald-400">{{ format_currency($breakdown['cash_transfers_in'] ?? 0) }}</span>
+                                <span class="font-bold text-emerald-400"><x-money value="{{ $breakdown['cash_transfers_in'] ?? 0 }}" /></span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-rose-400">- Cash Refunds:</span>
-                                <span class="font-bold text-rose-400">{{ format_currency($breakdown['cash_refunds_amount'] ?? 0) }}</span>
+                                <span class="font-bold text-rose-400"><x-money value="{{ $breakdown['cash_refunds_amount'] ?? 0 }}" /></span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-rose-400">- Cash Expenses:</span>
-                                <span class="font-bold text-rose-400">{{ format_currency($breakdown['cash_expenses_amount'] ?? 0) }}</span>
+                                <span class="font-bold text-rose-400"><x-money value="{{ $breakdown['cash_expenses_amount'] ?? 0 }}" /></span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-rose-400">- Transfers Out:</span>
-                                <span class="font-bold text-rose-400">{{ format_currency($breakdown['cash_transfers_out'] ?? 0) }}</span>
+                                <span class="font-bold text-rose-400"><x-money value="{{ $breakdown['cash_transfers_out'] ?? 0 }}" /></span>
                             </div>
                         </div>
                     </div>
@@ -214,8 +214,8 @@
                                 </div>
 
                                 <div class="text-right text-xs">
-                                    <div class="text-slate-400">Counted: <span class="font-bold text-slate-700 dark:text-slate-200">{{ $currencySymbol ?? '' }}<span x-text="formatMoney(countedAmount)"></span></span></div>
-                                    <div class="text-slate-400">Expected: <span class="font-bold text-slate-700 dark:text-slate-200">{{ format_currency($liveExpectedClosing) }}</span></div>
+                                    <div class="text-slate-400">Counted: <span class="font-bold text-slate-700 dark:text-slate-200"><x-money value="countedAmount" symbol="{{ $currencySymbol ?? '' }}" /></span></div>
+                                    <div class="text-slate-400">Expected: <span class="font-bold text-slate-700 dark:text-slate-200"><x-money value="{{ $liveExpectedClosing }}" /></span></div>
                                 </div>
                             </div>
                         </div>

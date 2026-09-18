@@ -94,3 +94,91 @@ function skipUnlessSqlite(string $reason = 'SQLite-only concurrency/migration ha
         \PHPUnit\Framework\Assert::markTestSkipped($reason);
     }
 }
+
+/*
+|--------------------------------------------------------------------------
+| Compact-amount (<x-money>) assertion helpers
+|--------------------------------------------------------------------------
+|
+| Amounts are displayed through the shared <x-money> component, whose compact
+| label is computed CLIENT-SIDE by window.formatCompactAmount(). The exact
+| numeric text therefore never appears as static server HTML (e.g. "120.00"),
+| so feature tests must assert the component CALL that produces it at runtime.
+|
+| <x-money value="{{ $amount }}" /> interpolates $amount VERBATIM into an
+| Alpine expression, e.g.
+|     :data-exact-amount="(Number(120) || 0).toFixed(2)"
+|     x-text="'$' + window.formatCompactAmount(120).compact"
+| Depending on the source (a float/int vs a decimal-string attribute) PHP may
+| print "120" or "120.00"; both forms are accepted by the helpers below.
+*/
+
+/**
+ * Normalise a monetary amount to the literal(s) PHP may print inside <x-money>.
+ */
+function compact_amount_literals($amount): array
+{
+    $canonical = rtrim(rtrim(number_format((float) $amount, 2, '.', ''), '0'), '.');
+    $decimal = number_format((float) $amount, 2, '.', '');
+
+    return array_values(array_unique([$canonical, $decimal]));
+}
+
+/**
+ * Assert the page rendered a compact amount via <x-money> for $amount.
+ *
+ * $mode = 'exact'   → the non-lossy tooltip reveal (window.formatCompactAmount(n).exact)
+ * $mode = 'compact' → the compact label (window.formatCompactAmount(n).compact)
+ *
+ * The trailing ".exact"/".compact" also prevents a short amount (e.g. 50) from
+ * false-matching a longer one (e.g. 5000).
+ */
+function assert_compact_amount(\Illuminate\Testing\TestResponse $response, $amount, string $mode = 'exact'): void
+{
+    $needles = array_map(
+        fn ($n) => 'window.formatCompactAmount(' . $n . ').' . $mode,
+        compact_amount_literals($amount)
+    );
+
+    $html = $response->getContent();
+
+    foreach ($needles as $needle) {
+        if (str_contains($html, $needle)) {
+            \PHPUnit\Framework\Assert::assertTrue(true);
+
+            return;
+        }
+    }
+
+    \PHPUnit\Framework\Assert::fail(sprintf(
+        'Expected <x-money> to render %s amount %s. Looked for one of: %s',
+        $mode,
+        (string) $amount,
+        implode(' OR ', $needles)
+    ));
+}
+
+/**
+ * Assert the page did NOT render a compact amount via <x-money> for $amount
+ * (store-scope / active-filter leak guard).
+ */
+function assert_compact_amount_absent(\Illuminate\Testing\TestResponse $response, $amount): void
+{
+    $html = $response->getContent();
+
+    foreach (compact_amount_literals($amount) as $n) {
+        foreach (['exact', 'compact'] as $mode) {
+            $needle = 'window.formatCompactAmount(' . $n . ').' . $mode;
+
+            if (str_contains($html, $needle)) {
+                \PHPUnit\Framework\Assert::fail(sprintf(
+                    'Did not expect amount %s to be rendered via <x-money> (found %s).',
+                    (string) $amount,
+                    $needle
+                ));
+            }
+        }
+    }
+
+    \PHPUnit\Framework\Assert::assertTrue(true);
+}

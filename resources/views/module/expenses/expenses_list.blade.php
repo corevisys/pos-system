@@ -114,7 +114,7 @@
                                 </td>
                                 <td class="px-4 py-2 text-right">
                                     <span class="text-[10px] font-black tabular-nums text-text-primary dark:text-white leading-none">
-                                        {{ format_currency($expense->expense_amt) }}
+                                        <x-money value="{{ $expense->expense_amt }}" />
                                     </span>
                                 </td>
                                 <td class="px-4 py-2">
@@ -163,7 +163,7 @@
                         Showing {{ $expenses->firstItem() ?? 0 }} to {{ $expenses->lastItem() ?? 0 }} of {{ $expenses->total() }} entries
                     </p>
                     <span class="px-3 py-1 bg-success/10 text-success rounded text-[10px] font-black tabular-nums border border-success/20">
-                        Total: {{ format_currency($totalExpenses) }}
+                        Total: <x-money value="{{ $totalExpenses }}" />
                     </span>
                 </div>
                 <div class="flex gap-1">

@@ -1,5 +1,26 @@
 import './bootstrap';
 import Alpine from 'alpinejs';
+import { formatCompactAmount } from './format-compact-amount';
+
+/* ══════════════════════════════════════════════════════════════════
+   COMPACT AMOUNT FORMATTER (SINGLE SOURCE OF TRUTH) — GLOBAL REGISTER
+   ----------------------------------------------------------------
+   CRITICAL ORDERING: this MUST be registered BEFORE Alpine.start().
+
+   Alpine.start() performs the initial DOM walk synchronously and
+   immediately evaluates every directive — including every <x-money>
+   x-text binding: `window.formatCompactAmount(<expr>).compact`.
+
+   If the global is attached AFTER Alpine.start(), those expressions
+   are evaluated while `window.formatCompactAmount` is still undefined,
+   each throws `TypeError: window.formatCompactAmount is not a function`,
+   and x-text never writes — so EVERY compact amount (Dashboard,
+   Multi-Store, Sales, Purchase, Quotation, reports, POS) renders BLANK.
+
+   The threshold table + rounding logic live in ./format-compact-amount.js
+   so they can be unit-tested directly and are bundled exactly once.
+   ══════════════════════════════════════════════════════════════════ */
+window.formatCompactAmount = formatCompactAmount;
 
 window.Alpine = Alpine;
 
@@ -74,6 +95,17 @@ function resetButtonLoading(button) {
 /* Expose for manual opt-in on AJAX/fetch flows. */
 window.setButtonLoading = setButtonLoading;
 window.resetButtonLoading = resetButtonLoading;
+
+/* ══════════════════════════════════════════════════════════════════
+   COMPACT AMOUNT FORMATTER (SINGLE SOURCE OF TRUTH)
+   ----------------------------------------------------------------
+   The compact threshold table + rounding logic live in
+   ./format-compact-amount.js so they can be unit-tested directly and
+   are bundled exactly once. Exposed globally so Alpine / Blade
+   consumers (the <x-money> component) can call the one function.
+   ══════════════════════════════════════════════════════════════════ */
+/* (window.formatCompactAmount is registered ONCE near the top of this
+   file, BEFORE Alpine.start() — see the ordering note there.) */
 
 /* ── Auto-wire plain form submissions ──────────────────────────────── */
 document.addEventListener('submit', (event) => {

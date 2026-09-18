@@ -171,7 +171,8 @@ test('1. Sale show page surfaces "Credit Balance (Overpaid)" instead of clipping
     $response = $this->actingAs($user)->get(route('sales.show', $fx['sale']->id));
     $response->assertOk();
     $response->assertSee('Credit Balance (Overpaid)');
-    $response->assertSee(format_currency(100));
+    // Credit renders through <x-money>; assert its runtime formatter call.
+    assert_compact_amount($response, 100);
 });
 
 test('2. Sales List shows a "Credit" badge for an overpaid sale', function () {
@@ -181,7 +182,8 @@ test('2. Sales List shows a "Credit" badge for an overpaid sale', function () {
     $response = $this->actingAs($user)->get(route('sales.list'));
     $response->assertOk();
     $response->assertSee('SA-CREDIT-01');
-    $response->assertSee('Credit ' . format_currency(100));
+    $response->assertSee('Credit');
+    assert_compact_amount($response, 100);
 });
 
 test('3. Return Create page shows credit balance for an overpaid sale', function () {
@@ -191,7 +193,7 @@ test('3. Return Create page shows credit balance for an overpaid sale', function
     $response = $this->actingAs($user)->get(route('sales.return.create', $fx['sale']->id));
     $response->assertOk();
     $response->assertSee('Credit Balance (Overpaid)');
-    $response->assertSee(format_currency(100));
+    assert_compact_amount($response, 100);
 });
 
 test('4. Returns List shows a credit badge on the originating sale for an overpaid sale', function () {
@@ -201,5 +203,6 @@ test('4. Returns List shows a credit badge on the originating sale for an overpa
     $response = $this->actingAs($user)->get(route('sales.returns'));
     $response->assertOk();
     $response->assertSee('SR-CREDIT-01');
-    $response->assertSee('Credit ' . format_currency(100));
+    $response->assertSee('Credit');
+    assert_compact_amount($response, 100);
 });

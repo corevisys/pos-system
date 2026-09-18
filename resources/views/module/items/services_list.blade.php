@@ -86,10 +86,10 @@
                         <span class="text-[10px] font-bold text-text-secondary">{{ $service->category->category_name ?? '---' }}</span>
                     </td>
                     <td class="px-4 py-2 text-right whitespace-nowrap">
-                        <span class="text-[11px] font-medium text-text-secondary tabular-nums">{{ format_currency($service->price) }}</span>
+                        <span class="text-[11px] font-medium text-text-secondary tabular-nums"><x-money value="{{ $service->price }}" /></span>
                     </td>
                     <td class="px-4 py-2 text-right whitespace-nowrap">
-                        <span class="text-[11px] font-black text-emerald-600 dark:text-emerald-400 tabular-nums">{{ format_currency($service->sales_price) }}</span>
+                        <span class="text-[11px] font-black text-emerald-600 dark:text-emerald-400 tabular-nums"><x-money value="{{ $service->sales_price }}" /></span>
                     </td>
                     <td class="px-4 py-2 text-center whitespace-nowrap">
                         @if($service->status)

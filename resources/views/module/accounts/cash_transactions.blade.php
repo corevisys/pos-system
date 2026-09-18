@@ -173,12 +173,12 @@
                                     </td>
                                     <td class="px-4 py-2 text-right">
                                         <span class="text-[10px] font-black tabular-nums {{ $tr->debit_amt > 0 ? 'text-danger' : 'text-text-muted' }} leading-none">
-                                            {{ format_currency($tr->debit_amt > 0 ? $tr->debit_amt : 0) }}
+                                            <x-money value="{{ $tr->debit_amt > 0 ? $tr->debit_amt : 0 }}" />
                                         </span>
                                     </td>
                                     <td class="px-4 py-2 text-right">
                                         <span class="text-[10px] font-black tabular-nums {{ $tr->credit_amt > 0 ? 'text-success' : 'text-text-muted' }} leading-none">
-                                            {{ format_currency($tr->credit_amt > 0 ? $tr->credit_amt : 0) }}
+                                            <x-money value="{{ $tr->credit_amt > 0 ? $tr->credit_amt : 0 }}" />
                                         </span>
                                     </td>
                                     <td class="px-4 py-2 text-center">

@@ -110,7 +110,7 @@
                     </span>
                 </div>
                 <h3 class="text-2xl font-black text-slate-800 dark:text-white tabular-nums">
-                    {{ $currencySymbol ?? '$' }}<span x-text="formatNumber(summary.opening_balance)">0.00</span>
+                    <x-money value="summary.opening_balance" symbol="{{ $currencySymbol ?? '$' }}" />
                 </h3>
                 <p class="text-xs font-bold text-slate-400 mt-2 flex items-center justify-between">
                     <span>At Period Start:</span>
@@ -127,7 +127,7 @@
                     </span>
                 </div>
                 <h3 class="text-2xl font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
-                    {{ $currencySymbol ?? '$' }}<span x-text="formatNumber(summary.total_inflow)">0.00</span>
+                    <x-money value="summary.total_inflow" symbol="{{ $currencySymbol ?? '$' }}" />
                 </h3>
                 <p class="text-xs font-bold text-slate-400 mt-2 flex items-center justify-between">
                     <span>Operating + Deposits:</span>
@@ -144,7 +144,7 @@
                     </span>
                 </div>
                 <h3 class="text-2xl font-black text-rose-600 dark:text-rose-400 tabular-nums">
-                    {{ $currencySymbol ?? '$' }}<span x-text="formatNumber(summary.total_outflow)">0.00</span>
+                    <x-money value="summary.total_outflow" symbol="{{ $currencySymbol ?? '$' }}" />
                 </h3>
                 <p class="text-xs font-bold text-slate-400 mt-2 flex items-center justify-between">
                     <span>Expenses + Refunds:</span>
@@ -161,7 +161,7 @@
                     </span>
                 </div>
                 <h3 class="text-2xl font-black tabular-nums" :class="summary.net_cash_flow >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">
-                    <span x-text="summary.net_cash_flow >= 0 ? '+' : '−'">+</span>{{ $currencySymbol ?? '$' }}<span x-text="formatNumber(Math.abs(summary.net_cash_flow))">0.00</span>
+                    <span x-text="summary.net_cash_flow >= 0 ? '+' : '−'">+</span><x-money value="Math.abs(summary.net_cash_flow)" symbol="{{ $currencySymbol ?? '$' }}" />
                 </h3>
                 <p class="text-xs font-bold text-slate-400 mt-2 flex items-center justify-between">
                     <span>Cash Position Change:</span>
@@ -179,7 +179,7 @@
                     </span>
                 </div>
                 <h3 class="text-2xl font-black text-slate-900 dark:text-white tabular-nums">
-                    {{ $currencySymbol ?? '$' }}<span x-text="formatNumber(summary.closing_balance)">0.00</span>
+                    <x-money value="summary.closing_balance" symbol="{{ $currencySymbol ?? '$' }}" />
                 </h3>
                 <p class="text-xs font-bold text-slate-500 dark:text-slate-400 mt-2 flex items-center justify-between">
                     <span>At Period End:</span>
@@ -197,7 +197,7 @@
                 <div class="font-bold text-amber-800 dark:text-amber-300 mb-0.5 flex items-center justify-between">
                     <span>Purchase Payments Included in Cash Flow</span>
                     <span class="font-black tabular-nums bg-amber-200 dark:bg-amber-500/30 px-2 py-0.5 rounded text-amber-900 dark:text-amber-200">
-                        Purchase Payments: {{ $currencySymbol ?? '$' }}<span x-text="formatNumber(operating_activities.purchase_payments)">0.00</span>
+                        Purchase Payments: <x-money value="operating_activities.purchase_payments" symbol="{{ $currencySymbol ?? '$' }}" />
                     </span>
                 </div>
                 <p class="text-amber-700 dark:text-amber-400/90 leading-relaxed">
@@ -229,7 +229,7 @@
                             1. Cash Flow from Operating Activities
                         </span>
                         <span class="text-xs font-black tabular-nums" :class="operating_activities.net_operating_cash_flow >= 0 ? 'text-emerald-600' : 'text-rose-600'">
-                            <span x-text="operating_activities.net_operating_cash_flow >= 0 ? '+' : '−'">+</span>{{ $currencySymbol ?? '$' }}<span x-text="formatNumber(Math.abs(operating_activities.net_operating_cash_flow))">0.00</span>
+                            <span x-text="operating_activities.net_operating_cash_flow >= 0 ? '+' : '−'">+</span><x-money value="Math.abs(operating_activities.net_operating_cash_flow)" symbol="{{ $currencySymbol ?? '$' }}" />
                         </span>
                     </div>
 
@@ -241,7 +241,7 @@
                                 <span class="text-slate-700 dark:text-slate-300 font-medium">Cash Received from Sales & Collections</span>
                             </div>
                             <span class="font-bold text-slate-800 dark:text-slate-100 tabular-nums">
-                                +{{ $currencySymbol ?? '$' }}<span x-text="formatNumber(operating_activities.sales_payments)">0.00</span>
+                                +<x-money value="operating_activities.sales_payments" symbol="{{ $currencySymbol ?? '$' }}" />
                             </span>
                         </div>
 
@@ -252,7 +252,7 @@
                                 <span class="text-slate-700 dark:text-slate-300 font-medium">Cash Paid for Sales Return Refunds</span>
                             </div>
                             <span class="font-bold text-rose-600 dark:text-rose-400 tabular-nums">
-                                −{{ $currencySymbol ?? '$' }}<span x-text="formatNumber(operating_activities.sales_refunds)">0.00</span>
+                                −<x-money value="operating_activities.sales_refunds" symbol="{{ $currencySymbol ?? '$' }}" />
                             </span>
                         </div>
 
@@ -263,7 +263,7 @@
                                 <span class="text-slate-700 dark:text-slate-300 font-medium">Cash Paid for Operating Expenses</span>
                             </div>
                             <span class="font-bold text-rose-600 dark:text-rose-400 tabular-nums">
-                                −{{ $currencySymbol ?? '$' }}<span x-text="formatNumber(operating_activities.expenses)">0.00</span>
+                                −<x-money value="operating_activities.expenses" symbol="{{ $currencySymbol ?? '$' }}" />
                             </span>
                         </div>
 
@@ -274,7 +274,7 @@
                                 <span class="text-slate-700 dark:text-slate-300 font-medium">Cash Paid for Purchases</span>
                             </div>
                             <span class="font-bold text-rose-600 dark:text-rose-400 tabular-nums">
-                                −{{ $currencySymbol ?? '$' }}<span x-text="formatNumber(operating_activities.purchase_payments)">0.00</span>
+                                −<x-money value="operating_activities.purchase_payments" symbol="{{ $currencySymbol ?? '$' }}" />
                             </span>
                         </div>
 
@@ -285,7 +285,7 @@
                                 <span class="text-slate-700 dark:text-slate-300 font-medium">Cash Drawer Reconciliation Adjustments (Overage − Shortage)</span>
                             </div>
                             <span class="font-bold tabular-nums" :class="operating_activities.net_drawer_adjustment >= 0 ? 'text-slate-800 dark:text-slate-100' : 'text-rose-600 dark:text-rose-400'">
-                                <span x-text="operating_activities.net_drawer_adjustment >= 0 ? '+' : '−'">+</span>{{ $currencySymbol ?? '$' }}<span x-text="formatNumber(Math.abs(operating_activities.net_drawer_adjustment))">0.00</span>
+                                <span x-text="operating_activities.net_drawer_adjustment >= 0 ? '+' : '−'">+</span><x-money value="Math.abs(operating_activities.net_drawer_adjustment)" symbol="{{ $currencySymbol ?? '$' }}" />
                             </span>
                         </div>
 
@@ -293,7 +293,7 @@
                         <div class="flex items-center justify-between text-xs pt-2 font-black text-slate-800 dark:text-white">
                             <span class="uppercase tracking-wider">Net Cash from Operating Activities</span>
                             <span class="text-sm tabular-nums" :class="operating_activities.net_operating_cash_flow >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">
-                                <span x-text="operating_activities.net_operating_cash_flow >= 0 ? '+' : '−'">+</span>{{ $currencySymbol ?? '$' }}<span x-text="formatNumber(Math.abs(operating_activities.net_operating_cash_flow))">0.00</span>
+                                <span x-text="operating_activities.net_operating_cash_flow >= 0 ? '+' : '−'">+</span><x-money value="Math.abs(operating_activities.net_operating_cash_flow)" symbol="{{ $currencySymbol ?? '$' }}" />
                             </span>
                         </div>
                     </div>
@@ -307,7 +307,7 @@
                             2. Cash Flow from Financing & Account Movements
                         </span>
                         <span class="text-xs font-black tabular-nums" :class="financing_activities.net_financing_cash_flow >= 0 ? 'text-emerald-600' : 'text-rose-600'">
-                            <span x-text="financing_activities.net_financing_cash_flow >= 0 ? '+' : '−'">+</span>{{ $currencySymbol ?? '$' }}<span x-text="formatNumber(Math.abs(financing_activities.net_financing_cash_flow))">0.00</span>
+                            <span x-text="financing_activities.net_financing_cash_flow >= 0 ? '+' : '−'">+</span><x-money value="Math.abs(financing_activities.net_financing_cash_flow)" symbol="{{ $currencySymbol ?? '$' }}" />
                         </span>
                     </div>
 
@@ -319,7 +319,7 @@
                                 <span class="text-slate-700 dark:text-slate-300 font-medium">External Deposits into Accounts</span>
                             </div>
                             <span class="font-bold text-slate-800 dark:text-slate-100 tabular-nums">
-                                +{{ $currencySymbol ?? '$' }}<span x-text="formatNumber(financing_activities.deposits)">0.00</span>
+                                +<x-money value="financing_activities.deposits" symbol="{{ $currencySymbol ?? '$' }}" />
                             </span>
                         </div>
 
@@ -330,7 +330,7 @@
                                 <span class="text-slate-700 dark:text-slate-300 font-medium">New Accounts Initial Capital Entries</span>
                             </div>
                             <span class="font-bold text-slate-800 dark:text-slate-100 tabular-nums">
-                                +{{ $currencySymbol ?? '$' }}<span x-text="formatNumber(financing_activities.opening_balances)">0.00</span>
+                                +<x-money value="financing_activities.opening_balances" symbol="{{ $currencySymbol ?? '$' }}" />
                             </span>
                         </div>
 
@@ -341,7 +341,7 @@
                                 <span class="text-slate-700 dark:text-slate-300 font-medium">Transfers In (Inter-account Credits)</span>
                             </div>
                             <span class="font-bold text-slate-600 dark:text-slate-300 tabular-nums">
-                                +{{ $currencySymbol ?? '$' }}<span x-text="formatNumber(financing_activities.transfers_in)">0.00</span>
+                                +<x-money value="financing_activities.transfers_in" symbol="{{ $currencySymbol ?? '$' }}" />
                             </span>
                         </div>
 
@@ -352,7 +352,7 @@
                                 <span class="text-slate-700 dark:text-slate-300 font-medium">Transfers Out (Inter-account Debits)</span>
                             </div>
                             <span class="font-bold text-slate-600 dark:text-slate-300 tabular-nums">
-                                −{{ $currencySymbol ?? '$' }}<span x-text="formatNumber(financing_activities.transfers_out)">0.00</span>
+                                −<x-money value="financing_activities.transfers_out" symbol="{{ $currencySymbol ?? '$' }}" />
                             </span>
                         </div>
 
@@ -363,7 +363,7 @@
                                 <span class="text-slate-600 dark:text-slate-400 font-bold" x-text="financing_activities.is_consolidated ? 'Net Internal Transfers (Zero Business Impact on Consolidated Total)' : 'Net Inter-account Movement for Selected Account'">Net Internal Transfers</span>
                             </div>
                             <span class="font-black tabular-nums" :class="financing_activities.net_internal_transfers == 0 ? 'text-slate-500' : (financing_activities.net_internal_transfers > 0 ? 'text-emerald-600' : 'text-rose-600')">
-                                {{ $currencySymbol ?? '$' }}<span x-text="formatNumber(financing_activities.net_internal_transfers)">0.00</span>
+                                <x-money value="financing_activities.net_internal_transfers" symbol="{{ $currencySymbol ?? '$' }}" />
                             </span>
                         </div>
 
@@ -371,7 +371,7 @@
                         <div class="flex items-center justify-between text-xs pt-2 font-black text-slate-800 dark:text-white">
                             <span class="uppercase tracking-wider">Net Cash from Financing Activities</span>
                             <span class="text-sm tabular-nums" :class="financing_activities.net_financing_cash_flow >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">
-                                <span x-text="financing_activities.net_financing_cash_flow >= 0 ? '+' : '−'">+</span>{{ $currencySymbol ?? '$' }}<span x-text="formatNumber(Math.abs(financing_activities.net_financing_cash_flow))">0.00</span>
+                                <span x-text="financing_activities.net_financing_cash_flow >= 0 ? '+' : '−'">+</span><x-money value="Math.abs(financing_activities.net_financing_cash_flow)" symbol="{{ $currencySymbol ?? '$' }}" />
                             </span>
                         </div>
                     </div>
@@ -391,35 +391,35 @@
                         <div class="flex items-center justify-between text-slate-300">
                             <span>Opening Cash Position (Start Date):</span>
                             <span class="font-bold text-white tabular-nums text-sm">
-                                {{ $currencySymbol ?? '$' }}<span x-text="formatNumber(summary.opening_balance)">0.00</span>
+                                <x-money value="summary.opening_balance" symbol="{{ $currencySymbol ?? '$' }}" />
                             </span>
                         </div>
 
                         <div class="flex items-center justify-between text-slate-300">
                             <span>(+) Net Cash from Operating Activities:</span>
                             <span class="font-bold tabular-nums" :class="operating_activities.net_operating_cash_flow >= 0 ? 'text-emerald-400' : 'text-rose-400'">
-                                <span x-text="operating_activities.net_operating_cash_flow >= 0 ? '+' : '−'">+</span>{{ $currencySymbol ?? '$' }}<span x-text="formatNumber(Math.abs(operating_activities.net_operating_cash_flow))">0.00</span>
+                                <span x-text="operating_activities.net_operating_cash_flow >= 0 ? '+' : '−'">+</span><x-money value="Math.abs(operating_activities.net_operating_cash_flow)" symbol="{{ $currencySymbol ?? '$' }}" />
                             </span>
                         </div>
 
                         <div class="flex items-center justify-between text-slate-300">
                             <span>(+) Net Cash from Financing Activities:</span>
                             <span class="font-bold tabular-nums" :class="financing_activities.net_financing_cash_flow >= 0 ? 'text-emerald-400' : 'text-rose-400'">
-                                <span x-text="financing_activities.net_financing_cash_flow >= 0 ? '+' : '−'">+</span>{{ $currencySymbol ?? '$' }}<span x-text="formatNumber(Math.abs(financing_activities.net_financing_cash_flow))">0.00</span>
+                                <span x-text="financing_activities.net_financing_cash_flow >= 0 ? '+' : '−'">+</span><x-money value="Math.abs(financing_activities.net_financing_cash_flow)" symbol="{{ $currencySymbol ?? '$' }}" />
                             </span>
                         </div>
 
                         <div class="flex items-center justify-between text-slate-300 pt-2 border-t border-slate-800">
                             <span class="font-black text-white">(=) Net Change in Cash Position:</span>
                             <span class="font-black text-sm tabular-nums" :class="summary.net_cash_flow >= 0 ? 'text-emerald-400' : 'text-rose-400'">
-                                <span x-text="summary.net_cash_flow >= 0 ? '+' : '−'">+</span>{{ $currencySymbol ?? '$' }}<span x-text="formatNumber(Math.abs(summary.net_cash_flow))">0.00</span>
+                                <span x-text="summary.net_cash_flow >= 0 ? '+' : '−'">+</span><x-money value="Math.abs(summary.net_cash_flow)" symbol="{{ $currencySymbol ?? '$' }}" />
                             </span>
                         </div>
 
                         <div class="flex items-center justify-between text-slate-100 pt-3 border-t-2 border-slate-700 text-sm">
                             <span class="font-black uppercase tracking-wider text-emerald-400">Closing Cash Position (End Date):</span>
                             <span class="font-black text-base text-emerald-400 tabular-nums">
-                                {{ $currencySymbol ?? '$' }}<span x-text="formatNumber(summary.closing_balance)">0.00</span>
+                                <x-money value="summary.closing_balance" symbol="{{ $currencySymbol ?? '$' }}" />
                             </span>
                         </div>
 
@@ -463,7 +463,7 @@
                                     <span class="text-[10px] text-slate-400" x-text="'(' + item.count + ' tx)'"></span>
                                 </div>
                                 <span class="font-black text-slate-800 dark:text-white tabular-nums">
-                                    {{ $currencySymbol ?? '$' }}<span x-text="formatNumber(item.amount)">0.00</span>
+                                    <x-money value="item.amount" symbol="{{ $currencySymbol ?? '$' }}" />
                                 </span>
                             </div>
                         </template>
@@ -488,7 +488,7 @@
                                     <span class="text-[10px] text-slate-400" x-text="'(' + item.count + ')'"></span>
                                 </div>
                                 <span class="font-black text-rose-600 dark:text-rose-400 tabular-nums">
-                                    {{ $currencySymbol ?? '$' }}<span x-text="formatNumber(item.amount)">0.00</span>
+                                    <x-money value="item.amount" symbol="{{ $currencySymbol ?? '$' }}" />
                                 </span>
                             </div>
                         </template>
@@ -535,19 +535,19 @@
                                 <td class="py-3 px-4 font-bold text-slate-800 dark:text-white" x-text="acc.account_name"></td>
                                 <td class="py-3 px-4 font-mono text-slate-500" x-text="acc.account_code"></td>
                                 <td class="py-3 px-4 text-right tabular-nums text-slate-600 dark:text-slate-300 font-bold">
-                                    {{ $currencySymbol ?? '$' }}<span x-text="formatNumber(acc.opening_balance)">0.00</span>
+                                    <x-money value="acc.opening_balance" symbol="{{ $currencySymbol ?? '$' }}" />
                                 </td>
                                 <td class="py-3 px-4 text-right tabular-nums text-emerald-600 font-bold">
-                                    +{{ $currencySymbol ?? '$' }}<span x-text="formatNumber(acc.total_inflow)">0.00</span>
+                                    +<x-money value="acc.total_inflow" symbol="{{ $currencySymbol ?? '$' }}" />
                                 </td>
                                 <td class="py-3 px-4 text-right tabular-nums text-rose-600 font-bold">
-                                    −{{ $currencySymbol ?? '$' }}<span x-text="formatNumber(acc.total_outflow)">0.00</span>
+                                    −<x-money value="acc.total_outflow" symbol="{{ $currencySymbol ?? '$' }}" />
                                 </td>
                                 <td class="py-3 px-4 text-right tabular-nums font-black" :class="acc.net_change >= 0 ? 'text-emerald-600' : 'text-rose-600'">
-                                    <span x-text="acc.net_change >= 0 ? '+' : '−'">+</span>{{ $currencySymbol ?? '$' }}<span x-text="formatNumber(Math.abs(acc.net_change))">0.00</span>
+                                    <span x-text="acc.net_change >= 0 ? '+' : '−'">+</span><x-money value="Math.abs(acc.net_change)" symbol="{{ $currencySymbol ?? '$' }}" />
                                 </td>
                                 <td class="py-3 px-4 text-right tabular-nums font-black text-slate-900 dark:text-white">
-                                    {{ $currencySymbol ?? '$' }}<span x-text="formatNumber(acc.closing_balance)">0.00</span>
+                                    <x-money value="acc.closing_balance" symbol="{{ $currencySymbol ?? '$' }}" />
                                 </td>
                                 <td class="py-3 px-4 text-right">
                                     <div class="flex items-center justify-end gap-2">
@@ -567,19 +567,19 @@
                         <tr>
                             <td colspan="2" class="py-3.5 px-4 text-slate-800 dark:text-white uppercase tracking-wider">Total Consolidated Position</td>
                             <td class="py-3.5 px-4 text-right tabular-nums text-slate-800 dark:text-white">
-                                {{ $currencySymbol ?? '$' }}<span x-text="formatNumber(summary.opening_balance)">0.00</span>
+                                <x-money value="summary.opening_balance" symbol="{{ $currencySymbol ?? '$' }}" />
                             </td>
                             <td class="py-3.5 px-4 text-right tabular-nums text-emerald-600">
-                                +{{ $currencySymbol ?? '$' }}<span x-text="formatNumber(summary.total_inflow)">0.00</span>
+                                +<x-money value="summary.total_inflow" symbol="{{ $currencySymbol ?? '$' }}" />
                             </td>
                             <td class="py-3.5 px-4 text-right tabular-nums text-rose-600">
-                                −{{ $currencySymbol ?? '$' }}<span x-text="formatNumber(summary.total_outflow)">0.00</span>
+                                −<x-money value="summary.total_outflow" symbol="{{ $currencySymbol ?? '$' }}" />
                             </td>
                             <td class="py-3.5 px-4 text-right tabular-nums" :class="summary.net_cash_flow >= 0 ? 'text-emerald-600' : 'text-rose-600'">
-                                <span x-text="summary.net_cash_flow >= 0 ? '+' : '−'">+</span>{{ $currencySymbol ?? '$' }}<span x-text="formatNumber(Math.abs(summary.net_cash_flow))">0.00</span>
+                                <span x-text="summary.net_cash_flow >= 0 ? '+' : '−'">+</span><x-money value="Math.abs(summary.net_cash_flow)" symbol="{{ $currencySymbol ?? '$' }}" />
                             </td>
                             <td class="py-3.5 px-4 text-right tabular-nums text-emerald-600 dark:text-emerald-400 text-sm">
-                                {{ $currencySymbol ?? '$' }}<span x-text="formatNumber(summary.closing_balance)">0.00</span>
+                                <x-money value="summary.closing_balance" symbol="{{ $currencySymbol ?? '$' }}" />
                             </td>
                             <td class="py-3.5 px-4 text-right font-black text-slate-700 dark:text-slate-300">100.0%</td>
                         </tr>
@@ -632,10 +632,10 @@
                                     <span x-show="tx.debit_account" class="text-rose-600 font-bold" x-text="'From: ' + tx.debit_account"></span>
                                 </td>
                                 <td class="py-2 px-3 text-right font-bold tabular-nums" :class="tx.debit_amt > 0 ? 'text-rose-600' : 'text-slate-400'">
-                                    <span x-show="tx.debit_amt > 0">−{{ $currencySymbol ?? '$' }}</span><span x-text="formatNumber(tx.debit_amt)">0.00</span>
+                                    <span x-show="tx.debit_amt > 0">−{{ $currencySymbol ?? '$' }}</span><x-money value="tx.debit_amt" symbol="" />
                                 </td>
                                 <td class="py-2 px-3 text-right font-bold tabular-nums" :class="tx.credit_amt > 0 ? 'text-emerald-600' : 'text-slate-400'">
-                                    <span x-show="tx.credit_amt > 0">+{{ $currencySymbol ?? '$' }}</span><span x-text="formatNumber(tx.credit_amt)">0.00</span>
+                                    <span x-show="tx.credit_amt > 0">+{{ $currencySymbol ?? '$' }}</span><x-money value="tx.credit_amt" symbol="" />
                                 </td>
                                 <td class="py-2 px-3 text-slate-400 text-[11px] truncate max-w-xs" x-text="tx.note || '—'"></td>
                             </tr>

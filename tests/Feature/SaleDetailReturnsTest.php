@@ -119,7 +119,7 @@ test('1. Sale with zero returns renders without returns section and Balance Due 
 
     // Balance Due should be exactly 1000 - 600 = 400
     $response->assertSee('Balance Due');
-    $response->assertSee(format_currency(400));
+    assert_compact_amount($response, 400);
 });
 
 test('2. Scenario 1: Fully paid sale with cash refund displays correct return info and zero Balance Due', function () {
@@ -225,13 +225,13 @@ test('2. Scenario 1: Fully paid sale with cash refund displays correct return in
     $response->assertSee('Wireless Keyboard');
     $response->assertSee('ITM-KB-01');
     $response->assertSee(format_quantity(1));
-    $response->assertSee(format_currency(500));
+    assert_compact_amount($response, 500);
 
     // Returned Items row in summary
     $response->assertSee('Returned Items');
 
     // Balance Due: (1000 - 500) - (1000 - 500) = 0
-    $response->assertSee(format_currency(0));
+    assert_compact_amount($response, 0);
 });
 
 test('3. Scenario 2: Partially paid sale with due offset and no cash refund displays correct reduced Balance Due', function () {
@@ -313,7 +313,7 @@ test('3. Scenario 2: Partially paid sale with due offset and no cash refund disp
     $response->assertOk();
 
     // Balance Due: (1000 - 300) - (600 - 0) = 700 - 600 = 100
-    $response->assertSee(format_currency(100));
+    assert_compact_amount($response, 100);
     $response->assertSee('No cash refund issued (Due offset).');
 });
 
@@ -416,9 +416,9 @@ test('4. Scenario 3: Partially paid sale with partial offset and partial refund 
     $response->assertOk();
 
     // Balance Due: (1000 - 500) - (600 - 100) = 500 - 500 = 0
-    $response->assertSee(format_currency(0));
+    assert_compact_amount($response, 0);
     $response->assertSee('Refund (Cash - Main Cash Drawer):');
-    $response->assertSee(format_currency(100));
+    assert_compact_amount($response, 100);
 });
 
 test('5. Scenario 4: Return edge case where returned value exceeds net amount floors at zero without negative due', function () {
@@ -499,7 +499,7 @@ test('5. Scenario 4: Return edge case where returned value exceeds net amount fl
     $response->assertOk();
 
     // Balance Due: max(0, (200 - 200) - (200 - 200)) = 0
-    $response->assertSee(format_currency(0));
+    assert_compact_amount($response, 0);
 });
 
 test('6. Multiple returns for single sale all display on sales/show and cross-links work', function () {

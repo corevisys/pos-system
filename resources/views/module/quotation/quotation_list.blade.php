@@ -34,7 +34,8 @@
 
             <x-stat-card 
                 label="Total Quoted Value" 
-                :value="format_currency($stats['total_amount'])"
+                :money="true"
+                :value="$stats['total_amount']"
                 iconBg="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
                 <x-slot:icon>
                     <span class="text-base font-black italic">{{ $currencySymbol }}</span>
@@ -222,7 +223,7 @@
 
                     <!-- Total -->
                     <td class="px-4 py-2.5 text-right font-black tabular-nums text-xs text-text-primary dark:text-dark-text">
-                        {{ format_currency($quot->grand_total) }}
+                        <x-money value="{{ $quot->grand_total }}" />
                     </td>
 
                     <!-- Action Dropdown -->

@@ -183,12 +183,12 @@
                                 </div>
                             </td>
                             <td class="px-4 py-3 text-right font-bold text-text-secondary dark:text-dark-text">
-                                <div>{{ format_currency($recon->opening_balance) }}</div>
+                                <div><x-money value="{{ $recon->opening_balance }}" /></div>
                                 @if($recon->is_initial)
                                     <div class="text-[9px] font-bold text-blue-500">Initial Float</div>
                                 @elseif($recon->opening_variance != 0)
                                     <div class="text-[9px] font-bold text-amber-600">
-                                        {{ $recon->opening_variance > 0 ? '+' : '' }}{{ format_currency($recon->opening_variance) }} Float Adj
+                                        {{ $recon->opening_variance > 0 ? '+' : '' }}<x-money value="{{ $recon->opening_variance }}" /> Float Adj
                                     </div>
                                 @endif
                             </td>
@@ -196,14 +196,14 @@
                                 @if($recon->status === 'Open')
                                     <span class="text-text-muted font-normal italic text-[10px]">Pending Close</span>
                                 @else
-                                    {{ format_currency($recon->expected_closing_balance) }}
+                                    <x-money value="{{ $recon->expected_closing_balance }}" />
                                 @endif
                             </td>
                             <td class="px-4 py-3 text-right font-black text-text-primary dark:text-white">
                                 @if($recon->status === 'Open')
                                     <span class="text-text-muted font-normal italic text-[10px]">&mdash;</span>
                                 @else
-                                    {{ format_currency($recon->counted_amount) }}
+                                    <x-money value="{{ $recon->counted_amount }}" />
                                 @endif
                             </td>
                             <td class="px-4 py-3 text-right font-black">
@@ -217,11 +217,11 @@
                                     </span>
                                 @elseif($recon->variance > 0)
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
-                                        +{{ format_currency($recon->variance) }} Over
+                                        +<x-money value="{{ $recon->variance }}" /> Over
                                     </span>
                                 @else
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300">
-                                        -{{ format_currency(abs($recon->variance)) }} Short
+                                        -<x-money value="{{ abs($recon->variance) }}" /> Short
                                     </span>
                                 @endif
                             </td>

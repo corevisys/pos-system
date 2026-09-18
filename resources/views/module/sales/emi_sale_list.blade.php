@@ -25,13 +25,13 @@
             <x-stat-card label="Invoices" :value="number_format($globalStats['total_invoices'])"
                 iconBg="bg-success-light text-success"
                 icon='<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>' />
-            <x-stat-card label="Total Loan" :value="format_currency($globalStats['total_loan'])"
+            <x-stat-card label="Total Loan" :money="true" :value="$globalStats['total_loan']"
                 iconBg="bg-primary-light text-primary"
                 icon='<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>' />
-            <x-stat-card label="Total Payable" :value="format_currency($globalStats['total_payable'])"
+            <x-stat-card label="Total Payable" :money="true" :value="$globalStats['total_payable']"
                 iconBg="bg-primary-light text-primary"
                 icon='<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>' />
-            <x-stat-card label="Outstanding" :value="format_currency($globalStats['total_due'])"
+            <x-stat-card label="Outstanding" :money="true" :value="$globalStats['total_due']"
                 iconBg="bg-warning-light text-warning"
                 icon='<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>' />
             <x-stat-card label="Overdue Installments" :value="number_format($globalStats['total_overdue'])"
@@ -194,9 +194,9 @@
                         {{ $emi->customer->customer_name }}
                         <div class="text-[8px] text-text-muted">{{ $emi->customer->mobile }}</div>
                     </td>
-                    <td class="px-6 py-3 text-[10px] font-black text-right tabular-nums">{{ format_currency($emi->loan_amount) }}</td>
-                    <td class="px-6 py-3 text-[10px] font-black text-right tabular-nums text-primary">{{ format_currency($emi->total_payable) }}</td>
-                    <td class="px-6 py-3 text-[10px] font-black text-right tabular-nums {{ $remaining > 0 ? 'text-rose-600' : 'text-emerald-600' }}">{{ format_currency($remaining) }}</td>
+                    <td class="px-6 py-3 text-[10px] font-black text-right tabular-nums"><x-money value="{{ $emi->loan_amount }}" /></td>
+                    <td class="px-6 py-3 text-[10px] font-black text-right tabular-nums text-primary"><x-money value="{{ $emi->total_payable }}" /></td>
+                    <td class="px-6 py-3 text-[10px] font-black text-right tabular-nums {{ $remaining > 0 ? 'text-rose-600' : 'text-emerald-600' }}"><x-money value="{{ $remaining }}" /></td>
                     <td class="px-6 py-3 text-center">
                         <x-badge color="{{ $paidCount == $emi->duration_months ? 'success' : 'neutral' }}">{{ $paidCount }}/{{ $emi->duration_months }}</x-badge>
                     </td>

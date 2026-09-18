@@ -193,7 +193,7 @@
                                 </td>
                                 <td class="px-4 py-2 text-right">
                                     <span class="text-[10px] font-black tabular-nums text-text-primary dark:text-white leading-none">
-                                        {{ format_currency($tr->amount) }}
+                                        <x-money value="{{ $tr->amount }}" />
                                     </span>
                                 </td>
                                 <td class="px-4 py-2 text-center">

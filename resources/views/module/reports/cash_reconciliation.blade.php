@@ -94,12 +94,12 @@
             </div>
             <div class="bg-white dark:bg-dark-card rounded-2xl border border-slate-100 dark:border-dark-border p-4 shadow-sm">
                 <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1">Expected Cash</span>
-                <div class="text-2xl font-black text-slate-800 dark:text-white">{{ $currencySymbol ?? '' }}<span x-text="formatMoney(summary.total_expected)">0.00</span></div>
+                <div class="text-2xl font-black text-slate-800 dark:text-white"><x-money value="summary.total_expected" symbol="{{ $currencySymbol ?? '' }}" /></div>
                 <div class="text-[10px] text-slate-400 mt-1">System Expected Sum</div>
             </div>
             <div class="bg-white dark:bg-dark-card rounded-2xl border border-slate-100 dark:border-dark-border p-4 shadow-sm">
                 <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1">Counted Cash</span>
-                <div class="text-2xl font-black text-slate-800 dark:text-white">{{ $currencySymbol ?? '' }}<span x-text="formatMoney(summary.total_counted)">0.00</span></div>
+                <div class="text-2xl font-black text-slate-800 dark:text-white"><x-money value="summary.total_counted" symbol="{{ $currencySymbol ?? '' }}" /></div>
                 <div class="text-[10px] text-slate-400 mt-1">Physically Counted Sum</div>
             </div>
             <div class="bg-white dark:bg-dark-card rounded-2xl border border-slate-100 dark:border-dark-border p-4 shadow-sm" :class="{
@@ -113,11 +113,11 @@
                     'text-blue-600': summary.total_variance > 0,
                     'text-rose-600': summary.total_variance < 0
                 }">
-                    {{ $currencySymbol ?? '' }}<span x-text="formatMoney(summary.total_variance)">0.00</span>
+                    <x-money value="summary.total_variance" symbol="{{ $currencySymbol ?? '' }}" />
                 </div>
                 <div class="text-[10px] text-slate-400 mt-1">
-                    <span class="text-rose-500 font-bold">-{{ $currencySymbol ?? '' }}<span x-text="formatMoney(summary.total_shortage)">0.00</span> short</span> &bull; 
-                    <span class="text-blue-500 font-bold">+{{ $currencySymbol ?? '' }}<span x-text="formatMoney(summary.total_overage)">0.00</span> over</span>
+                    <span class="text-rose-500 font-bold">-<x-money value="summary.total_shortage" symbol="{{ $currencySymbol ?? '' }}" /> short</span> &bull;
+                    <span class="text-blue-500 font-bold">+<x-money value="summary.total_overage" symbol="{{ $currencySymbol ?? '' }}" /> over</span>
                 </div>
             </div>
         </div>
@@ -152,15 +152,15 @@
                                 <td class="px-4 py-3 font-bold text-slate-700 dark:text-slate-300" x-text="r.account"></td>
                                 <td class="px-4 py-3 text-slate-600 dark:text-slate-400" x-text="r.warehouse"></td>
                                 <td class="px-4 py-3 text-slate-600 dark:text-slate-400" x-text="r.user"></td>
-                                <td class="px-4 py-3 text-right font-bold text-slate-800 dark:text-white">{{ $currencySymbol ?? '' }}<span x-text="formatMoney(r.expected)"></span></td>
-                                <td class="px-4 py-3 text-right font-black text-slate-900 dark:text-white">{{ $currencySymbol ?? '' }}<span x-text="formatMoney(r.counted)"></span></td>
+                                <td class="px-4 py-3 text-right font-bold text-slate-800 dark:text-white"><x-money value="r.expected" symbol="{{ $currencySymbol ?? '' }}" /></td>
+                                <td class="px-4 py-3 text-right font-black text-slate-900 dark:text-white"><x-money value="r.counted" symbol="{{ $currencySymbol ?? '' }}" /></td>
                                 <td class="px-4 py-3 text-right font-black">
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px]" :class="{
                                         'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300': r.variance === 0,
                                         'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300': r.variance > 0,
                                         'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300': r.variance < 0
                                     }">
-                                        <span x-text="(r.variance >= 0 ? '+' : '') + '{{ $currencySymbol ?? '' }}' + formatMoney(r.variance)"></span>
+                                        <span x-text="r.variance >= 0 ? '+' : '−'">+</span><x-money value="Math.abs(r.variance)" symbol="{{ $currencySymbol ?? '' }}" />
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 text-center font-bold" x-text="r.status"></td>

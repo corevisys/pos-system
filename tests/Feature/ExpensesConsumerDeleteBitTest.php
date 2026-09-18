@@ -200,15 +200,15 @@ class ExpensesConsumerDeleteBitTest extends TestCase
         // Dashboard today net profit = revenue(500) - expenses(100) = 400.
         $res = $this->actingAs($user)->get(route('dashboard'));
         $res->assertOk();
-        $res->assertSee('400.00');
+        assert_compact_amount($res, 400.00);
 
         $this->softDeleteViaRoute($user, $expense);
 
         // After soft-delete: net profit = 500 - 0 = 500.
         $res2 = $this->actingAs($user)->get(route('dashboard'));
         $res2->assertOk();
-        $res2->assertSee('500.00');
-        $res2->assertDontSee('400.00');
+        assert_compact_amount($res2, 500.00);
+        assert_compact_amount_absent($res2, 400.00);
     }
 
     // ── CONSUMER 5: Global search ──

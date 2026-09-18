@@ -125,7 +125,7 @@
                                         </div>
                                         <div class="flex items-center gap-1.5">
                                             <span class="text-[8px] font-black text-text-muted uppercase tracking-widest">Worth:</span>
-                                            <span class="text-[11px] font-bold text-primary-600 dark:text-primary-400 tabular-nums">{{ format_currency($wh->worth ?? 0) }}</span>
+                                            <span class="text-[11px] font-bold text-primary-600 dark:text-primary-400 tabular-nums"><x-money value="{{ $wh->worth ?? 0 }}" /></span>
                                         </div>
                                     </div>
                                 </td>

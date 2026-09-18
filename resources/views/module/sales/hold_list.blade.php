@@ -173,7 +173,7 @@
                             {{ format_quantity($hold->items_count) }}
                         </td>
                         <td class="px-6 py-3 text-right text-[12px] font-black text-text-primary dark:text-dark-text tabular-nums">
-                            {{ format_currency($hold->grand_total) }}
+                            <x-money value="{{ $hold->grand_total }}" />
                         </td>
                         <td class="px-6 py-3">
                             <div class="flex items-center justify-center gap-1.5">
@@ -206,7 +206,7 @@
             <div class="card p-3 flex flex-wrap items-center justify-end gap-6">
                 <div class="flex items-center gap-2">
                     <span class="text-[9px] font-black uppercase tracking-widest text-text-muted">Filtered Total</span>
-                    <span class="text-sm font-black tabular-nums text-text-primary dark:text-white">{{ format_currency($filteredTotal) }}</span>
+                    <span class="text-sm font-black tabular-nums text-text-primary dark:text-white"><x-money value="{{ $filteredTotal }}" /></span>
                 </div>
             </div>
 

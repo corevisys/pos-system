@@ -115,11 +115,11 @@
                                     @endif
                                 </div>
                             </td>
-                            <td class="px-6 py-3 text-[10px] font-black text-right tabular-nums">{{ format_currency($item->price_per_unit) }}</td>
+                            <td class="px-6 py-3 text-[10px] font-black text-right tabular-nums"><x-money value="{{ $item->price_per_unit }}" /></td>
                             <td class="px-6 py-3 text-[10px] font-black text-center tabular-nums">
                                 <span class="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-text-secondary dark:text-dark-text">{{ format_quantity($item->sales_qty) }}</span>
                             </td>
-                            <td class="px-6 py-3 text-[10px] font-black text-right tabular-nums text-primary">{{ format_currency($item->total_cost) }}</td>
+                            <td class="px-6 py-3 text-[10px] font-black text-right tabular-nums text-primary"><x-money value="{{ $item->total_cost }}" /></td>
                         </tr>
                     @endforeach
                 </x-table>
@@ -143,8 +143,8 @@
                         <tr class="hover:bg-slate-50/30 dark:hover:bg-slate-800/30 transition-colors {{ $isOverdue ? 'bg-rose-50/40 dark:bg-rose-900/10' : '' }}">
                             <td class="px-6 py-3 text-[10px] font-bold text-text-muted">{{ $sch->installment_no }}</td>
                             <td class="px-6 py-3 text-[10px] font-bold {{ $isOverdue ? 'text-rose-600' : 'text-text-primary dark:text-dark-text' }}">{{ \Carbon\Carbon::parse($sch->due_date)->format('d-M-Y') }}</td>
-                            <td class="px-6 py-3 text-[10px] font-black text-right tabular-nums">{{ format_currency($sch->amount) }}</td>
-                            <td class="px-6 py-3 text-[10px] font-black text-right tabular-nums text-emerald-600">{{ format_currency($sch->paid_amount) }}</td>
+                            <td class="px-6 py-3 text-[10px] font-black text-right tabular-nums"><x-money value="{{ $sch->amount }}" /></td>
+                            <td class="px-6 py-3 text-[10px] font-black text-right tabular-nums text-emerald-600"><x-money value="{{ $sch->paid_amount }}" /></td>
                             <td class="px-6 py-3 text-center">
                                 @if($isOverdue)
                                     <x-badge color="danger">Overdue</x-badge>
@@ -181,19 +181,19 @@
                     <div class="space-y-3">
                         <div class="flex justify-between items-center">
                             <span class="text-xs font-medium text-text-secondary">Total Payable</span>
-                            <span class="text-xs font-black text-text-primary dark:text-dark-text">{{ format_currency($emiSale->total_payable) }}</span>
+                            <span class="text-xs font-black text-text-primary dark:text-dark-text"><x-money value="{{ $emiSale->total_payable }}" /></span>
                         </div>
                         <div class="flex justify-between items-center text-rose-500 p-2 bg-danger-light/50 dark:bg-rose-900/10 rounded-lg">
                             <span class="text-[10px] font-black uppercase tracking-tight">Initial Payment</span>
-                            <span class="text-xs font-black">- {{ format_currency($emiSale->sale->paid_amount) }}</span>
+                            <span class="text-xs font-black">- <x-money value="{{ $emiSale->sale->paid_amount }}" /></span>
                         </div>
                         <div class="flex justify-between items-center text-emerald-600 p-2 bg-success-light dark:bg-emerald-900/10 rounded-lg">
                             <span class="text-[10px] font-black uppercase tracking-tight">Total Collected</span>
-                            <span class="text-xs font-black">{{ format_currency($emiSale->sale->payments->sum('payment')) }}</span>
+                            <span class="text-xs font-black"><x-money value="{{ $emiSale->sale->payments->sum('payment') }}" /></span>
                         </div>
                         <div class="flex justify-between items-center">
                             <span class="text-xs font-medium text-text-secondary">Installments Paid</span>
-                            <span class="text-xs font-bold text-emerald-600">{{ format_currency($emiSale->schedule->sum('paid_amount')) }}</span>
+                            <span class="text-xs font-bold text-emerald-600"><x-money value="{{ $emiSale->schedule->sum('paid_amount') }}" /></span>
                         </div>
                         @if($overdueInstallments->count() > 0)
                             <div class="flex justify-between items-center text-rose-600 p-2 bg-danger-light dark:bg-rose-900/10 rounded-lg">
@@ -213,14 +213,14 @@
                                 @endif
                             </div>
                             <span class="text-2xl font-black text-rose-600 tabular-nums leading-none">
-                                {{ format_currency($emiSale->total_payable - $emiSale->schedule->sum('paid_amount')) }}
+                                <x-money value="{{ $emiSale->total_payable - $emiSale->schedule->sum('paid_amount') }}" />
                             </span>
                         </div>
 
                         <div class="grid grid-cols-2 gap-2 mt-4">
                             <div class="p-2 bg-success-light dark:bg-emerald-900/10 rounded-xl border border-emerald-100 dark:border-emerald-900/20">
                                 <p class="text-[8px] font-black text-emerald-600 uppercase tracking-widest">Subtotal</p>
-                                <p class="text-xs font-black text-emerald-600 tabular-nums">{{ format_currency($emiSale->sale->subtotal) }}</p>
+                                <p class="text-xs font-black text-emerald-600 tabular-nums"><x-money value="{{ $emiSale->sale->subtotal }}" /></p>
                             </div>
                             <div class="p-2 bg-slate-50 dark:bg-slate-900/10 rounded-xl border border-border-light dark:border-slate-900/20 text-right">
                                 <p class="text-[8px] font-black text-text-secondary uppercase tracking-widest">Duration</p>

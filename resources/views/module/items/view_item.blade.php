@@ -103,7 +103,7 @@
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
                         <div class="p-3 bg-amber-50 dark:bg-amber-500/5 rounded-2xl border border-amber-100/50 dark:border-amber-500/10">
                             <span class="text-[8px] font-black text-amber-600 uppercase tracking-widest mb-1 block">Purchase Price</span>
-                            <span class="text-lg font-black text-slate-800 dark:text-white tabular-nums">{{ format_currency($item->purchase_price) }}</span>
+                            <span class="text-lg font-black text-slate-800 dark:text-white tabular-nums"><x-money value="{{ $item->purchase_price }}" /></span>
                         </div>
                         <div class="p-3 bg-indigo-50 dark:bg-indigo-500/5 rounded-2xl border border-indigo-100/50 dark:border-indigo-500/10">
                             <span class="text-[8px] font-black text-indigo-600 uppercase tracking-widest mb-1 block">Profit Margin</span>
@@ -111,11 +111,11 @@
                         </div>
                         <div class="p-3 bg-emerald-50 dark:bg-emerald-500/5 rounded-2xl border border-emerald-100/50 dark:border-emerald-500/10">
                             <span class="text-[8px] font-black text-emerald-600 uppercase tracking-widest mb-1 block">Sales Price</span>
-                            <span class="text-lg font-black text-slate-800 dark:text-white tabular-nums">{{ format_currency($item->sales_price) }}</span>
+                            <span class="text-lg font-black text-slate-800 dark:text-white tabular-nums"><x-money value="{{ $item->sales_price }}" /></span>
                         </div>
                         <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-dark-border">
                             <span class="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1 block">MRP</span>
-                            <span class="text-lg font-black text-slate-800 dark:text-white tabular-nums">{{ format_currency($item->mrp) }}</span>
+                            <span class="text-lg font-black text-slate-800 dark:text-white tabular-nums"><x-money value="{{ $item->mrp }}" /></span>
                         </div>
                     </div>
                 </div>
@@ -196,7 +196,7 @@
                                         </div>
                                     </td>
                                     <td class="px-6 py-3 text-right">
-                                        <span class="text-[11px] font-black text-emerald-600 dark:text-emerald-400 tabular-nums">{{ format_currency($variant->sales_price) }}</span>
+                                        <span class="text-[11px] font-black text-emerald-600 dark:text-emerald-400 tabular-nums"><x-money value="{{ $variant->sales_price }}" /></span>
                                     </td>
                                     <td class="px-6 py-3 text-right">
                                         <span class="text-[11px] font-black text-slate-700 dark:text-slate-200 tabular-nums">{{ $variant->stock }}</span>
