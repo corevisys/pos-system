@@ -19,6 +19,11 @@
         roundOff: 0,
         isSubmitting: false,
         showQuickAdd: false,
+        // Save-in-flight flag for the Quick Add Item modal. Kept separate from
+        // isSubmitting (which drives the main Save Quotation button) so approving
+        // a quick-added item never shows "Saving Quotation..." on the wrong button.
+        // Mirrors the verified new_purchase.blade.php Quick Add fix.
+        quickItemSaving: false,
         successMessage: '',
         errorMessage: '',
         errorDetails: [],
@@ -253,6 +258,10 @@
         },
 
         async submitQuickItem() {
+            // Re-entry guard: never fire two quick-add requests from a double-click
+            // (the Save button is also :disabled while saving).
+            if (this.quickItemSaving) return;
+
             let errors = [];
             if (!this.quickItem.item_name) errors.push('Item Name is required');
             if (!this.quickItem.category_id) errors.push('Category is required');
@@ -266,6 +275,8 @@
                 this.showErrorModal = true;
                 return;
             }
+
+            this.quickItemSaving = true;
 
             try {
                 const response = await fetch('{{ route('purchase.quick.item.store', [], false) }}', {
@@ -317,6 +328,10 @@
                 this.errorMessage = 'System Error';
                 this.errorDetails = ['An error occurred while saving the item.'];
                 this.showErrorModal = true;
+            } finally {
+                // Reset on BOTH success and failure paths so the button
+                // re-enables and the spinner clears.
+                this.quickItemSaving = false;
             }
         }
     }" class="space-y-4">
@@ -634,7 +649,7 @@
             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
             style="display: none;"
             x-cloak>
-            <div class="card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-5 space-y-4 shadow-2xl" @click.away="showQuickAdd = false">
+            <div class="card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-5 space-y-4 shadow-2xl" @click.away="if(!quickItemSaving) showQuickAdd = false">
                 <div class="flex justify-between items-center pb-3 border-b border-border-light dark:border-dark-border">
                     <div>
                         <h3 class="text-base font-black text-text-primary dark:text-dark-text">Quick Add Item</h3>
@@ -720,8 +735,19 @@
                     <button type="button" @click="showQuickAdd = false" class="btn-secondary !py-1.5 !px-3 text-xs font-bold">
                         Cancel
                     </button>
-                    <button type="button" @click="submitQuickItem()" class="btn-primary !py-1.5 !px-4 text-xs font-bold">
-                        Save Item
+                    <button type="button" @click="submitQuickItem()" :disabled="quickItemSaving" class="btn-primary !py-1.5 !px-4 text-xs font-bold flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <template x-if="quickItemSaving">
+                            <div class="flex items-center gap-1.5">
+                                <svg class="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                <span>Saving...</span>
+                            </div>
+                        </template>
+                        <template x-if="!quickItemSaving">
+                            <div class="flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                <span>Save Item</span>
+                            </div>
+                        </template>
                     </button>
                 </div>
             </div>

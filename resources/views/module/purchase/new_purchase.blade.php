@@ -24,6 +24,15 @@
             account_id: '',
             isSubmitting: false,
             showQuickAdd: false,
+            // Save-in-flight flag for the Quick Add Product modal (mirrors
+            // savePurchase()'s isSubmitting): drives the Save button spinner +
+            // disabled state and guards the backdrop click while saving.
+            quickItemSaving: false,
+            // Quick-added serials for the item currently being created, handed to the
+            // new cart line by addItem() (the quick-added item definition itself is
+            // created with NO opening stock/serials — the purchase supplies them).
+            pendingQuickAddSerials: [],
+            pendingQuickAddQty: 0,
             quickItem: {
                 item_name: '',
                 barcode: '',
@@ -80,6 +89,45 @@
                         this.$refs.searchInput.focus();
                     }
                     this.calculateTotals();
+                });
+            },
+
+            // --- Serial entry UX helpers (shared by the Quick-Add serial grid and
+            // the per-line serial modal). Enter in a serial slot moves focus to the
+            // NEXT slot; the LAST slot keeps focus because slots are quantity-driven
+            // and fixed (one input per unit) — there is no auto-create affordance.
+            focusSerialSlot(container, currentEl = null) {
+                if (!container) return;
+                const fields = [...container.querySelectorAll('input, textarea')].filter(el => !el.disabled);
+                if (fields.length === 0) return;
+                const i = currentEl ? fields.indexOf(currentEl) : -1;
+                const next = fields[i + 1];
+                if (next) next.focus();
+            },
+            // Focus the first slot of a serial grid, deferred until x-for has rendered.
+            focusFirstSerialSlot(container) {
+                this.$nextTick(() => {
+                    if (!container) return;
+                    const first = container.querySelector('input, textarea');
+                    if (first) first.focus();
+                });
+            },
+            // After the per-line serial modal closes, focus that same row's serial
+            // badge (its "add / next" affordance) so rapid-scan flow continues.
+            focusSerialRow(index) {
+                this.$nextTick(() => {
+                    const el = document.querySelector('[data-serial-badge="' + index + '"]');
+                    if (el) el.focus();
+                });
+            },
+            // Open the Quick-Add Product modal, focusing the first serial slot when
+            // the product is serialized with opening stock being entered.
+            openQuickAdd() {
+                this.showQuickAdd = true;
+                this.$nextTick(() => {
+                    const grid = this.$refs.quickAddSerialGrid;
+                    const first = grid ? grid.querySelector('input') : null;
+                    if (first) first.focus();
                 });
             },
 
@@ -170,6 +218,23 @@
             },
 
             async submitQuickItem() {
+                // Option 1 — a serialized quick-add with opening stock is a NEW item
+                // whose stock + serials will be supplied by the PURCHASE itself. The
+                // item definition is therefore created with NO opening stock/serials,
+                // and the entered serials are handed to the new cart line instead.
+                // (Without this, the same serials would be registered twice — once by
+                // quick-add and again by the purchase — and the cross-entry-point
+                // uniqueness check would reject the purchase at submit.)
+                // Re-entry guard: never fire two quick-add requests from a
+                // double-click (the button is also :disabled while saving).
+                if (this.quickItemSaving) return;
+
+                const serializedQuickAdd = this.quickItem.is_serialized == 1
+                    && parseInt(this.quickItem.opening_stock) > 0;
+                const enteredSerials = serializedQuickAdd
+                    ? this.quickItem.serial_numbers.map(s => (s || '').trim()).filter(s => s !== '')
+                    : [];
+
                 let errors = [];
                 if (!this.quickItem.item_name) errors.push('Item Name is required');
                 if (!this.quickItem.category_id) errors.push('Category is required');
@@ -178,13 +243,11 @@
                 if (!this.quickItem.purchase_price || parseFloat(this.quickItem.purchase_price) < 0) errors.push('Valid Purchase Price is required');
                 if (!this.quickItem.sales_price || parseFloat(this.quickItem.sales_price) < 0) errors.push('Valid Sales Price is required');
 
-                if (this.quickItem.is_serialized && parseInt(this.quickItem.opening_stock) > 0) {
-                    const filledSerials = this.quickItem.serial_numbers.filter(s => s.trim() !== '').length;
-                    if (filledSerials !== parseInt(this.quickItem.opening_stock)) {
-                        errors.push(`Please provide all ${this.quickItem.opening_stock} serial numbers (only ${filledSerials} entered).`);
-                    }
-                    if (!this.quickItem.warehouse_id) {
-                        errors.push('Warehouse is required when entering opening stock.');
+                if (serializedQuickAdd) {
+                    // Serials move to the purchase line, so they must cover the qty.
+                    // No warehouse is required here: the purchase supplies it.
+                    if (enteredSerials.length !== parseInt(this.quickItem.opening_stock)) {
+                        errors.push(`Please provide all ${this.quickItem.opening_stock} serial numbers (only ${enteredSerials.length} entered).`);
                     }
                 }
 
@@ -195,6 +258,20 @@
                     return;
                 }
 
+                const payload = {
+                    ...this.quickItem,
+                    purchase_price: parseFloat(this.quickItem.purchase_price || 0),
+                    sales_price: parseFloat(this.quickItem.sales_price || 0),
+                    opening_stock: serializedQuickAdd ? 0 : parseInt(this.quickItem.opening_stock || 0),
+                    _token: '{{ csrf_token() }}'
+                };
+                if (serializedQuickAdd) {
+                    // Diverted to the purchase line — do not register here.
+                    payload.serial_numbers = [];
+                }
+
+                this.quickItemSaving = true;
+
                 try {
                     const response = await fetch('{{ route('purchase.quick.item.store', [], false) }}', {
                         method: 'POST',
@@ -203,20 +280,20 @@
                             'Accept': 'application/json',
                             'X-CSRF-TOKEN': '{{ csrf_token() }}'
                         },
-                        body: JSON.stringify({
-                            ...this.quickItem,
-                            purchase_price: parseFloat(this.quickItem.purchase_price || 0),
-                            sales_price: parseFloat(this.quickItem.sales_price || 0),
-                            opening_stock: parseInt(this.quickItem.opening_stock || 0),
-                            _token: '{{ csrf_token() }}'
-                        })
+                        body: JSON.stringify(payload)
                     });
 
                     const result = await response.json();
                     if (result.success) {
-                        this.addItem(result.item);
+                        // Stash the entered serials so addItem() can attach them to the
+                        // new cart line BEFORE the quickItem reset wipes the source.
+                        this.pendingQuickAddSerials = enteredSerials;
+                        this.pendingQuickAddQty = serializedQuickAdd ? parseInt(this.quickItem.opening_stock) : 0;
+
                         this.showQuickAdd = false;
-                        
+                        this.showErrorModal = false;
+                        this.addItem(result.item);
+
                         this.successMessage = result.message || 'Item created and added to cart!';
                         this.showSuccessModal = true;
                         setTimeout(() => this.showSuccessModal = false, 3000);
@@ -227,6 +304,8 @@
                             description: '', tax_type: 'Inclusive', custom_barcode: '', is_serialized: 0,
                             opening_stock: 0, serial_numbers: [], warehouse_id: ''
                         };
+                        this.pendingQuickAddSerials = [];
+                        this.pendingQuickAddQty = 0;
                     } else {
                         this.errorMessage = result.message || 'Item Creation Failed';
                         this.errorDetails = result.errors ? Object.values(result.errors).flat() : [result.message || 'Error occurred.'];
@@ -237,6 +316,10 @@
                     this.errorMessage = 'System Exception';
                     this.errorDetails = ['Failed to communicate with server. Check connectivity.'];
                     this.showErrorModal = true;
+                } finally {
+                    // Reset on BOTH success and failure paths so the button
+                    // re-enables and the spinner clears.
+                    this.quickItemSaving = false;
                 }
             },
 
@@ -265,17 +348,30 @@
             },
             
             addItem(item) {
+                const pendingSerials = Array.isArray(this.pendingQuickAddSerials) ? this.pendingQuickAddSerials : [];
+                const pendingQty = parseInt(this.pendingQuickAddQty) || 0;
+                const isSerialized = (item.is_serialized == 1) ? 1 : 0;
+
                 let existing = this.cart.find(i => i.item_id === item.id);
                 if (existing) {
-                    existing.qty++;
+                    if (isSerialized && pendingSerials.length > 0) {
+                        // Quick-added serials replace (not append) so count tracks qty.
+                        existing.serials = pendingSerials.slice();
+                        existing.qty = pendingSerials.length;
+                    } else {
+                        existing.qty++;
+                    }
                     this.updateItemSerials(existing);
                 } else {
                     const taxRate = item.tax ? parseFloat(item.tax.tax || 0) : 0;
+                    const initialQty = (isSerialized && pendingSerials.length > 0)
+                        ? pendingSerials.length
+                        : ((isSerialized && pendingQty > 0) ? pendingQty : 1);
                     this.cart.push({
                         item_id: item.id,
                         name: item.item_name,
                         item_code: item.item_code || '',
-                        qty: 1,
+                        qty: initialQty,
                         price: parseFloat(item.purchase_price || item.price || 0),
                         discount: 0,
                         discount_type: 'Fixed',
@@ -285,8 +381,8 @@
                         taxAmount: 0,
                         unitCost: parseFloat(item.purchase_price || item.price || 0),
                         total: parseFloat(item.purchase_price || item.price || 0),
-                        is_serialized: item.is_serialized || 0,
-                        serials: []
+                        is_serialized: isSerialized,
+                        serials: (isSerialized && pendingSerials.length > 0) ? pendingSerials.slice() : []
                     });
                     let added = this.cart[this.cart.length - 1];
                     this.updateItemSerials(added);
@@ -327,6 +423,8 @@
                 this.serialModal.tempSerials = item.serials.join('\n');
                 this.refreshSerialWarnings();
                 this.serialModal.show = true;
+                // Auto-focus the first serial slot (mirrors POS's serial-modal focus).
+                this.focusFirstSerialSlot(this.$refs.serialModalGrid);
             },
 
             updateItemSerials(item) {
@@ -364,6 +462,8 @@
                     this.calculateTotals();
                 }
                 this.serialModal.show = false;
+                // Return focus to this line's serial badge so scanning can resume.
+                this.focusSerialRow(this.serialModal.currentIndex);
             },
 
             // Item 4 (client-side feedback): compute which serials in the current
@@ -694,7 +794,7 @@
                                 <!-- Quick Create link -->
                                 <div 
                                     x-show="searchQuery.length >= 1"
-                                    @click="showQuickAdd = true; quickItem.item_name = searchQuery"
+                                    @click="showQuickAdd = true; quickItem.item_name = searchQuery; $nextTick(() => { const g = $refs.quickAddSerialGrid; if (g) { const i = g.querySelector('input'); if (i) i.focus(); } })"
                                     class="p-2.5 bg-primary-light/50 dark:bg-primary/10 hover:bg-primary-light cursor-pointer transition-all flex items-center justify-between">
                                     <div class="flex items-center gap-2">
                                         <div class="w-5 h-5 rounded bg-primary text-white flex items-center justify-center text-xs font-bold">+</div>
@@ -708,7 +808,7 @@
                         <!-- Add Item Button -->
                         <button 
                             type="button" 
-                            @click="showQuickAdd = true" 
+                            @click="openQuickAdd()"
                             class="btn-secondary !py-2 !px-3 text-xs font-bold flex items-center gap-1.5 shrink-0" 
                             title="Quick Add Product">
                             <svg class="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
@@ -758,6 +858,7 @@
                                             <template x-if="item.is_serialized == 1">
                                                 <button 
                                                     type="button"
+                                                    :data-serial-badge="index"
                                                     @click="openSerialModal(item, cart.indexOf(item))"
                                                     :class="item.serials.filter(s => s && s.trim() !== '').length === parseInt(item.qty) ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20' : 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400 border-rose-200 dark:border-rose-500/20 animate-pulse'"
                                                     class="px-1.5 py-0.5 rounded text-[9px] font-black border transition-all flex items-center gap-1 whitespace-nowrap">
@@ -1065,7 +1166,7 @@
         x-cloak
         style="display: none;">
         
-        <div class="bg-white dark:bg-dark-card w-full max-w-2xl rounded-2xl shadow-2xl border border-border dark:border-dark-border overflow-hidden" @click.away="showQuickAdd = false">
+        <div class="bg-white dark:bg-dark-card w-full max-w-2xl rounded-2xl shadow-2xl border border-border dark:border-dark-border overflow-hidden" @click.away="if(!quickItemSaving) showQuickAdd = false">
             <div class="px-5 py-3 border-b border-border dark:border-dark-border flex justify-between items-center bg-slate-50/50 dark:bg-dark-bg/50">
                 <h3 class="text-sm font-black text-text-primary dark:text-dark-text">Quick Add Product</h3>
                 <button type="button" @click="showQuickAdd = false" class="text-slate-400 hover:text-danger">
@@ -1177,9 +1278,14 @@
                             <span class="text-[9px] font-black uppercase text-primary tracking-wider">Serial Numbers Entry</span>
                             <span class="text-[9px] font-bold text-slate-400" x-text="'Required: ' + quickItem.opening_stock"></span>
                         </div>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[140px] overflow-y-auto pr-1">
+                        <div x-ref="quickAddSerialGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[140px] overflow-y-auto pr-1">
                             <template x-for="(sn, idx) in quickItem.serial_numbers" :key="idx">
-                                <input type="text" x-model="quickItem.serial_numbers[idx]" :placeholder="'SN #' + (idx + 1)" class="input-base !py-1 !px-2 !text-xs !rounded-lg w-full font-mono uppercase">
+                                <input
+                                    type="text"
+                                    x-model="quickItem.serial_numbers[idx]"
+                                    :placeholder="'SN #' + (idx + 1)"
+                                    @keydown.enter.prevent="focusSerialSlot($refs.quickAddSerialGrid, $event.target)"
+                                    class="input-base !py-1 !px-2 !text-xs !rounded-lg w-full font-mono uppercase">
                             </template>
                         </div>
                     </div>
@@ -1188,7 +1294,20 @@
 
             <div class="px-5 py-3 bg-slate-50/80 dark:bg-dark-bg/50 border-t border-border dark:border-dark-border flex justify-end gap-2">
                 <button type="button" @click="showQuickAdd = false" class="btn-secondary !py-1.5 !px-3 text-xs font-bold">Cancel</button>
-                <button type="button" @click="submitQuickItem()" class="btn-primary !py-1.5 !px-4 text-xs font-bold">Save Product</button>
+                <button type="button" @click="submitQuickItem()" :disabled="quickItemSaving" class="btn-primary !py-1.5 !px-4 text-xs font-bold flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <template x-if="quickItemSaving">
+                        <div class="flex items-center gap-1.5">
+                            <svg class="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            <span>Saving...</span>
+                        </div>
+                    </template>
+                    <template x-if="!quickItemSaving">
+                        <div class="flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                            <span>Save Product</span>
+                        </div>
+                    </template>
+                </button>
             </div>
         </div>
     </div>
@@ -1255,13 +1374,14 @@
                     </div>
                     
                     <div class="max-h-[180px] overflow-y-auto pr-1">
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        <div x-ref="serialModalGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                             <template x-if="serialModal.currentIndex !== -1">
                                 <template x-for="(sn, idx) in cart[serialModal.currentIndex].serials" :key="idx">
-                                    <input 
-                                        type="text" 
-                                        x-model="cart[serialModal.currentIndex].serials[idx]" 
-                                        :placeholder="'Serial #' + (idx + 1)" 
+                                    <input
+                                        type="text"
+                                        x-model="cart[serialModal.currentIndex].serials[idx]"
+                                        :placeholder="'Serial #' + (idx + 1)"
+                                        @keydown.enter.prevent="focusSerialSlot($refs.serialModalGrid, $event.target)"
                                         class="input-base !py-1 !px-2 !text-xs !rounded-lg w-full font-mono uppercase font-bold">
                                 </template>
                             </template>
